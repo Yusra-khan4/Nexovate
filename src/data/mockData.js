@@ -1,9 +1,9 @@
 export const clientDashboardData = {
   profile: { name: "Sarah Ahmed", type: "Client" },
-  stats: { totalProjectsPosted: 4, lockedbalance: "450k pkr", completedMilestones: 8 },
+  stats: { totalProjectsPosted: 12, activeProjects: 3, totalSpent: "Rs.120k" },
   postedProjects: [
-    { id: "p-901", title: "Fintech Mobile App", budget: "300k pkr", status: "In Selection" },
-    { id: "p-902", title: "Corporate Portfolio Website", budget: "150k pkr", status: "Active" }
+    { id: "p-901", title: "Blule Sky Trave", description: "Booking Engine Redesign", status: "High Priority" },
+    { id: "p-902", title: "Bon Apetite", description: "Restuarant Website", status: "On Track" }
   ]
 };
 
@@ -11,9 +11,9 @@ export const developerDashboardData = {
   profile: { name: "Bilal Ahmed", type: "Full Stack Developer" },
   stats: { totalProjects: 12, activeProjects: 3, earned: "120k pkr" },
   activeProjects: [
-    { id: 1, title: "BlueSkyTravel", description: "Booking Engine Redesign", progress: 72, priority: "High Priority" },
-    { id: 2, title: "Smart Task Manager", description: "Workflow Automation Tools", progress: 45, priority: "On Track" },
-    { id: 3, title: "Ajrak Quest", description: "Cultural Heritage Puzzle Game", progress: 100, priority: "Completed" }
+    { id: 1, title: "Bon Apetite", description: "Booking Engine Redesign", progress: 80, priority: "In Progress" },
+    { id: 2, title: "Blue Sky Travel", description: "Workflow Automation Tools", progress: 10, priority: "In Progress" },
+    { id: 3, title: "AK Apparel Store", description: "Cultural Heritage Puzzle Game", progress: 100, priority: "Completed" }
   ],
   recentBids: [
     { client: "Zara Ahmed", value: "80,400 Rs.", deadline: "June 12, 2026", status: "Under Review" },

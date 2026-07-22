@@ -1,9 +1,28 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react'; 
+import logoImg from '../assets/NEXOVATE WHITE BG.png';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
+
+  // ☀️/🌙 SYNC STATE THEME ENGINE
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme === 'dark' : true; 
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
   const handleReset = (e) => {
     e.preventDefault();
@@ -11,37 +30,82 @@ export default function ForgotPassword() {
   };
 
   return (
-    // Same wrapper classes as DashboardLayout for consistency
-    <div className="flex w-screen h-screen overflow-hidden bg-[#0a0806] text-white antialiased relative items-center justify-center">
+    <div className="flex w-screen h-screen overflow-hidden bg-[#FFFFFF] text-gray-900 dark:bg-[#0a0806] dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased relative items-center justify-center">
       
-      {/* EXACT SAME RADIAL GRADIENTS AS DASHBOARDLAYOUT */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#dc6b0f_0%,transparent_55%)] opacity-20 pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,#bd1c22_0%,transparent_50%)] opacity-15 pointer-events-none z-0" />
+      {/* Decorative ambient gradients */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#dc6b0f_0%,transparent_55%)] opacity-0 dark:opacity-20 pointer-events-none z-0 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,#bd1c22_0%,transparent_50%)] opacity-0 dark:opacity-15 pointer-events-none z-0 transition-opacity duration-300" />
 
-      {/* CARD CONTAINER (Glassmorphism) */}
-      <div className="w-full max-w-[400px] bg-[#1c1a17]/40 backdrop-blur-xl border border-white/10 p-8 rounded-[5px] shadow-[0_24px_60px_rgba(0,0,0,0.5)] z-10">
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-12 z-10 select-none">
+              <img 
+                src={logoImg} 
+                alt="Nexovate Logo" 
+                className="w-28 sm:w-32 max-h-[80px] object-contain mix-blend-multiply dark:mix-blend-normal brightness-105" 
+              />
+            </div>
+      <div className="absolute top-8 right-8 sm:top-12 sm:right-12 z-20 flex items-center gap-2.5 font-sans text-xs font-bold select-none tracking-wide transition-colors">
+        {/* Light Label Toggle Trigger */}
+        <span className={`transition-colors duration-300 ${!isDarkMode ? 'text-gray-900 font-extrabold' : 'text-gray-400'}`}>
+          Light
+        </span>
+                <button
+          type="button"
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="w-16 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-full p-1 relative flex items-center shadow-inner cursor-pointer transition-all focus:outline-none"
+          title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          <div 
+            className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center transform transition-transform duration-300 relative ${
+              isDarkMode ? 'translate-x-8' : 'translate-x-0'
+            }`}
+          >
+            {isDarkMode && (
+              <div className="absolute inset-0 flex items-center justify-center p-1">
+                <div className="w-1 h-1 bg-blue-100 rounded-full absolute top-1 right-1.5" />
+                <div className="w-1.5 h-1.5 bg-blue-100 rounded-full absolute bottom-1 right-2" />
+              </div>
+            )}
+          </div>
+
+          {!isDarkMode ? (
+            <div className="absolute right-2.5 w-1 h-1 bg-white/60 rounded-full animate-pulse" />
+          ) : (
+            <div className="absolute left-2.5 flex gap-0.5">
+              <div className="w-1 h-1 bg-white/40 rounded-full" />
+              <div className="w-0.5 h-0.5 bg-white/40 rounded-full mt-1" />
+            </div>
+          )}
+        </button>
+
+        <span className={`transition-colors duration-300 ${isDarkMode ? 'text-white font-extrabold' : 'text-gray-400'}`}>
+          Dark
+        </span>
+      </div>
+
+      <div className="w-full max-w-[400px] bg-[#FFF6E9] dark:bg-[#1c1a17]/40 border border-black/5 dark:border-white/10 p-8 rounded-[12px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] z-10 transition-all duration-300">
         
         <div className="text-center space-y-2 mb-8">
-          <h2 className="text-2xl font-extrabold text-[#FFFFFF] tracking-tight">Reset Password</h2>
-          <p className="text-xs text-gray-400 font-medium">Enter your email and we'll send you a link.</p>
+          <h2 className="text-2xl font-extrabold text-gray-900 dark:text-[#FFFFFF] tracking-tight transition-colors duration-300">Reset Password</h2>
+          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium transition-colors duration-300">Enter your email and we'll send you a link.</p>
         </div>
 
         <form onSubmit={handleReset} className="space-y-5">
           <div className="text-left space-y-1.5">
-            <label className="block text-xs font-bold text-[#FFFFFF] tracking-wide">Email Address</label>
+            <label className="block text-xs font-bold text-gray-900 dark:text-[#FFFFFF] tracking-wide transition-colors duration-300">Email Address</label>
+            
             <input 
               type="email" 
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#000000]/30 border border-white/10 rounded-[5px] py-3 px-4 text-xs text-[#FFFFFF] placeholder-gray-500 focus:outline-none focus:border-[#DC6B0F] transition-all"
+              className="w-full bg-white dark:bg-[#000000]/30 border border-gray-300 dark:border-white/10 rounded-[5px] py-3 px-4 text-xs text-gray-900 dark:text-[#FFFFFF] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#DC6B0F] transition-colors duration-300 font-medium"
               placeholder="name@email.com"
             />
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] py-3 rounded-[5px] font-extrabold text-xs tracking-wider shadow-lg active:scale-[0.99] hover:brightness-105 transition-all uppercase"
+            className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] py-3 rounded-[5px] font-extrabold text-xs tracking-wider shadow-lg active:scale-[0.99] hover:brightness-105 transition-all uppercase mt-2 cursor-pointer"
           >
             Send Reset Link
           </button>
@@ -50,9 +114,9 @@ export default function ForgotPassword() {
         <div className="mt-6 text-center">
           <button 
             onClick={() => navigate("/login")}
-            className="text-[10px] text-gray-500 font-bold hover:text-[#FFFFFF] transition-colors"
+            className="text-[11px] text-gray-900 dark:text-gray-400 font-bold hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer transition-colors duration-300"
           >
-            Back to Login
+            <ArrowLeft size={12} strokeWidth={2.5} /> Back to Login
           </button>
         </div>
       </div>

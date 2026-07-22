@@ -12,6 +12,12 @@ import ProjectCreationForm from './modules/client/ProjectCreationForm';
 import ClientProjects from './modules/client/ClientProjects';
 import ProfilePage from './modules/developer/ProfilePage';
 import DeveloperProjects from './modules/developer/DeveloperProjects';
+import ClientDevelopers from './modules/client/ClientDevelopers';
+import ClientSavedProjects from './modules/client/ClientSavedProjects';
+import ClientProfile from './modules/client/ClientProfile';
+import DeveloperMyProject from './modules/developer/DeveloperMyProject';
+
+
 
 
 function App() {
@@ -31,11 +37,17 @@ function App() {
           <Route path="post-project" element={<ProjectCreationForm />} />
           
           <Route path="messages" element={<MessagesDashboard />} />
+          <Route path="developers" element={<ClientDevelopers />} />
+          <Route path="profile" element={<ClientProfile />} />
+
+          
+          <Route path="saved-projects" element={<ClientSavedProjects />} />
         </Route>
 
         <Route path="/developer" element={<DashboardLayout userRole="developer" userName="Developer" />}>
           <Route path="dashboard" element={<DeveloperDashboard />} />
           <Route path="projects" element={<DeveloperProjects />} />
+          <Route path="my projects" element={<DeveloperMyProject />} />
           <Route path="Messages" element={<MessagesDashboard/>}/>
           
           <Route path="profile" element={<ProfilePage />} />

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { loginUser } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
+import { Sun, Moon, Mail, Lock } from 'lucide-react';
+import logoImg from '../assets/NEXOVATE WHITE BG.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -9,19 +11,32 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme === 'dark' : true; 
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    
     if (!email || !password) {
-      setError('Please fill in all registration parameters.');
+      setError('Please fill in all the fields.');
       return;
     }
-    
     setError(''); 
 
     try {
       const data = await loginUser(email, password);
-      
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
@@ -41,43 +56,82 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 relative w-full bg-[#0a0806] font-['Raleway',sans-serif] antialiased overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#dc6b0f_0%,transparent_55%)] opacity-20 pointer-events-none z-0" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,#bd1c22_0%,transparent_50%)] opacity-15 pointer-events-none z-0" />
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 relative w-full bg-[#FFFFFF] text-gray-900 dark:bg-[#0a0806] dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased overflow-hidden">
+      
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#dc6b0f_0%,transparent_55%)] opacity-0 dark:opacity-20 pointer-events-none z-0 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,#bd1c22_0%,transparent_50%)] opacity-0 dark:opacity-15 pointer-events-none z-0 transition-opacity duration-300" />
 
-      <div className="flex items-center gap-2 absolute top-8 left-8 sm:top-12 sm:left-12 z-10">
-        <div className="w-6 h-6 bg-[#F2A508] rounded-[5px] flex items-center justify-center font-black text-xs text-[#000000]">
-          N
-        </div>
-        <span className="text-base font-extrabold tracking-wide text-[#FFFFFF]">Nexovate</span>
+    
+      <div className="absolute top-6 left-6 sm:top-8 sm:left-12 z-10 select-none">
+        <img 
+          src={logoImg} 
+          alt="Nexovate Logo" 
+          className="w-28 sm:w-32 max-h-[80px] object-contain mix-blend-multiply dark:mix-blend-normal brightness-105" 
+        />
       </div>
 
+      <div className="absolute top-8 right-8 sm:top-12 sm:right-12 z-10 flex items-center gap-2.5 font-sans text-xs font-bold select-none tracking-wide transition-colors">
+        <span className={`transition-colors duration-300 ${!isDarkMode ? 'text-gray-900 font-extrabold' : 'text-gray-400'}`}>
+          Light
+        </span>
+        
+        <button
+          type="button"
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="w-16 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-full p-1 relative flex items-center shadow-inner cursor-pointer transition-all focus:outline-none"
+          title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          <div 
+            className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center transform transition-transform duration-300 relative ${
+              isDarkMode ? 'translate-x-8' : 'translate-x-0'
+            }`}
+          >
+            {isDarkMode && (
+              <div className="absolute inset-0 flex items-center justify-center p-1">
+                <div className="w-1 h-1 bg-blue-100 rounded-full absolute top-1 right-1.5" />
+                <div className="w-1.5 h-1.5 bg-blue-100 rounded-full absolute bottom-1 right-2" />
+              </div>
+            )}
+          </div>
+
+          {!isDarkMode ? (
+            <div className="absolute right-2.5 w-1 h-1 bg-white/60 rounded-full animate-pulse" />
+          ) : (
+            <div className="absolute left-2.5 flex gap-0.5">
+              <div className="w-1 h-1 bg-white/40 rounded-full" />
+              <div className="w-0.5 h-0.5 bg-white/40 rounded-full mt-1" />
+            </div>
+          )}
+        </button>
+
+        <span className={`transition-colors duration-300 ${isDarkMode ? 'text-white font-extrabold' : 'text-gray-400'}`}>
+          Dark
+        </span>
+      </div>
       <div className="w-full max-w-[440px] z-10 space-y-6">
         <div className="text-center space-y-2">
-          <h2 className="text-4xl font-extrabold text-[#FFFFFF] tracking-tight">Welcome back</h2>
-          <p className="text-xs text-gray-400 font-medium">Enter your credentials to access your dashboard.</p>
+          <h2 className="text-4xl font-extrabold text-gray-900 dark:text-[#FFFFFF] tracking-tight transition-colors duration-300">Welcome back</h2>
+          <p className="text-xs text-gray-600 dark:text-gray-400 font-medium transition-colors duration-300">Enter your credentials to access your dashboard.</p>
         </div>
-
-        <div className="bg-[#1c1a17]/40 border border-white/10 rounded-[5px] p-8 backdrop-blur-xl shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
+        <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/40 border border-black/5 dark:border-white/10 rounded-[12px] p-8 backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] transition-all duration-300">
           {error && (
-            <div className="mb-4 p-3 bg-red-950/40 border border-red-500/20 text-red-400 text-xs font-semibold rounded-[5px]">
+            <div className="mb-4 p-3 bg-red-100 dark:bg-red-950/40 border border-red-500/20 text-red-700 dark:text-red-400 text-xs font-semibold rounded-[5px]">
               {error}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="text-left space-y-1.5">
-              <label className="block text-xs font-bold text-[#FFFFFF] tracking-wide">Email Address</label>
+              <label className="block text-xs font-bold text-gray-900 dark:text-[#FFFFFF] tracking-wide transition-colors duration-300">Email Address</label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-500">
+                  <Mail size={14} strokeWidth={2.5} />
                 </span>
+                
                 <input
                   type="email"
                   placeholder="name@email.com"
-                  className="w-full bg-[#000000]/30 border border-white/10 rounded-[5px] py-3 pl-10 pr-4 text-xs text-[#FFFFFF] placeholder-gray-500 focus:outline-none focus:border-[#DC6B0F] transition-all font-medium"
+                  className="w-full bg-white dark:bg-[#000000]/30 border border-gray-300 dark:border-white/10 rounded-[5px] py-3 pl-10 pr-4 text-xs text-gray-900 dark:text-[#FFFFFF] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#DC6B0F] transition-colors duration-300 font-medium"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
@@ -87,24 +141,24 @@ const Login = () => {
 
             <div className="text-left space-y-1.5">
               <div className="flex justify-between items-center">
-                <label className="block text-xs font-bold text-[#FFFFFF] tracking-wide">Password</label>
+                <label className="block text-xs font-bold text-gray-900 dark:text-[#FFFFFF] tracking-wide transition-colors duration-300">Password</label>
                 <button
                   type="button"
                   onClick={() => navigate("/forgot-password")}
-                  className="text-[11px] font-bold text-[#F2A508] hover:underline"
+                  className="text-[11px] font-bold text-gray-900 dark:text-[#F2A508] hover:underline cursor-pointer transition-colors duration-300"
                 >
                   Forgot Password?
-                </button>              </div>
+                </button>
+              </div>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-500">
+                  <Lock size={14} strokeWidth={2.5} />
                 </span>
+
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full bg-[#000000]/30 border border-white/10 rounded-[5px] py-3 pl-10 pr-10 text-xs text-[#FFFFFF] placeholder-gray-500 focus:outline-none focus:border-[#DC6B0F] transition-all font-medium"
+                  className="w-full bg-white dark:bg-[#000000]/30 border border-gray-300 dark:border-white/10 rounded-[5px] py-3 pl-10 pr-10 text-xs text-gray-900 dark:text-[#FFFFFF] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#DC6B0F] transition-colors duration-300 font-medium"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
@@ -112,7 +166,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FFFFFF] transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-[#FFFFFF] transition-colors cursor-pointer"
                 >
                   {showPassword ? (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg>
@@ -123,13 +177,13 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-white/5"></div>
-              <span className="flex-shrink mx-4 text-[10px] text-gray-500 font-extrabold tracking-widest">OR</span>
-              <div className="flex-grow border-t border-white/5"></div>
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-black/10 dark:border-white/5 transition-colors duration-300"></div>
+              <span className="flex-shrink mx-4 text-[10px] text-gray-800 dark:text-gray-500 font-extrabold tracking-widest transition-colors duration-300">OR</span>
+              <div className="flex-grow border-t border-black/10 dark:border-white/5 transition-colors duration-300"></div>
             </div>
 
-            <button type="button" className="w-full bg-[#000000]/20 hover:bg-[#000000]/40 border border-white/10 text-gray-200 rounded-[5px] py-2.5 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2.5">
+            <button type="button" className="w-full bg-white/40 dark:bg-[#000000]/20 hover:bg-white/60 dark:hover:bg-[#000000]/40 border border-black/10 dark:border-white/10 text-gray-900 dark:text-gray-200 rounded-[5px] py-2.5 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-sm">
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#EA4335" d="M12 5.04c1.65 0 3.13.57 4.3 1.69l3.22-3.22C17.56 1.83 14.99 1 12 1 7.37 1 3.42 3.66 1.48 7.56l3.85 2.99c.9-2.7 3.42-4.51 6.67-4.51z" />
                 <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.47h6.44c-.28 1.47-1.11 2.71-2.36 3.55l3.66 2.84c2.14-1.97 3.38-4.88 3.38-8.5z" />
@@ -141,15 +195,15 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] py-3 rounded-[5px] font-extrabold text-xs tracking-wider shadow-lg shadow-orange-900/10 active:scale-[0.99] hover:brightness-105 transition-all uppercase"
+              className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] py-3 rounded-[5px] font-extrabold text-xs tracking-wider shadow-lg active:scale-[0.99] hover:brightness-105 transition-all uppercase cursor-pointer"
             >
               Login In
             </button>
           </form>
         </div>
 
-        <p className="text-xs text-center text-gray-400 font-semibold tracking-wide">
-          Don't have an account? <Link to="/register" className="text-[#F2A508] hover:underline font-bold ml-1">Sign Up</Link>
+        <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-semibold tracking-wide transition-colors duration-300">
+          Don't have an account? <Link to="/register" className="text-gray-900 dark:text-[#F2A508] hover:underline font-bold ml-1 transition-colors duration-300">Sign Up</Link>
         </p>
       </div>
     </div>

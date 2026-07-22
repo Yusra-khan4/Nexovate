@@ -1,242 +1,165 @@
-// src/services/api.js
+const BASE_URL = 'https://nexovate-soft.vercel.app';
 
-const AUTH_URL = 'https://nexovate-soft.vercel.app'; 
+const getHeaders = (includeAuth = true) => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    ...(includeAuth && token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
+
+const handleResponse = async (response, customErrorMessage) => {
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || customErrorMessage || 'An error occurred.');
+  }
+  return data;
+};
 
 export const loginUser = async (email, password) => {
-  const response = await fetch(`${AUTH_URL}/auth/login`, {
+  const response = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(false),
     body: JSON.stringify({ email, password }),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Login failed");
-  }
-  
-  return await response.json(); 
+  return handleResponse(response, 'Login failed');
 };
 
 export const registerUser = async (role, userData) => {
-  const response = await fetch(`${AUTH_URL}/api/developers`, {
+  const endpoint = role === 'client' ? '/api/client' : '/api/developers';
+
+  const payload = {
+    full_Name: userData.full_Name,
+    email_address: userData.email_address,
+    password: userData.password,
+    your_domain: role === 'developer' ? userData.your_domain : "Client Domain",
+    Tech_stack: role === 'developer' ? userData.Tech_stack : "Client Stack",
+    Linkdin_URL: userData.Linkdin_URL || "",
+    Github_URL: userData.Github_URL || ""
+  };
+
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ role, ...userData }),
+    headers: getHeaders(false),
+    body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Registration failed");
-  }
-
-  return await response.json();
+  return handleResponse(response, 'Registration failed');
 };
 
-// 1. Fetch developer by ID (GET /api/developers/id)
-export const fetchUserProfile = async () => {
-  const token = localStorage.getItem('token');
-  const developerId = localStorage.getItem('developerId');
+export const fetchUserProfile = async (role, id) => {
+  const endpoint = role === 'client' ? `/api/client/${id}` : `/api/developers/${id}`;
 
-  if (!developerId) {
-    throw new Error("No developer ID found. Please log in again.");
-  }
-
-  const response = await fetch(`${AUTH_URL}/api/developers/${developerId}`, {
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
+    headers: getHeaders(true),
   });
 
-  const responseText = await response.text();
-  
-  if (!response.ok) {
-    try {
-      const errorData = JSON.parse(responseText);
-      throw new Error(errorData.message || "Failed to load developer profile data");
-    } catch{ throw new Error('Server Error (${response.status}): The backend returned an invalid page instead of data.');
-    }
-  }
-
-const result = JSON.parse(responseText);
-
-return result.data;
+  return handleResponse(response, 'Failed to fetch profile data.');
 };
 
-export const updateUserProfile = async (profileFormData) => {
-  const token = localStorage.getItem('token');
-  const developerId = localStorage.getItem('developerId');
+const parseBudgetToNumeric = (budgetInput) => {
+  if (typeof budgetInput === 'number') return budgetInput;
+  if (!budgetInput) return 0;
+  const numbers = budgetInput.replace(/,/g, '').match(/\d+/g);
 
-  if (!developerId) {
-    throw new Error("No developer ID found. Please log in again.");
-  }
-
-  const response = await fetch(`${AUTH_URL}/api/developers/${developerId}`, {
-    method: 'PUT', 
-    headers: {
-      "Content-Type": "application/json",
-      'Authorization': `Bearer ${token}`
-    },
-     body: JSON.stringify(profileFormData),
-  });
-
-  const responseText = await response.text();
-
-  if (!response.ok) {
-    try {
-      const errorData = JSON.parse(responseText);
-      throw new Error(errorData.message || "Failed to update profile parameters");
-    } catch {
-      throw new Error(`Server Error (${response.status}): The backend crashed processing form-data data.`);
-    }
-  }
-
-  try {
-    return JSON.parse(responseText);
-  } catch {
-    return { success: true, message: "Profile updated successfully, but response formatting varied." };
-  }
-};
-export const fetchDashboardData = async (role) => {
-  const token = localStorage.getItem('token'); 
-
-  const response = await fetch(`${AUTH_URL}/${role}/dashboard`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`, 
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login'; 
-    }
-    throw new Error(`Failed to fetch ${role} data`);
-  }
-
-  return await response.json();
+  if (!numbers || numbers.length === 0) return 0;
+  const parsed = parseInt(numbers[numbers.length - 1], 10);
+  return isNaN(parsed) ? 0 : parsed;
 };
 
-export const submitProjectWizard = async (wizardData) => {
-  const token = localStorage.getItem("token");
-  console.log("Calling:", `${AUTH_URL}/api/ai/wizard`);
+export const startProject = async (projectData) => {
+  const numericBudget = parseBudgetToNumeric(projectData.budget);
 
-  const response = await fetch(`${AUTH_URL}/api/ai/wizard`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(wizardData),
-  });
-
-  const text = await response.text();
-
-  console.log("Status:", response.status);
-  console.log("Response:", text);
-
-  if (!response.ok) {
-    throw new Error(text);
-  }
-
-  return JSON.parse(text);
-};
-// ===========================
-// Scope Generation APIs
-// ===========================
-
-export const saveQuestionnaire = async (data) => {
-  const token = localStorage.getItem("token");
-
-  const response = await fetch(`${AUTH_URL}/api/ai/questionnaire`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  return response.json();
-};
-
-export const generateScope = async (questionnaireId) => {
-  const token = localStorage.getItem("token");
-
-  const response = await fetch(`${AUTH_URL}/api/ai/generate-scope`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+  const response = await fetch(`${BASE_URL}/api/ai/start-project`, {
+    method: 'POST',
+    headers: getHeaders(true),
     body: JSON.stringify({
-      questionnaireId,
+      projectName: projectData.projectName,
+      purpose: projectData.purpose,
+      projectOverview: projectData.projectOverview,
+      budget: numericBudget, 
     }),
   });
 
-  const responseText = await response.text();
+  return handleResponse(response, 'Failed to start project.');
+};
 
-  console.log("==================================");
-  console.log("Generate Scope Status:", response.status);
-  console.log("Generate Scope Response:", responseText);
-  console.log("==================================");
+export const generateScope = async (questionnaireId) => {
+  const response = await fetch(`${BASE_URL}/api/ai/generate-scope`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      questionnaireId: Number(questionnaireId)
+    }),
+  });
 
-  if (!response.ok) {
-    throw new Error(responseText);
-  }
+  return handleResponse(response, 'Failed to generate scope document.');
+};
 
-  return JSON.parse(responseText);
+export const regenerateScope = async (questionnaireId, feedback) => {
+  const response = await fetch(`${BASE_URL}/api/ai/scope/regenerate`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      questionnaireId: Number(questionnaireId),
+      feedback: feedback
+    }),
+  });
+
+  return handleResponse(response, 'Failed to regenerate scope document.');
+};
+
+export const saveScope = async (questionnaireId, scopeData) => {
+  const response = await fetch(`${BASE_URL}/api/ai/save-scope`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      questionnaireId: Number(questionnaireId),
+      success: true,
+      scope: scopeData,
+    }),
+  });
+
+  return handleResponse(response, 'Failed to save scope document.');
+};
+
+export const sendScopeToDeveloper = async (scopeId, teamLeadId = 99) => {
+  const response = await fetch(`${BASE_URL}/api/ai/scope/send-to-developer`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      scopeId: Number(scopeId),
+      developerDetails: {
+        teamLeadId: Number(teamLeadId),
+      },
+    }),
+  });
+
+  return handleResponse(response, 'Failed to send scope to developer.');
 };
 
 export const downloadScopePdf = async (scopeId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${BASE_URL}/api/ai/scope/${scopeId}/download`, {
+    method: 'GET',
+    headers: {
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    },
+  });
 
-    const token = localStorage.getItem("token");
+  if (!response.ok) {
+    throw new Error('Failed to download PDF.');
+  }
 
-    const response = await fetch(
-
-        `${AUTH_URL}/api/ai/scope/${scopeId}/download`,
-
-        {
-
-            headers: {
-
-                Authorization: `Bearer ${token}`,
-
-            },
-
-        }
-
-    );
-
-    if (!response.ok) {
-
-        throw new Error(await response.text());
-
-    }
-
-    const blob = await response.blob();
-
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-
-    a.href = url;
-
-    a.download = `Scope_${scopeId}.pdf`;
-
-    document.body.appendChild(a);
-
-    a.click();
-
-    a.remove();
-
-    window.URL.revokeObjectURL(url);
-
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Project_Scope_${scopeId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 };

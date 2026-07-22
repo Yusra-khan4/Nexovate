@@ -1,20 +1,59 @@
-import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom'; // 🔴 Native nested route handler
+import React, { useState, useEffect } from 'react';
+import { Outlet,useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import Navbar from '../components/Navbar'; 
 
-// IMPORT THE CONTEXT PROVIDER
 import { ProfileProvider } from '../context/ProfileContext'; 
 
 export default function DashboardLayout({ userName, userRole, onLogout }) {
-  // Sidebar navigation fallback engine tracking state variables
   const [currentView, setCurrentView] = useState('dashboard');
+  const location = useLocation();
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme');
+    return savedTheme ? savedTheme === 'dark' : true; 
+  });
+
+  useEffect(() => {
+    const path = location.pathname;
+    
+    if (path.includes('/projects') && !path.includes('/myprojects')) {
+      setCurrentView('projects');
+    } else if (path.includes('/my%20projects') || path.includes('/my-projects')) {
+      setCurrentView('my projects');
+    } else if (path.includes('/profile')) {
+      setCurrentView('profile');
+    } else if (path.includes('/messages')) {
+      setCurrentView('messages');
+    }else if (path.includes('/post-project')) {
+    setCurrentView('post-project');
+    } else {
+      setCurrentView('dashboard');
+    }
+  }, [location]);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (isDarkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
   return (
     <ProfileProvider>
-      <div className="flex h-screen w-screen overflow-hidden bg-[#0a0806] text-white antialiased">
-        {/* Decorative background visual ambient elements */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#dc6b0f_0%,transparent_55%)] opacity-20 pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,#bd1c22_0%,transparent_50%)] opacity-15 pointer-events-none z-0" />
+      <div className="flex h-screen w-screen overflow-hidden bg-[#FFFFFF] text-black dark:bg-[#0a0806] dark:text-white transition-colors duration-300 antialiased relative">
+        
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none hidden dark:block">
+          <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#DC6B0F] via-[#DC6B0F]/60 to-transparent blur-[120px] opacity-50" />
+          
+          <div className="absolute -bottom-[15%] -left-[10%] w-[700px] h-[700px] rounded-full bg-gradient-to-tr from-[#BD1C22] via-[#BD1C22]/50 to-transparent blur-[140px] opacity-45" />
+
+          <div className="absolute top-[25%] left-[20%] w-[550px] h-[550px] rounded-full bg-radial-gradient from-[#DC6B0F]/30 via-[#BD1C22]/10 to-transparent blur-[100px] opacity-30 mix-blend-plus-lighter" />
+        </div>
 
         <Sidebar 
           userName={userName} 
@@ -26,34 +65,9 @@ export default function DashboardLayout({ userName, userRole, onLogout }) {
 
         <main className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar relative z-10 flex flex-col">
           
-          {/* Responsive Top Navbar */}
-          <div className="w-full max-w-7xl mx-auto pt-6 px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-[#F2A508] rounded-[5px] flex items-center justify-center font-black text-xs text-black">N</span>
-              <span className="font-extrabold text-base font-['Raleway'] tracking-wide">Nexovate</span>
-            </div>
-            
-            <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-end">
-              <div className="relative flex items-center bg-white/10 border border-white/10 rounded-[5px] pl-3 pr-1 py-1 w-full max-w-xs backdrop-blur-md">
-                <span className="text-gray-400 text-xs mr-2">🔍</span>
-                <input 
-                  type="text" 
-                  placeholder="Search..." 
-                  className="bg-transparent text-xs text-white placeholder-gray-400 outline-none w-full font-['Raleway'] font-medium"
-                />
-                <button className="hidden sm:block bg-gradient-to-r from-[#F2A508] to-[#BD1C22] text-white px-4 py-1.5 rounded-[5px] text-[11px] font-bold tracking-wide shadow-md hover:brightness-105 transition-all">
-                  Search
-                </button>
-              </div>
-              <button className="p-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors relative">
-                <span className="text-sm">🔔</span>
-              </button>
-            </div>
-          </div>
+          <Navbar isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
 
-          {/* Main Content Area */}
           <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8">
-            {/* 🔴 THE FIX: Replace renderMainContent() with Outlet to load App.jsx configurations dynamically! */}
             <Outlet /> 
           </div>
         </main>
