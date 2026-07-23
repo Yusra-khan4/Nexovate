@@ -407,7 +407,7 @@ export default function ProjectCreationForm() {
         <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">
           Submit a new project idea
         </h2>
-        <p className="text-xs text-gray-400 font-medium tracking-wide">
+        <p className="text-xs text-gray-400 dark:text-gray-200 font-medium tracking-wide">
           Five quick steps - then your project report will be generated.
         </p>
       </div>
