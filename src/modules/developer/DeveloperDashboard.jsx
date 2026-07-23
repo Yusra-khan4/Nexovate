@@ -77,7 +77,7 @@ export default function DeveloperDashboard() {
         <>
           <div className="text-gray-900 dark:text-white space-y-1 text-left">
             <h2 className="text-3xl font-extrabold tracking-tight">Welcome back, Bilal!</h2>
-            <p className="text-xs text-gray-400 font-medium">Here's what's happening with your projects today.</p>
+            <p className="text-xs text-gray-200 font-medium">Here's what's happening with your projects today.</p>
           </div>
 
           {/* Top Floating Metric Row */}
@@ -113,8 +113,8 @@ export default function DeveloperDashboard() {
             </div>
           </div>
 
-          <div className="p-0 dark:p-4 rounded-[8px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md max-w-5xl w-full transition-all duration-300 overflow-hidden">
-            <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[5px] overflow-hidden pb-5 transition-colors duration-300 border border-black/5 dark:border-transparent shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-2xl">
+          <div className="p-0 dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md max-w-5xl w-full transition-all duration-300 overflow-hidden">
+            <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[5px] overflow-hidden pb-5 transition-colors duration-300 border border-black/5 dark:border-transparent shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-2xl">
               <div className="bg-white/40 dark:bg-white/80 px-6 py-4 flex justify-between items-center border-b border-black/5 dark:border-gray-200/60">
                 <h3 className="text-sm font-black text-black tracking-tight flex items-center gap-2">
                   My projects
@@ -150,8 +150,8 @@ export default function DeveloperDashboard() {
           </div>
 
           {/* BOX 3: RECENT MESSAGES MODULE CONTAINER */}
-          <div className="p-0 dark:p-4 rounded-[8px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md max-w-xl w-full transition-all duration-300 overflow-hidden">
-            <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[8px] overflow-hidden pb-5 transition-colors duration-300 border border-black/5 dark:border-transparent shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-none">
+          <div className="p-0 dark:p-6 rounded-[8px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md max-w-xl w-full transition-all duration-300 overflow-hidden">
+            <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[8px] overflow-hidden pb-5 transition-colors duration-300 border border-black/5 dark:border-transparent shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-none">
               
               <div className="bg-white/40 dark:bg-white/80 px-6 py-4 flex justify-between items-center border-b border-black/5 dark:border-gray-200/60">
                 <div className="flex items-center gap-2 text-left">

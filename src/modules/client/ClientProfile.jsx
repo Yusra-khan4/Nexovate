@@ -34,12 +34,12 @@ export default function ClientProfile() {
 
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight mb-1 text-gray-900 dark:text-white">My Profile</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Manage your personal payment information.</p>     
+        <p className="text-sm text-gray-500 dark:text-gray-200 font-medium">Manage your personal payment information.</p>     
       </div>
 
-      <div className="p-0 dark:p-8 rounded-[12px] bg-transparent dark:bg-white/10 border border-black/5 dark:border-white/10 dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-2xl w-full max-w-lg mx-auto overflow-hidden transition-all duration-300">
+      <div className="p-0 dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-black/5 dark:border-white/10 dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-2xl w-full max-w-lg mx-auto overflow-hidden transition-all duration-300">
         
-        <div className="bg-[#FFF6E9] dark:bg-white text-gray-900 dark:text-black p-8 rounded-[4px] shadow-inner border border-transparent w-full transition-colors duration-300">
+        <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-gray-900 dark:text-black p-8 rounded-[4px] shadow-inner border border-transparent w-full transition-colors duration-300">
           <form onSubmit={handleSaveChanges} className="space-y-4">
             
             <div className="flex flex-col items-center justify-center mb-6">

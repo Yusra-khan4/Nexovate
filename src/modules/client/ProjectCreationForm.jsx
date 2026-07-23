@@ -16,7 +16,6 @@ import {
   Download
 } from 'lucide-react';
 
-// Helper to convert UI budget strings to pure numbers for backend
 const parseBudgetToNumeric = (budgetInput) => {
   if (typeof budgetInput === 'number') return budgetInput;
   if (!budgetInput) return 0;
@@ -35,10 +34,9 @@ export default function ProjectCreationForm() {
   const [errorMessage, setErrorMessage] = useState('');
   
   // Database identifiers
-  const [createdProjectInfo, setCreatedProjectInfo] = useState(null); // { projectId, questionnaireId }
-  const [savedScopeRecord, setSavedScopeRecord] = useState(null);     // Holds response from save-scope ({ id: 23, ... })
-  const [generatedScope, setGeneratedScope] = useState(null);        // AI generated scope object
-
+  const [createdProjectInfo, setCreatedProjectInfo] = useState(null); 
+  const [savedScopeRecord, setSavedScopeRecord] = useState(null);     
+  const [generatedScope, setGeneratedScope] = useState(null);        
   const [dashboardView, setDashboardView] = useState('main');
   const [currentStep, setCurrentStep] = useState(1);        
   const [projectNameInput, setProjectNameInput] = useState('Bon Appetit restaurant app');
@@ -75,9 +73,6 @@ export default function ProjectCreationForm() {
     }
   };
 
-  // =========================================================================
-  // GENERATION FLOW (Start Project -> Generate Scope -> Save Scope)
-  // =========================================================================
   const handleNextStep = async () => {
     setErrorMessage('');
 
@@ -236,9 +231,6 @@ export default function ProjectCreationForm() {
     }
   };
 
-  // =========================================================================
-  // STATE VIEW 1: SAMPLE UI SCHEME VIEWER
-  // =========================================================================
   if (dashboardView === 'sample-ui') {
     const currentTheme = colorSchemes[colorIndex];
 
@@ -415,7 +407,7 @@ export default function ProjectCreationForm() {
         <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">
           Submit a new project idea
         </h2>
-        <p className="text-xs text-gray-600 font-medium tracking-wide">
+        <p className="text-xs text-gray-400 font-medium tracking-wide">
           Five quick steps - then your project report will be generated.
         </p>
       </div>

@@ -33,11 +33,11 @@ export default function ClientProjects() {
       <div className="space-y-6 max-w-5xl mx-auto pb-12 px-4 sm:px-6 font-['Raleway',sans-serif] text-left animate-fade-in select-none text-gray-900 dark:text-white transition-colors duration-300">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">My Projects</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Every idea you've submitted, from intake to delivery.</p> 
+          <p className="text-sm text-gray-500 dark:text-gray-200 font-medium">Every idea you've submitted, from intake to delivery.</p> 
         </div>
 
-        <div className="p-0 dark:p-8 rounded-[12px] bg-transparent dark:bg-white/10 border border-black/5 dark:border-white/10 dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-2xl w-full max-w-4xl mx-auto overflow-hidden transition-all duration-300">
-          <div className="bg-[#FFF6E9] dark:bg-white rounded-[4px] p-6 shadow-inner overflow-x-auto relative flex gap-3 items-stretch border border-transparent text-gray-900 dark:text-black transition-colors duration-300">
+        <div className="p-0 dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-black/5 dark:border-white/10 dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-2xl w-full max-w-4xl mx-auto overflow-hidden transition-all duration-300">
+          <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] rounded-[4px] p-6 shadow-inner overflow-x-auto relative flex gap-3 items-stretch border border-transparent text-gray-900 dark:text-black transition-colors duration-300">
             <table className="w-full text-left border-separate border-spacing-y-4 flex-1 min-w-[760px]">
               <thead>
                 <tr className="bg-gray-400/40 dark:bg-gray-400 text-black dark:text-black uppercase font-['Raleway',sans-serif] font-black text-[12px] tracking-wider">

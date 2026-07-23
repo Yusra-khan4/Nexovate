@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-// 🎯 IMPORTING THE ICONS FROM LUCIDE
 import { Bell, Search } from 'lucide-react';
 
 export default function Navbar({ isDarkMode, setIsDarkMode }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close the notification panel if the user clicks outside of it
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -17,7 +15,6 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Mock list elements built from schema definitions
   const notificationsList = [
     { id: 1, text: "A developer is interested in building your project", time: "today" },
     { id: 2, text: "Bilal ahmed sent you a message", time: "12:30 PM" },
@@ -28,63 +25,44 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
   return (
     <header className="w-full h-24 flex items-center justify-between px-10 shrink-0 z-30 bg-transparent relative">
       
-      {/* 🟢 Brand Watermark Layout Alignment
-      <div className="flex items-center gap-2 z-10 select-none">
-        <div className="w-6 h-6 bg-[#F2A508] rounded-[5px] flex items-center justify-center font-black text-xs text-[#000000]">
-          N
-        </div>
-        <span className="text-base font-extrabold tracking-wide text-gray-900 dark:text-[#FFFFFF] transition-colors duration-300">
-          Nexovate
-        </span>
-      </div> */}
-
-      {/* Actions and Search Interface Deck Layout */}
       <div className="flex items-center gap-5 ml-auto relative">
         
-        {/* 🎨 SEARCH BAR CONTAINER */}
-        <div className="bg-[#FFFFFF] dark:bg-white/10 rounded-full pl-4 pr-1.5 py-1.5 flex items-center max-w-md shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-lg border border-black/[0.04] dark:border-white/20 transition-all duration-300">
+        <div className="bg-[#FFF6E9] dark:bg-[#e0d8cf]/80 backdrop-blur-md rounded-[16px] pl-4 pr-1.5 py-1.5 flex items-center w-[460px] max-w-lg shadow-[0_10px_25px_rgba(0,0,0,0.25)] border border-white/20 transition-all duration-300">
           
-          <span className="text-gray-400 dark:text-gray-400 text-xs mr-2 shrink-0">
-            <Search size={14} strokeWidth={2.5} />
+          <span className="text-gray-500 text-sm mr-2.5 shrink-0 flex items-center">
+            <Search size={16} strokeWidth={2.5} className="text-[#5a5550]" />
           </span>
           
           <input 
             type="text" 
             placeholder="Search projects, tasks, or clients..." 
-            className="bg-transparent text-black dark:text-white text-xs font-medium placeholder-gray-400 dark:placeholder-gray-500 outline-none w-64 pr-2"
+            className="bg-transparent text-[#2c2825] text-xs font-semibold placeholder-[#7a746e] outline-none w-full pr-2"
           />
 
-          {/* 🎨 THE SPLIT DIVIDER */}
-          <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 mx-1 shrink-0" />
+          <div className="h-5 w-[1px] bg-black/10 mx-2 shrink-0" />
 
-          <button className="bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold text-xs px-5 py-2 rounded-full shadow-md hover:brightness-105 active:scale-[0.98] transition-all shrink-0 cursor-pointer">
+          <button className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs px-6 py-2 rounded-[10px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.35)] hover:brightness-110 active:scale-[0.98] transition-all shrink-0 cursor-pointer tracking-wide border border-white/10">
             Search
           </button>
         </div>
 
-        {/* ========================================================================= */}
-        {/* 🎯 THE THEME SWITCH TOGGLE BUTTON (image_d620e7.png Accurate Implementation) */}
-        {/* ========================================================================= */}
+      
         <div className="flex items-center gap-2.5 font-sans text-xs font-bold select-none tracking-wide transition-colors">
-          {/* Light Label Toggle Trigger */}
           <span className={`transition-colors duration-300 ${!isDarkMode ? 'text-gray-900 font-extrabold' : 'text-gray-400'}`}>
             Light
           </span>
           
-          {/* Sliding Pill track background container */}
           <button
             type="button"
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="w-16 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-full p-1 relative flex items-center shadow-inner cursor-pointer transition-all focus:outline-none"
+            className="w-16 h-8 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] rounded-full p-1 relative flex items-center shadow-inner cursor-pointer transition-all focus:outline-none"
             title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >
-            {/* Toggle Sliding Circle Ball Node */}
             <div 
               className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center transform transition-transform duration-300 relative ${
                 isDarkMode ? 'translate-x-8' : 'translate-x-0'
               }`}
             >
-              {/* Dynamic Little craters inside the sphere canvas node for style accents */}
               {isDarkMode && (
                 <div className="absolute inset-0 flex items-center justify-center p-1">
                   <div className="w-1 h-1 bg-blue-100 rounded-full absolute top-1 right-1.5" />
@@ -93,7 +71,6 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
               )}
             </div>
 
-            {/* Little ambient spark stars overlay inside track strip background channel */}
             {!isDarkMode ? (
               <div className="absolute right-2.5 w-1 h-1 bg-white/60 rounded-full animate-pulse" />
             ) : (
@@ -104,13 +81,11 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
             )}
           </button>
 
-          {/* Dark Label Toggle Trigger */}
           <span className={`transition-colors duration-300 ${isDarkMode ? 'text-white font-extrabold' : 'text-gray-400'}`}>
             Dark
           </span>
         </div>
 
-        {/* 🔔 Standalone Glow Bell Alert (Lucide Version) */}
         <div ref={dropdownRef} className="relative">
           <button 
             onClick={() => setShowNotifications(!showNotifications)}
@@ -125,7 +100,7 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
           </button>
 
           {/* ========================================================================= */}
-          {/* 🎨 DUAL-THEME POPUP DECK: Maps layout specifications                     */}
+          {/* 🎨 DUAL-THEME POPUP DECK                                                 */}
           {/* ========================================================================= */}
           {showNotifications && (
             <div className="absolute right-0 top-12 w-[380px] bg-[#FFF6E9] dark:bg-[#FFFFFF]/95 border border-black/5 dark:border-white/10 rounded-[5px] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] z-50 text-left transition-all duration-300 animate-fade-in flex gap-4">

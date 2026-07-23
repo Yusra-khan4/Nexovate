@@ -1,17 +1,13 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
 @layer utilities {
-  /* Hide scrollbar for Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  /* Hide scrollbar for IE, Edge and Firefox */
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
   }
-
-  /* Elegant custom dark scrollbar for the main content area */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
@@ -25,4 +21,18 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.25);
   }
+}
+
+body {
+  background-color: #ffffff;
+  background-image: none;
+}
+
+html.dark body {
+  background-image: url('./assets/background.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; 
+  background-color: #0a0806;
 }

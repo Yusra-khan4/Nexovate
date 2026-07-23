@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet,useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar'; 
 
@@ -25,8 +25,8 @@ export default function DashboardLayout({ userName, userRole, onLogout }) {
       setCurrentView('profile');
     } else if (path.includes('/messages')) {
       setCurrentView('messages');
-    }else if (path.includes('/post-project')) {
-    setCurrentView('post-project');
+    } else if (path.includes('/post-project')) {
+      setCurrentView('post-project');
     } else {
       setCurrentView('dashboard');
     }
@@ -45,16 +45,9 @@ export default function DashboardLayout({ userName, userRole, onLogout }) {
 
   return (
     <ProfileProvider>
-      <div className="flex h-screen w-screen overflow-hidden bg-[#FFFFFF] text-black dark:bg-[#0a0806] dark:text-white transition-colors duration-300 antialiased relative">
+      {/* 🎯 FIX: Set main container to bg-transparent so index.css body background shines through */}
+      <div className="flex h-screen w-screen overflow-hidden bg-transparent text-black dark:text-white transition-colors duration-300 antialiased relative">
         
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none hidden dark:block">
-          <div className="absolute -top-[10%] -right-[10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#DC6B0F] via-[#DC6B0F]/60 to-transparent blur-[120px] opacity-50" />
-          
-          <div className="absolute -bottom-[15%] -left-[10%] w-[700px] h-[700px] rounded-full bg-gradient-to-tr from-[#BD1C22] via-[#BD1C22]/50 to-transparent blur-[140px] opacity-45" />
-
-          <div className="absolute top-[25%] left-[20%] w-[550px] h-[550px] rounded-full bg-radial-gradient from-[#DC6B0F]/30 via-[#BD1C22]/10 to-transparent blur-[100px] opacity-30 mix-blend-plus-lighter" />
-        </div>
-
         <Sidebar 
           userName={userName} 
           userRole={userRole} 
@@ -64,7 +57,6 @@ export default function DashboardLayout({ userName, userRole, onLogout }) {
         />
 
         <main className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar relative z-10 flex flex-col">
-          
           <Navbar isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
 
           <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8">

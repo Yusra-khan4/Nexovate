@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react'; 
-import logoImg from '../assets/NEXOVATE WHITE BG.png';
+import logoImg from '../assets/NEXOVATE_WHITE_BG.png';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -30,25 +30,25 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex w-screen h-screen overflow-hidden bg-[#FFFFFF] text-gray-900 dark:bg-[#0a0806] dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased relative items-center justify-center">
+    /* 🎯 FIX: Changed solid bg classes to bg-transparent so index.css body background shows through */
+    <div className="flex w-screen h-screen overflow-hidden bg-transparent text-gray-900 dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased relative items-center justify-center">
       
-      {/* Decorative ambient gradients */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#dc6b0f_0%,transparent_55%)] opacity-0 dark:opacity-20 pointer-events-none z-0 transition-opacity duration-300" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,#bd1c22_0%,transparent_50%)] opacity-0 dark:opacity-15 pointer-events-none z-0 transition-opacity duration-300" />
-
+      {/* TOP LEFT LOGO */}
       <div className="absolute top-6 left-6 sm:top-8 sm:left-12 z-10 select-none">
-              <img 
-                src={logoImg} 
-                alt="Nexovate Logo" 
-                className="w-28 sm:w-32 max-h-[80px] object-contain mix-blend-multiply dark:mix-blend-normal brightness-105" 
-              />
-            </div>
+        <img 
+                              src={logoImg} 
+                              alt="Nexovate Logo" 
+                              className="w-28 max-h-[80px] object-contain brightness-105" 
+                            />
+      </div>
+
+      {/* TOP RIGHT THEME TOGGLE */}
       <div className="absolute top-8 right-8 sm:top-12 sm:right-12 z-20 flex items-center gap-2.5 font-sans text-xs font-bold select-none tracking-wide transition-colors">
-        {/* Light Label Toggle Trigger */}
         <span className={`transition-colors duration-300 ${!isDarkMode ? 'text-gray-900 font-extrabold' : 'text-gray-400'}`}>
           Light
         </span>
-                <button
+        
+        <button
           type="button"
           onClick={() => setIsDarkMode(!isDarkMode)}
           className="w-16 h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-full p-1 relative flex items-center shadow-inner cursor-pointer transition-all focus:outline-none"
@@ -82,7 +82,8 @@ export default function ForgotPassword() {
         </span>
       </div>
 
-      <div className="w-full max-w-[400px] bg-[#FFF6E9] dark:bg-[#1c1a17]/40 border border-black/5 dark:border-white/10 p-8 rounded-[12px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] z-10 transition-all duration-300">
+      {/* RESET CARD CONTAINER */}
+      <div className="w-full max-w-[400px] bg-[#FFF6E9] dark:bg-[#1c1a17]/50 border border-black/5 dark:border-white/10 p-8 rounded-[12px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] backdrop-blur-md z-10 transition-all duration-300">
         
         <div className="text-center space-y-2 mb-8">
           <h2 className="text-2xl font-extrabold text-gray-900 dark:text-[#FFFFFF] tracking-tight transition-colors duration-300">Reset Password</h2>
@@ -113,6 +114,7 @@ export default function ForgotPassword() {
 
         <div className="mt-6 text-center">
           <button 
+            type="button"
             onClick={() => navigate("/login")}
             className="text-[11px] text-gray-900 dark:text-gray-400 font-bold hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer transition-colors duration-300"
           >

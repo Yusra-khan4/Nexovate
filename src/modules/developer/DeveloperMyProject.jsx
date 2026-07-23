@@ -39,7 +39,7 @@ export default function ClientProjects() {
       <div className="space-y-6 max-w-5xl mx-auto pb-12 px-4 sm:px-6 font-['Raleway',sans-serif] text-left animate-fade-in select-none text-gray-900 dark:text-white transition-colors duration-300">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">My Projects</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Every idea you've submitted, from intake to delivery.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-200 font-medium">Every idea you've submitted, from intake to delivery.</p>
         </div>
 
         <div className="p-0 dark:p-6 rounded-[16px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-xl transition-all duration-300 w-full max-w-4xl mx-auto overflow-hidden">
@@ -113,8 +113,8 @@ export default function ClientProjects() {
       </div>
 
       {/* SECTION 1: INTERACTIVE PROGRESS STEPPER CARD */}
-      <div className="p-0 dark:p-4 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md shadow-none dark:shadow-2xl transition-all duration-300">
-        <div className="bg-[#FFF6E9] dark:bg-white text-black p-6 rounded-[12px] border border-black/5 dark:border-transparent shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-none text-center">
+      <div className="p-0 dark:p-4 rounded-[8px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md shadow-none dark:shadow-2xl transition-all duration-300">
+        <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black p-6 rounded-[8px] border border-black/5 dark:border-transparent shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-none text-center">
           <h3 className="text-sm font-black text-black tracking-tight text-left mb-6">Progress stepper</h3>
           
           <div className="relative max-w-2xl mx-auto px-4 py-2">

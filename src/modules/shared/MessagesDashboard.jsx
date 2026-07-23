@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-// 🎯 MODERN REPLACEMENTS: LINKING LUCIDE VECTOR GRAPHICS FOR DUAL-THEME COMPATIBILITY
 import { MessageSquare, Paperclip, Smile, Send } from 'lucide-react';
 
 export default function MessagesDashboard({ userName, userRole }) {
-  // Mock conversations list matching your mockup
   const chats = [
     { id: 1, name: 'Blue Sky Travel', subtitle: 'Zain: The latest build looks...', icon: '🛫', time: 'Now', active: true, unread: true },
     { id: 2, name: 'Bon Appetit', subtitle: 'Can we discuss the menu animation?', icon: '🍴', time: '2h ago', active: false },
@@ -13,17 +11,14 @@ export default function MessagesDashboard({ userName, userRole }) {
   return (
     <div className="max-w-5xl mx-auto pb-6 px-4 sm:px-6 font-['Raleway',sans-serif] flex flex-col h-[calc(100vh-160px)] select-none transition-colors duration-300">
       
-      {/* Dynamic Context Header */}
       <div className="mb-6 text-left">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight transition-colors duration-300">Blue Sky Travel</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium transition-colors duration-300">Booking Engine Redesign</p>
+        <p className="text-sm text-gray-500 dark:text-gray-200 font-medium transition-colors duration-300">Booking Engine Redesign</p>
       </div>
 
-      {/* Main Interface Grid Split */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 min-h-0">
         
-        {/* 🎯 PANEL 1: ACTIVE CHATS SIDEBAR MODULE */}
-        <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/50 border border-black/5 dark:border-white/10 p-0 dark:p-4 rounded-[8px] dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-2xl flex flex-col h-full overflow-hidden transition-all duration-300">
+        <div className="bg-[#FFF6E9] dark:bg-white/10 border border-black/5 dark:border-white/15 p-0 dark:p-6 rounded-[8px] dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-2xl flex flex-col h-full overflow-hidden transition-all duration-300">
           <div className="bg-white/40 dark:bg-white rounded-none dark:rounded-t-[5px] px-5 py-3.5 border-b border-black/5 dark:border-gray-200 flex items-center gap-2 text-gray-900 dark:text-black">
             <MessageSquare size={15} strokeWidth={2.5} />
             <h3 className="text-sm font-black tracking-wide">Active Chats</h3>
@@ -54,10 +49,8 @@ export default function MessagesDashboard({ userName, userRole }) {
           </div>
         </div>
 
-        {/* 🎯 PANEL 2: INTERACTIVE CHAT STREAM MODULE */}
-        <div className="md:col-span-2 bg-[#FFF6E9] dark:bg-[#1c1a17]/50 border border-black/5 dark:border-white/10 p-0 dark:p-4 rounded-[8px] dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-2xl flex flex-col h-full overflow-hidden transition-all duration-300">
+       <div className="md:col-span-2 bg-[#FFF6E9] dark:bg-white/10 border border-black/5 dark:border-white/15 p-0 dark:p-6 rounded-[8px] dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.15)] dark:shadow-2xl flex flex-col h-full overflow-hidden transition-all duration-300">
           
-          {/* Scrollable Message Box Content */}
           <div className="p-5 flex-1 overflow-y-auto text-xs space-y-4 flex flex-col text-black bg-transparent dark:bg-[#d9d5ce]">
             
             <div className="self-center my-1">
@@ -66,7 +59,6 @@ export default function MessagesDashboard({ userName, userRole }) {
               </span>
             </div>
 
-            {/* Inbound Message Row */}
             <div className="flex gap-3 max-w-[85%] text-left">
               <div className="w-7 h-7 rounded-full overflow-hidden border border-black/20 shrink-0 mt-1">
                 <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="Zain" className="w-full h-full object-cover" />

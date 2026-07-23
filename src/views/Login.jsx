@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { loginUser } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { Sun, Moon, Mail, Lock } from 'lucide-react';
-import logoImg from '../assets/NEXOVATE WHITE BG.png';
+import logoImg from '../assets/NEXOVATE_WHITE_BG.png';
+
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -56,20 +57,18 @@ const Login = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 relative w-full bg-[#FFFFFF] text-gray-900 dark:bg-[#0a0806] dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased overflow-hidden">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 relative w-full bg-transparent text-gray-900 dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased overflow-hidden">
       
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#dc6b0f_0%,transparent_55%)] opacity-0 dark:opacity-20 pointer-events-none z-0 transition-opacity duration-300" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_80%,#bd1c22_0%,transparent_50%)] opacity-0 dark:opacity-15 pointer-events-none z-0 transition-opacity duration-300" />
-
-    
+      {/* TOP LEFT LOGO */}
       <div className="absolute top-6 left-6 sm:top-8 sm:left-12 z-10 select-none">
-        <img 
-          src={logoImg} 
-          alt="Nexovate Logo" 
-          className="w-28 sm:w-32 max-h-[80px] object-contain mix-blend-multiply dark:mix-blend-normal brightness-105" 
-        />
+                    <img 
+                      src={logoImg} 
+                      alt="Nexovate Logo" 
+                      className="w-28 max-h-[80px] object-contain brightness-105" 
+                    />
       </div>
 
+      {/* TOP RIGHT THEME TOGGLE */}
       <div className="absolute top-8 right-8 sm:top-12 sm:right-12 z-10 flex items-center gap-2.5 font-sans text-xs font-bold select-none tracking-wide transition-colors">
         <span className={`transition-colors duration-300 ${!isDarkMode ? 'text-gray-900 font-extrabold' : 'text-gray-400'}`}>
           Light
@@ -108,12 +107,15 @@ const Login = () => {
           Dark
         </span>
       </div>
+
+      {/* LOGIN CARD CONTAINER */}
       <div className="w-full max-w-[440px] z-10 space-y-6">
         <div className="text-center space-y-2">
           <h2 className="text-4xl font-extrabold text-gray-900 dark:text-[#FFFFFF] tracking-tight transition-colors duration-300">Welcome back</h2>
           <p className="text-xs text-gray-600 dark:text-gray-400 font-medium transition-colors duration-300">Enter your credentials to access your dashboard.</p>
         </div>
-        <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/40 border border-black/5 dark:border-white/10 rounded-[12px] p-8 backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] transition-all duration-300">
+
+        <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/50 border border-black/5 dark:border-white/10 rounded-[12px] p-8 backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.6)] transition-all duration-300">
           {error && (
             <div className="mb-4 p-3 bg-red-100 dark:bg-red-950/40 border border-red-500/20 text-red-700 dark:text-red-400 text-xs font-semibold rounded-[5px]">
               {error}

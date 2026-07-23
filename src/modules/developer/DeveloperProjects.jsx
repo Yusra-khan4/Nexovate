@@ -1,5 +1,4 @@
 import React from 'react';
-// 🎯 MODERN REPLACEMENTS: DUAL-THEME COMPATIBLE VECTOR GRAPHICS
 import { FileText, SendHorizontal } from 'lucide-react';
 
 export default function DeveloperProjects() {
@@ -47,7 +46,7 @@ export default function DeveloperProjects() {
       {/* Page Title Section */}
       <div className="mb-8 text-left">
         <h2 className="text-3xl font-extrabold text-gray-900 dark:text-[#FFFFFF] tracking-tight">Open Projects</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">
+        <p className="text-xs text-gray-500 dark:text-gray-200 font-medium mt-1">
           Discover new projects and connect with clients to bring their ideas to life.
         </p>
       </div>
@@ -55,13 +54,12 @@ export default function DeveloperProjects() {
       {/* Grid wrapper constrained max width per card to maintain the pixel-perfect design ratio */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
         {projectsData.map((project) => (
-          /* 🎯 OUTER CARD CANVAS FRAME: Stripped border entirely in light theme, keeps premium layout ratios */
           <div 
             key={project.id} 
-            className="p-0 dark:p-4 bg-transparent dark:bg-[#1c1a17]/40 border border-transparent dark:border-white/10 rounded-[20px] dark:backdrop-blur-xl dark:shadow-[0_24px_60px_rgba(0,0,0,0.5)] flex flex-col justify-between transition-all duration-300 w-full max-w-[420px] mx-auto"
+            className="p-0 dark:p-6 bg-transparent dark:bg-white/10 border border-transparent dark:border-white/15 rounded-[12px] dark:backdrop-blur-xl dark:shadow-[0_24px_60px_rgba(0,0,0,0.5)] flex flex-col justify-between transition-all duration-300 w-full max-w-[420px] mx-auto"
           >
             {/* 🎯 INNER CONTAINER PLATE: Oatmeal Cream (#FFF6E9) for Light | Custom Ivory Tan (#f3eedf) for Dark */}
-            <div className="bg-[#FFF6E9] dark:bg-[#f3eedf] rounded-[12px] p-6 text-black flex-1 flex flex-col justify-between border border-black/5 dark:border-transparent shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-none transition-all duration-300">
+            <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] rounded-[12px] p-6 text-black flex-1 flex flex-col justify-between border border-black/5 dark:border-transparent shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-none transition-all duration-300">
               
               {/* Header Details */}
               <div className="text-left">

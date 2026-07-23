@@ -10,7 +10,8 @@ import {
   ChevronLeft
 } from 'lucide-react';
 
-import logoImg from '../assets/NEXOVATE WHITE BG.png';
+import logoImg from '../assets/NEXOVATE_WHITE_BG.png';
+
 export default function Sidebar({ userName, userRole, currentView, onViewChange, onLogout }) {
   const navigate = useNavigate();
   
@@ -65,15 +66,16 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
   return (
     <div className="h-screen w-[262px] dark:w-[260px] p-[2px] dark:p-0 bg-gradient-to-b from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] dark:bg-none rounded-tr-[42px] rounded-br-[42px] z-20 shadow-[10px_0_50px_rgba(0,0,0,0.06)] dark:shadow-[10px_0_50px_rgba(0,0,0,0.3)] transition-all duration-300">
       
-      <aside className="w-full h-full bg-[#fcf7ee] dark:bg-[#13110f]/40 backdrop-blur-xl border-r border-black/5 dark:border-white/10 flex flex-col p-5 shrink-0 rounded-tr-[40px] rounded-br-[40px] overflow-hidden transition-colors duration-300">
+      <aside className="w-full h-full bg-[#FFF6E9] dark:bg-[#13110f]/20 backdrop-blur-2xl border-r border-black/5 dark:border-white/20 flex flex-col p-5 shrink-0 rounded-tr-[40px] rounded-br-[40px] overflow-hidden transition-colors duration-300">
         
         <div className="flex flex-col shrink-0 relative pt-2">
           
-<div className="w-full flex flex-col items-center justify-center py-2 select-none">
-              <img 
+          <div className="w-full flex flex-col items-center justify-center py-2 select-none">
+            <img 
               src={logoImg} 
               alt="Nexovate Logo" 
-className="w-28 max-h-[80px] object-contain mix-blend-multiply dark:mix-blend-normal brightness-105"            />
+              className="w-28 max-h-[80px] object-contain brightness-105" 
+            />
           </div>
 
           <div className="absolute top-2 left-0">
@@ -128,8 +130,6 @@ className="w-28 max-h-[80px] object-contain mix-blend-multiply dark:mix-blend-no
         </nav>
 
         <div className="shrink-0 mt-auto space-y-4 bg-transparent">
-          
-          {/* 🎯 CHANGED LOGIC: Only show "+ New Project" if it is a client AND they are not on the dashboard view */}
           {isClient && currentView !== 'dashboard' && (
             <div className="pb-4 border-b border-black/30 dark:border-white/10">
               <button 
