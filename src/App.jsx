@@ -16,9 +16,10 @@ import ClientDevelopers from './modules/client/ClientDevelopers';
 import ClientSavedProjects from './modules/client/ClientSavedProjects';
 import ClientProfile from './modules/client/ClientProfile';
 import DeveloperMyProject from './modules/developer/DeveloperMyProject';
-
-
-
+import DeveloperApproval from './modules/admin/DeveloperApproval';
+import ProjectApproval from './modules/admin/ProjectApproval';
+import ChatMonitor from './modules/admin/ChatMonitor';
+import PaymentHistory from './modules/admin/PaymentHistory';
 
 function App() {
   return (
@@ -55,9 +56,16 @@ function App() {
 
         <Route path="/admin" element={<DashboardLayout userRole="admin" userName="Admin" />}>
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="developer-approval" element={<DeveloperApproval />} />
+          <Route path="project-approval" element={<ProjectApproval />} />
+          <Route path="chat-monitor" element={<ChatMonitor />} />
+          <Route path="payment-history" element={<PaymentHistory />} />
+
+
+
+
         </Route>
         
-        {/* Wildcard Fallback */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

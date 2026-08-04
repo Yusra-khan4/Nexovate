@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, SendHorizontal } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 export default function DeveloperProjects() {
   const projectsData = [
@@ -42,58 +42,58 @@ export default function DeveloperProjects() {
   ];
 
   return (
-    <div className="w-full font-['Raleway',sans-serif] px-2 sm:px-4 text-gray-900 dark:text-white transition-colors duration-300">
+    <div className="w-full font-['Raleway',sans-serif] px-3 sm:px-4 pb-8 text-gray-900 dark:text-white transition-colors duration-300">
       {/* Page Title Section */}
-      <div className="mb-8 text-left">
-        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-[#FFFFFF] tracking-tight">Open Projects</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-200 font-medium mt-1">
+      <div className="mb-4 sm:mb-5 text-left space-y-0.5 max-w-4xl mx-auto">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[#FFFFFF] tracking-tight">Open Projects</h2>
+        <p className="text-[11px] text-gray-500 dark:text-gray-200 font-medium">
           Discover new projects and connect with clients to bring their ideas to life.
         </p>
       </div>
 
-      {/* Grid wrapper constrained max width per card to maintain the pixel-perfect design ratio */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+      {/* Grid Wrapper */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 max-w-4xl mx-auto items-stretch">
         {projectsData.map((project) => (
           <div 
             key={project.id} 
-            className="p-0 dark:p-6 bg-transparent dark:bg-white/10 border border-transparent dark:border-white/15 rounded-[12px] dark:backdrop-blur-xl dark:shadow-[0_24px_60px_rgba(0,0,0,0.5)] flex flex-col justify-between transition-all duration-300 w-full max-w-[420px] mx-auto"
+            className="p-0 dark:p-2 sm:dark:p-6 bg-transparent dark:bg-white/10 border border-transparent dark:border-white/15 rounded-[10px] dark:backdrop-blur-xl dark:shadow-xl flex flex-col justify-between transition-all duration-300 w-full max-w-[360px] mx-auto"
           >
-            {/* 🎯 INNER CONTAINER PLATE: Oatmeal Cream (#FFF6E9) for Light | Custom Ivory Tan (#f3eedf) for Dark */}
-            <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] rounded-[12px] p-6 text-black flex-1 flex flex-col justify-between border border-black/5 dark:border-transparent shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] dark:shadow-none transition-all duration-300">
+            {/* Inner Container Plate */}
+            <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] rounded-[8px] sm:rounded-[6px] p-3 sm:p-4 text-black flex-1 flex flex-col justify-between border border-black/5 dark:border-transparent shadow-xs dark:shadow-none transition-all duration-300">
               
               {/* Header Details */}
-              <div className="text-left">
-                <h3 className="text-base font-black tracking-tight leading-snug text-black">{project.title}</h3>
-                <p className="text-[10px] text-gray-600 font-bold mt-0.5">
+              <div className="text-left space-y-1">
+                <h3 className="text-xs sm:text-sm font-bold tracking-tight leading-snug text-black">{project.title}</h3>
+                <p className="text-[9px] text-gray-600 font-bold">
                   Client: {project.client} · <span className="font-medium text-gray-500">{project.postedTime}</span>
                 </p>
                 
                 {/* Description Block */}
-                <p className="text-xs text-gray-700 font-medium mt-5 leading-relaxed min-h-[56px]">
+                <p className="text-[11px] text-gray-700 font-medium pt-2 sm:pt-2.5 leading-snug sm:min-h-[44px]">
                   {project.description}
                 </p>
               </div>
 
               {/* Parameters Meta and Action Handles */}
-              <div className="mt-6 pt-4 border-t border-black/5">
-                <div className="flex gap-12 mb-5 text-left">
+              <div className="mt-3.5 sm:mt-4 pt-2.5 sm:pt-3 border-t border-black/10 dark:border-black/5">
+                <div className="flex gap-6 sm:gap-8 mb-3 sm:mb-3.5 text-left">
                   <div>
-                    <span className="block text-[9px] font-black tracking-wider text-gray-500 uppercase">Budget</span>
-                    <span className="text-xs font-extrabold text-black mt-0.5 block">{project.budget}</span>
+                    <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Budget</span>
+                    <span className="text-xs font-bold text-black mt-0.5 block">{project.budget}</span>
                   </div>
                   <div>
-                    <span className="block text-[9px] font-black tracking-wider text-gray-500 uppercase">Timeline</span>
-                    <span className="text-xs font-extrabold text-black mt-0.5 block">{project.timeline}</span>
+                    <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Timeline</span>
+                    <span className="text-xs font-bold text-black mt-0.5 block">{project.timeline}</span>
                   </div>
                 </div>
 
                 {/* Vector Button Groups */}
-                <div className="flex items-center gap-3 w-full">
-                  <button className="flex-1 bg-white border border-gray-300 rounded-[5px] py-2 px-3 text-[10px] font-extrabold text-black shadow-sm hover:bg-gray-50 flex items-center justify-center gap-1.5 transition-all cursor-pointer">
-                    <FileText size={12} strokeWidth={2.5} className="text-black" /> Download Report
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 w-full">
+                  <button type="button" className="w-full sm:flex-1 bg-white border border-gray-300 rounded-[4px] py-1.5 px-2.5 text-[10px] font-bold text-black shadow-xs hover:bg-gray-50 active:scale-[0.99] flex items-center justify-center gap-1 transition-all cursor-pointer">
+                    <FileText size={12} strokeWidth={2.2} className="text-black shrink-0" /> Download Report
                   </button>
-                  <button className="flex-1 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold py-2 px-3 rounded-[5px] text-[10px] shadow-md hover:brightness-105 active:scale-[0.98] flex items-center justify-center gap-1.5 transition-all cursor-pointer">
-                    Apply 
+                  <button type="button" className="w-full sm:flex-1 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold py-1.5 px-2.5 rounded-[4px] text-[10px] shadow-xs hover:brightness-105 active:scale-[0.98] flex items-center justify-center gap-1 transition-all cursor-pointer">
+                    Apply
                   </button>
                 </div>
               </div>

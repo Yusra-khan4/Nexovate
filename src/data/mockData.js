@@ -22,20 +22,38 @@ export const developerDashboardData = {
 };
 
 export const adminDashboardData = {
-  profile: { name: "System Admin", type: "Super Administrator" },
-  stats: { totalUsers: 342, pendingVerifications: 14, platformFeesCollected: "890k pkr" },
-  systemAlerts: [
+  profile: { 
+    name: "Hassan Ahmed", 
+    role: "Admin",
+    type: "Master Console"
+  },
+  stats: {
+    activeProjects: "03",
+    pendingApproval: "03",
+    paymentsHeld: "220k",
+    totalDevelopers: "23",
+    totalCustomers: "20",
+    totalProjects: "12"
+  },
+  projectsAwaitingApproval: [
     { 
-      type: "Dispute", 
-      user: "Client #21", 
-      message: "Dispute: Milestone locked balance payout review request", 
-      severity: "High" 
+      id: 1, 
+      title: "Bon appetit", 
+      submittedBy: "Zara Ahmed", 
+      budget: "PKR 90,000" 
     },
     { 
-      type: "Verification", 
-      user: "Dev #99", 
-      message: "New bank account documentation uploaded", 
-      severity: "Normal" 
+      id: 2, 
+      title: "Ecommerce Store", 
+      submittedBy: "Sara Ahmed", 
+      budget: "PKR 90,000" 
+    },
+    { 
+      id: 3, 
+      title: "TN-HRMS", 
+      submittedBy: "Zara Ahmed", 
+      budget: "PKR 90,000" 
     }
-  ]
+  ],
+  
 };

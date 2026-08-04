@@ -23,27 +23,23 @@ export default function ClientProfile() {
   const inputStyles = "w-full bg-white border border-gray-300 rounded-[5px] py-2 px-3 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#DC6B0F] transition-colors duration-200 font-medium shadow-sm";
 
   return (
-    <div className="w-full max-w-4xl mx-auto pb-12 px-4 sm:px-6 font-['Raleway',sans-serif] select-none text-left text-gray-900 dark:text-white transition-colors duration-300">
+    <div className="w-full max-w-4xl mx-auto pb-12 px-3 sm:px-6 font-['Raleway',sans-serif] select-none text-left text-gray-900 dark:text-white transition-colors duration-300">
       
-      {/* <button 
-        onClick={() => navigate(-1)}
-        className="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white mb-6 flex items-center gap-1.5 transition-colors cursor-pointer"
-      >
-        <ArrowLeft size={13} strokeWidth={2.5} /> Back to Dashboard
-      </button> */}
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight mb-1 text-gray-900 dark:text-white">My Profile</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-200 font-medium">Manage your personal payment information.</p>     
+      {/* HEADER */}
+      <div className="mb-6 sm:mb-8 space-y-1">
+        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">My Profile</h1>
+        <p className="text-[11px] sm:text-sm text-gray-500 dark:text-gray-200 font-medium">Manage your personal payment information.</p>     
       </div>
 
-      <div className="p-0 dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-black/5 dark:border-white/10 dark:backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.25)] dark:shadow-2xl w-full max-w-lg mx-auto overflow-hidden transition-all duration-300">
+      {/* CARD CONTAINER */}
+      <div className="p-0 dark:p-4 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md shadow-none dark:shadow-2xl w-full max-w-lg mx-auto overflow-hidden transition-all duration-300">
         
-        <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-gray-900 dark:text-black p-8 rounded-[4px] shadow-inner border border-transparent w-full transition-colors duration-300">
-          <form onSubmit={handleSaveChanges} className="space-y-4">
+        <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-gray-900 dark:text-black p-4 sm:p-8 rounded-[8px] sm:rounded-[4px] shadow-inner border border-black/5 sm:border-transparent w-full transition-colors duration-300">
+          <form onSubmit={handleSaveChanges} className="space-y-3.5 sm:space-y-4">
             
-            <div className="flex flex-col items-center justify-center mb-6">
-              <div className="w-12 h-12 rounded-full bg-[#1e40af] text-white flex items-center justify-center text-sm font-black shadow-md mb-1.5">
+            {/* AVATAR & EDIT LINK */}
+            <div className="flex flex-col items-center justify-center mb-4 sm:mb-6">
+              <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-full bg-[#1e40af] text-white flex items-center justify-center text-xs sm:text-sm font-black shadow-md mb-1.5">
                 BA
               </div>
               <button 
@@ -54,6 +50,7 @@ export default function ClientProfile() {
               </button>
             </div>
 
+            {/* FULL NAME */}
             <div>
               <label className={labelStyles}>Your name</label>
               <input 
@@ -65,7 +62,8 @@ export default function ClientProfile() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+            {/* EMAIL & PHONE GRID */}
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5 sm:gap-4">
               <div className="sm:col-span-3">
                 <label className={labelStyles}>Email</label>
                 <input 
@@ -88,6 +86,7 @@ export default function ClientProfile() {
               </div>
             </div>
 
+            {/* BANK ACCOUNT TITLE */}
             <div>
               <label className={labelStyles}>Bank account title</label>
               <input 
@@ -99,6 +98,7 @@ export default function ClientProfile() {
               />
             </div>
 
+            {/* BANK NAME */}
             <div>
               <label className={labelStyles}>Bank name</label>
               <input 
@@ -110,6 +110,7 @@ export default function ClientProfile() {
               />
             </div>
 
+            {/* BANK ACCOUNT / IBAN */}
             <div>
               <label className={labelStyles}>Bank account number/IBAN</label>
               <input 
@@ -121,10 +122,11 @@ export default function ClientProfile() {
               />
             </div>
 
-            <div className="pt-3 flex justify-start">
+            {/* SUBMIT BUTTON */}
+            <div className="pt-2 sm:pt-3 flex justify-start">
               <button 
                 type="submit" 
-                className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] py-2.5 px-6 rounded-[5px] font-extrabold text-xs tracking-wide shadow-md hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer"
+                className="w-full sm:w-auto bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] py-2.5 px-6 rounded-[5px] font-extrabold text-xs tracking-wide shadow-md hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer text-center"
               >
                 Save changes
               </button>
