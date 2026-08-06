@@ -23,7 +23,11 @@ export const loginUser = async (email, password) => {
     body: JSON.stringify({ email, password }),
   });
 
-  return handleResponse(response, 'Login failed');
+  const data = await handleResponse(response, 'Login failed');
+  if (data.token) {
+    localStorage.setItem('token', data.token);
+  }
+  return data;
 };
 
 export const registerUser = async (role, userData) => {
@@ -46,6 +50,54 @@ export const registerUser = async (role, userData) => {
   });
 
   return handleResponse(response, 'Registration failed');
+};
+
+export const fetchAllDevelopers = async () => {
+  const response = await fetch(`${BASE_URL}/api/developers`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch developers list.');
+};
+
+export const fetchDeveloperById = async (id) => {
+  const response = await fetch(`${BASE_URL}/api/developers/${id}`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch developer details.');
+};
+
+export const createDeveloper = async (developerData) => {
+  const payload = {
+    full_Name: developerData.full_Name,
+    email_address: developerData.email_address,
+    password: developerData.password,
+    your_domain: developerData.your_domain,
+    Tech_stack: developerData.Tech_stack,
+    Linkdin_URL: developerData.Linkdin_URL || "",
+    Github_URL: developerData.Github_URL || ""
+  };
+
+  const response = await fetch(`${BASE_URL}/api/developers`, {
+    method: 'POST',
+    headers: getHeaders(false),
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(response, 'Failed to create developer profile.');
+};
+
+export const updateDeveloper = async (id, updatedFields) => {
+  const response = await fetch(`${BASE_URL}/api/developers/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(true),
+    body: JSON.stringify(updatedFields),
+  });
+
+  return handleResponse(response, 'Failed to update developer profile.');
 };
 
 export const fetchUserProfile = async (role, id) => {

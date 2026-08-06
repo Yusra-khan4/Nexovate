@@ -78,7 +78,7 @@ export default function PaymentHistory() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen py-4 sm:py-6 px-3 sm:px-4 max-w-4xl sm:max-w-4xl mx-auto w-full font-['Raleway',sans-serif] antialiased text-left select-none">
+    <div className="flex flex-col min-h-screen py-4 sm:py-6 px-3 sm:px-4 max-w-2xl sm:max-w-3xl mx-auto w-full font-['Raleway',sans-serif] antialiased text-left select-none">
       
       <div className="w-full mb-4 sm:mb-5 text-left space-y-0.5">
         <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[#FFFFFF] tracking-tight">

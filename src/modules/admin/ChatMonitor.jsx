@@ -176,7 +176,7 @@ export default function ChatMonitor() {
 
   // ---------------- MAIN CHAT MONITOR LIST VIEW ----------------
   return (
-    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 max-w-4xl sm:max-w-4xl mx-auto pb-8 px-3 sm:px-4">
+    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 max-w-2xl sm:max-w-3xl mx-auto pb-8 px-3 sm:px-4">
 
       {/* Header Title */}
       <div className="text-left">

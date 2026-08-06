@@ -20,6 +20,8 @@ import DeveloperApproval from './modules/admin/DeveloperApproval';
 import ProjectApproval from './modules/admin/ProjectApproval';
 import ChatMonitor from './modules/admin/ChatMonitor';
 import PaymentHistory from './modules/admin/PaymentHistory';
+import ClientManagement from './modules/admin/ClientManagement';
+
 
 function App() {
   return (
@@ -57,6 +59,7 @@ function App() {
         <Route path="/admin" element={<DashboardLayout userRole="admin" userName="Admin" />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="developer-approval" element={<DeveloperApproval />} />
+          <Route path="client-management" element={<ClientManagement />} />
           <Route path="project-approval" element={<ProjectApproval />} />
           <Route path="chat-monitor" element={<ChatMonitor />} />
           <Route path="payment-history" element={<PaymentHistory />} />

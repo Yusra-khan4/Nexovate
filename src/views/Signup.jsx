@@ -20,6 +20,7 @@ const Signup = () => {
   });
 
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -42,41 +43,51 @@ const Signup = () => {
     e.preventDefault();
 
     if (!formData.full_Name || !formData.email_address || !formData.password) {
-      setError('Please fill in all the fields.');
+      setError('Please fill in all required fields.');
       return;
     }
 
-    if (role === 'client' && formData.password !== formData.confirmPassword) {
+    // Password matching check for both roles
+    if (formData.confirmPassword && formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
+      return;
+    }
+
+    if (role === 'developer' && (!formData.your_domain || !formData.Tech_stack)) {
+      setError('Please fill in Domain and Tech Stack fields.');
       return;
     }
 
     try {
       setError('');
+      setLoading(true);
+
       const response = await registerUser(role, formData);
 
       if (response.success) {
-        const accountData = response.authAccount || {};
-
+        // If server returns token directly, store it; otherwise navigate to login
         if (response.token) {
           localStorage.setItem('token', response.token);
-        } else if (accountData.token) {
-          localStorage.setItem('token', accountData.token);
+          if (response.user) {
+            localStorage.setItem('user', JSON.stringify(response.user));
+            const id = response.user.id || response.user._id;
+            if (id) {
+              localStorage.setItem(role === 'client' ? 'clientId' : 'developerId', id);
+            }
+          }
+          navigate(`/${role}/dashboard`);
+        } else {
+          // Standard signup flow: Redirect to login page after successful registration
+          alert(response.message || 'Account created successfully! Please log in.');
+          navigate('/login');
         }
-
-        localStorage.setItem('user', JSON.stringify(accountData));
-
-        const id = accountData.id || accountData._id;
-        if (id) {
-          localStorage.setItem(role === 'client' ? 'clientId' : 'developerId', id);
-        }
-
-        navigate(`/${role}/dashboard`);
       } else {
-        throw new Error(response.message || 'Server rejected registration operations.');
+        throw new Error(response.message || 'Registration failed.');
       }
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -202,7 +213,7 @@ const Signup = () => {
             onClick={() => setRole('select')} 
             className="text-[11px] font-bold text-gray-700 dark:text-[#F2A508] hover:underline mb-1 flex items-center gap-1 mx-auto cursor-pointer transition-colors"
           >
-            <ArrowLeft size={12} strokeWidth={2.5} /> Back to paths
+            {/* <ArrowLeft size={12} strokeWidth={2.5} /> Back to paths */}
           </button>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-[#FFFFFF] tracking-tight transition-colors">
             Create your profile
@@ -293,6 +304,18 @@ const Signup = () => {
               </div>
             </div>
 
+            <div>
+              <label className={labelStyles}>Confirm Password</label>
+              <input 
+                type="password" 
+                placeholder="••••••••" 
+                className={inputStyles} 
+                value={formData.confirmPassword} 
+                onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })} 
+                required 
+              />
+            </div>
+
             {/* Developer-Specific Inputs */}
             {role === 'developer' && (
               <>
@@ -354,20 +377,7 @@ const Signup = () => {
               </>
             )}
 
-            {/* Client-Specific Confirm Password */}
-            {role === 'client' && (
-              <div>
-                <label className={labelStyles}>Confirm Password</label>
-                <input 
-                  type="password" 
-                  placeholder="••••••••" 
-                  className={inputStyles} 
-                  value={formData.confirmPassword} 
-                  onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })} 
-                  required 
-                />
-              </div>
-            )}
+            
 
             {/* Terms Checkbox */}
             <div className="flex items-start gap-2 pt-1">
@@ -385,9 +395,12 @@ const Signup = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white h-9 rounded-[6px] font-extrabold text-xs tracking-wider shadow-sm active:scale-[0.99] hover:brightness-105 transition-all uppercase mt-2 cursor-pointer"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white h-9 rounded-[6px] font-extrabold text-xs tracking-wider shadow-sm active:scale-[0.99] hover:brightness-105 transition-all uppercase mt-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {role === 'developer' ? 'Complete Registration' : 'Create Account'}
+              {loading 
+                ? 'Submitting...' 
+                : (role === 'developer' ? 'Complete Registration' : 'Create Account')}
             </button>
           </form>
         </div>

@@ -31,9 +31,6 @@ export default function DeveloperMyProject() {
     setMilestoneNote('');
   };
 
-  // =========================================================================
-  // VIEW BRANCH A: MY PROJECTS LIST OVERVIEW
-  // =========================================================================
   if (!activeProjectView) {
     return (
       <div className="space-y-4 max-w-4xl sm:max-w-4xl mx-auto pb-8 px-3 sm:px-4 font-['Raleway',sans-serif] text-left animate-fade-in select-none text-gray-900 dark:text-white transition-colors duration-300">

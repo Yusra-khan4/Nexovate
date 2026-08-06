@@ -39,7 +39,7 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
     admin: [
       { id: 'dashboard', name: 'Dashboard', icon: <LayoutGrid size={14} strokeWidth={2.2} />, path: '/admin/dashboard' },
       { id: 'developer-management', name: 'Developer Management', icon: <UserCheck size={14} strokeWidth={2.2} />, path: '/admin/developer-approval' },
-      { id: 'client-management', name: 'Client Management', icon: <UserRound size={14} strokeWidth={2.2} />, path: '/admin/client-managment' },
+      { id: 'client-management', name: 'Client Management', icon: <UserRound size={14} strokeWidth={2.2} />, path: '/admin/client-management' },
       { id: 'project-approval', name: 'Project approval', icon: <CheckSquare size={14} strokeWidth={2.2} />, path: '/admin/project-approval' },
       { id: 'payment-management', name: 'Payment Management', icon: <CreditCard size={14} strokeWidth={2.2} />, path: '/admin/payment-management' },
       { id: 'payment-history', name: 'Payment History', icon: <Receipt size={14} strokeWidth={2.2} />, path: '/admin/payment-history' },

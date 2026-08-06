@@ -56,7 +56,7 @@ export default function AdminDashboard() {
     : [];
 
   return (
-    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-4xl mx-auto pb-8 px-3 sm:px-4">
+    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl mx-auto pb-8 px-3 sm:px-4">
       
       <div className="text-left space-y-0.5">
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white">

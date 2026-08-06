@@ -9,6 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -34,30 +35,42 @@ const Login = () => {
       return;
     }
     setError(''); 
+    setLoading(true);
 
     try {
       const data = await loginUser(email, password);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
 
-      const devId = data.user?._id || data.user?.id || data.id;
-      if (devId) {
-        localStorage.setItem('developerId', devId);
-      }
+      // Save user details
+      if (data?.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Save ID under developerId or clientId if present
+        const userId = data.user.id || data.user._id;
+        if (userId) {
+          localStorage.setItem('developerId', userId);
+        }
 
-      if (data.user.role?.toLowerCase() === 'developer') {
-        navigate('/developer/dashboard');
+        // Navigate based on role
+        if (data.user.role?.toLowerCase() === 'developer') {
+          navigate('/developer/dashboard');
+        } else {
+          navigate('/client/dashboard');
+        }
       } else {
-        navigate('/client/dashboard');
+        // Fallback navigation if role is not directly on data.user
+        navigate('/developer/dashboard');
       }
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 relative w-full bg-transparent text-gray-900 dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased overflow-x-hidden">
       
+      {/* Top Bar / Navigation */}
       <div className="w-full max-w-5xl absolute top-0 left-0 right-0 mx-auto px-6 py-4 flex items-center justify-between z-20">
         
         <div className="select-none">
@@ -100,6 +113,7 @@ const Login = () => {
 
       </div>
 
+      {/* Main Login Card */}
       <div className="w-full max-w-[360px] sm:max-w-[380px] z-10 space-y-4 my-auto pt-12 sm:pt-0">
         
         <div className="text-center space-y-1">
@@ -121,6 +135,7 @@ const Login = () => {
 
           <form onSubmit={handleLogin} className="space-y-3.5">
             
+            {/* Email Field */}
             <div className="text-left space-y-1">
               <label className="block text-xs font-bold text-gray-900 dark:text-[#FFFFFF] tracking-wide">
                 Email Address
@@ -208,15 +223,15 @@ const Login = () => {
             {/* Login Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white h-9 rounded-[6px] font-extrabold text-xs tracking-wider shadow-sm active:scale-[0.99] hover:brightness-105 transition-all uppercase cursor-pointer"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white h-9 rounded-[6px] font-extrabold text-xs tracking-wider shadow-sm active:scale-[0.99] hover:brightness-105 transition-all uppercase cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Login In
+              {loading ? 'Logging In...' : 'Log In'}
             </button>
           </form>
 
         </div>
 
-        {/* Signup Link Footer */}
         <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-semibold tracking-wide transition-colors duration-300">
           Don't have an account? <Link to="/register" className="text-gray-900 dark:text-[#F2A508] hover:underline font-bold ml-1">Sign Up</Link>
         </p>
