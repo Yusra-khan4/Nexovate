@@ -1,311 +1,621 @@
-import React, { useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
 import { 
+  ArrowLeft, 
   Calendar, 
-  Lock, 
-  Activity,
-  Check
+  Zap, 
+  Lock,
+  Loader2
 } from 'lucide-react';
+import { 
+  fetchClientProjectsList, 
+  fetchProjectMilestoneReport,
+  depositEscrowPayment
+} from '../../services/api';
+
+const fallbackProjects = [
+  {
+    id: 56,
+    title: "Bon Appetit restaurant app",
+    status: "in progress",
+    statusType: "progress",
+    dev: "Bilal ahmed",
+    progress: 40,
+    progressColor: "bg-blue-600",
+    budget: "PKR 50,000",
+    numericBudget: 50000,
+    timeline: "6-8 weeks",
+    timelineText: "6 of 8 weeks",
+    paymentStatus: "IN ESCROW",
+    milestonesCount: { completed: 4, total: 10 },
+    milestones: [
+      { id: 1, title: "Requirements & project setup", status: "completed", detail: "Completed · Jun 20, 2026", index: "1/10" },
+      { id: 2, title: "Authentication completed", status: "completed", detail: "Bilal Ahmed · Jun 28, 2026", index: "2/10" },
+      { id: 3, title: "Dashboard finished", status: "completed", detail: "Bilal Ahmed · Jul 2, 2026", index: "3/10" },
+      { id: 4, title: "Database integrated", status: "completed", detail: "Bilal Ahmed · Jul 6, 2026", index: "4/10" },
+      { id: 5, title: "Payment module completed", status: "pending", detail: "Pending", index: "5/10" },
+      { id: 6, title: "Menu & ordering flow", status: "pending", detail: "Pending", index: "6/10" },
+      { id: 7, title: "Order tracking & notifications", status: "pending", detail: "Pending", index: "7/10" },
+      { id: 8, title: "Admin panel for restaurant staff", status: "pending", detail: "Pending", index: "8/10" },
+      { id: 9, title: "QA & bug fixes", status: "pending", detail: "Pending", index: "9/10" },
+      { id: 10, title: "Final delivery & deployment", status: "pending", detail: "Pending", index: "10/10" }
+    ]
+  }
+];
 
 export default function ClientProjects() {
-  const [activeProjectView, setActiveProjectView] = useState(null); 
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [selectedProjectDetails, setSelectedProjectDetails] = useState(null);
+  const [showSubmitPayment, setShowSubmitPayment] = useState(false);
 
-  const activeProjectsList = [
-    { id: 'bon-appetit', title: 'Bon appetit', status: 'in progress', statusClass: 'bg-[#dbeafe] text-[#2563eb]', dev: 'Bilal ahmed', progress: 80, progressColor: 'bg-[#2563eb]', budget: 'PKR 50,000', timeline: '6-8 weeks', hasAssignedDev: true },
-    { id: 'blue-sky', title: 'Blue sky travel', status: 'developer interested', statusClass: 'bg-[#f3e8ff] text-[#7c3aed]', dev: 'Not assigned yet', progress: 0, progressColor: 'bg-gray-300', budget: 'PKR 100,000', timeline: '10 weeks', hasAssignedDev: false },
-    { id: 'ak-apparel', title: 'AK apparel store', status: 'Completed', statusClass: 'bg-[#dcfce7] text-[#16a34a]', dev: 'Sara khan', progress: 100, progressColor: 'bg-[#16a34a]', budget: 'PKR 98,000', timeline: 'Delivered', hasAssignedDev: true },
-  ];
+  // Bank Form State
+  const [bankTitle, setBankTitle] = useState('Bilal ahmed');
+  const [bankName, setBankName] = useState('Meezan bank');
+  const [accountNumber, setAccountNumber] = useState('4821 9876 3584 4821');
 
-  // =========================================================================
-  // VIEW 1: PROJECT OVERVIEW (TABLE ON DESKTOP, CARDS ON MOBILE)
-  // =========================================================================
-  if (!activeProjectView) {
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchClientProjectsList();
+
+      if (res?.success && Array.isArray(res.projects) && res.projects.length > 0) {
+        const mapped = res.projects.map((p) => {
+          const progress = Number(p.progress_percentage) || 0;
+          const rawStatus = (p.status || 'draft').toLowerCase();
+          
+          let statusType = 'progress';
+          let displayStatus = rawStatus.replace(/_/g, ' ');
+
+          if (rawStatus === 'completed' || progress >= 100) {
+            statusType = 'completed';
+            displayStatus = 'Completed';
+          } else if (rawStatus === 'draft') {
+            statusType = 'purple';
+            displayStatus = 'Draft';
+          } else if (p.assigned_developer_name) {
+            displayStatus = 'In Progress';
+          }
+
+          let color = 'bg-blue-600';
+          if (progress >= 100) color = 'bg-emerald-600';
+          else if (progress === 0) color = 'bg-gray-300';
+          else if (progress < 40) color = 'bg-orange-500';
+
+          const rawNum = typeof p.budget === 'string' ? parseFloat(p.budget.replace(/[^0-9.]/g, '')) : Number(p.budget) || 0;
+          const budgetStr = typeof p.budget === 'string' && p.budget.startsWith('Rs.') 
+            ? p.budget.replace('Rs.', 'PKR') 
+            : rawNum > 0 ? `PKR ${rawNum.toLocaleString()}` : 'PKR 0';
+
+          return {
+            id: p.project_id,
+            title: p.projectname || `Project #${p.project_id}`,
+            status: displayStatus,
+            statusType: statusType,
+            dev: p.assigned_developer_name || 'Not assigned yet',
+            assignedDevEmail: p.assigned_developer_email,
+            progress: progress,
+            progressColor: color,
+            budget: budgetStr,
+            numericBudget: rawNum,
+            timeline: p.timeline || 'Not specified',
+            timelineText: p.timeline || 'Not specified',
+            paymentStatus: progress >= 100 ? 'RELEASED' : 'IN ESCROW',
+            milestoneNote: p.milestone_note || ''
+          };
+        });
+
+        setProjects(mapped);
+      } else {
+        setProjects(fallbackProjects);
+      }
+    } catch (err) {
+      console.warn("Could not fetch client projects list, using fallback:", err);
+      setProjects(fallbackProjects);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const handleSelectProject = async (projectSummary) => {
+    setSelectedProjectId(projectSummary.id);
+    setShowSubmitPayment(false);
+
+    try {
+      setLoadingDetails(true);
+      const res = await fetchProjectMilestoneReport(projectSummary.id);
+
+      if (res?.success && res.report) {
+        const r = res.report;
+        const progress = Number(r.progress_percentage) || 0;
+        const completedMilestones = Math.round((progress / 100) * 10);
+        
+        const generatedMilestones = Array.from({ length: 10 }, (_, i) => {
+          const idx = i + 1;
+          const isDone = idx <= completedMilestones;
+          return {
+            id: idx,
+            title: idx === 1 ? "Requirements & Project Setup" : `Milestone ${idx}: Project Phase Deliverable`,
+            status: isDone ? 'completed' : 'pending',
+            detail: isDone 
+              ? `${r.assigned_developer?.name || 'Developer'} · Completed` 
+              : (idx === completedMilestones + 1 && r.milestone_note ? r.milestone_note : 'Pending'),
+            index: `${idx}/10`
+          };
+        });
+
+        setSelectedProjectDetails({
+          ...projectSummary,
+          title: r.project_name || projectSummary.title,
+          dev: r.assigned_developer?.name || projectSummary.dev,
+          assignedDevEmail: r.assigned_developer?.email || projectSummary.assignedDevEmail,
+          progress: progress,
+          timelineText: r.timeline || projectSummary.timelineText,
+          paymentStatus: r.status === 'completed' ? 'RELEASED' : 'IN ESCROW',
+          milestonesCount: { completed: completedMilestones, total: 10 },
+          milestones: generatedMilestones
+        });
+      } else {
+        const completedMilestones = Math.round((projectSummary.progress / 100) * 10);
+        setSelectedProjectDetails({
+          ...projectSummary,
+          milestonesCount: { completed: completedMilestones, total: 10 },
+          milestones: Array.from({ length: 10 }, (_, i) => ({
+            id: i + 1,
+            title: `Milestone ${i + 1}: Deliverable Phase`,
+            status: (i + 1) <= completedMilestones ? 'completed' : 'pending',
+            detail: (i + 1) <= completedMilestones ? 'Completed' : 'Pending',
+            index: `${i + 1}/10`
+          }))
+        });
+      }
+    } catch (err) {
+      console.warn("Could not fetch project milestone report, using list data:", err);
+      const completedMilestones = Math.round((projectSummary.progress / 100) * 10);
+      setSelectedProjectDetails({
+        ...projectSummary,
+        milestonesCount: { completed: completedMilestones, total: 10 },
+        milestones: Array.from({ length: 10 }, (_, i) => ({
+          id: i + 1,
+          title: `Milestone ${i + 1}: Deliverable Phase`,
+          status: (i + 1) <= completedMilestones ? 'completed' : 'pending',
+          detail: (i + 1) <= completedMilestones ? 'Completed' : 'Pending',
+          index: `${i + 1}/10`
+        }))
+      });
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const getStatusBadge = (status, type) => {
+    if (type === 'completed') {
+      return (
+        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-100/90 dark:text-emerald-800 inline-block capitalize">
+          {status}
+        </span>
+      );
+    }
+    if (type === 'purple') {
+      return (
+        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-100/90 dark:text-purple-800 inline-block capitalize">
+          {status}
+        </span>
+      );
+    }
     return (
-      <div className="space-y-4 sm:space-y-5 max-w-4xl sm:max-w-4xl mx-auto pb-8 px-3 sm:px-4 font-['Raleway',sans-serif] text-left animate-fade-in select-none text-gray-900 dark:text-white transition-colors duration-300">
-        <div className="space-y-0.5">
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">My Projects</h1>
-          <p className="text-[11px] text-gray-500 dark:text-gray-200 font-medium">Every idea you've submitted, from intake to delivery.</p> 
+      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-100/90 dark:text-blue-800 inline-block capitalize">
+        {status}
+      </span>
+    );
+  };
+
+  const handlePayNow = async (e) => {
+    e.preventDefault();
+    if (!selectedProjectDetails) return;
+
+    try {
+      setPaying(true);
+      const res = await depositEscrowPayment({
+        projectId: selectedProjectDetails.id,
+        amount: selectedProjectDetails.numericBudget || 50000,
+        transactionRef: `TXN-${Date.now()}`
+      });
+
+      alert(res?.message || `Payment deposited and held securely in platform escrow for ${selectedProjectDetails.title}!`);
+      setShowSubmitPayment(false);
+      setSelectedProjectId(null);
+      setSelectedProjectDetails(null);
+      loadProjects();
+    } catch (err) {
+      alert(err.message || 'Failed to deposit escrow payment.');
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  if (loadingDetails) {
+    return (
+      <div className="flex items-center justify-center p-16 text-black dark:text-white">
+        <Loader2 className="w-6 h-6 animate-spin text-[#DC6B0F] mr-2" />
+        <span className="text-xs font-semibold">Loading project milestone progress...</span>
+      </div>
+    );
+  }
+
+  // VIEW 1: SUBMIT PAYMENT CHECKOUT SCREEN
+  if (selectedProjectDetails && showSubmitPayment) {
+    return (
+      <div className="w-full text-black font-['Raleway',sans-serif] space-y-4 max-w-3xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setShowSubmitPayment(false)}
+            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
+          >
+            <ArrowLeft size={14} /> Back to details
+          </button>
         </div>
 
-        <div className="p-0 dark:p-3 sm:dark:p-4 rounded-[10px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md shadow-xs dark:shadow-xl w-full max-w-3xl mx-auto overflow-hidden transition-all duration-300">
-          <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] rounded-[8px] sm:rounded-[6px] p-2.5 sm:p-6 shadow-inner border border-black/5 sm:border-transparent text-gray-900 dark:text-black transition-colors duration-300">
-            
-            {/* 📱 MOBILE CARDS VIEW (Visible under 'md' breakpoint) */}
-            <div className="block md:hidden space-y-2">
-              {activeProjectsList.map((project) => (
-                <div 
-                  key={project.id}
-                  onClick={() => setActiveProjectView(project.id)}
-                  className="bg-white/80 p-3 rounded-[6px] border border-black/5 shadow-xs active:scale-[0.99] transition-transform cursor-pointer space-y-2"
-                >
-                  <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-bold text-xs text-black">{project.title}</h3>
-                    <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full capitalize shrink-0 ${project.statusClass}`}>
-                      {project.status}
-                    </span>
-                  </div>
+        <div className="text-left mb-6 space-y-1">
+          <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
+            Submit Payment
+          </h1>
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-200">
+            Pay securely for "{selectedProjectDetails.title}". Funds are held by Nexovate until developer delivers project.
+          </p>
+        </div>
 
-                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                    <div>
-                      <span className="block text-[8px] font-bold text-gray-400 uppercase">Dev</span>
-                      <span className="font-bold text-gray-700">{project.dev}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[8px] font-bold text-gray-400 uppercase">Budget</span>
-                      <span className="font-extrabold text-black">{project.budget}</span>
-                    </div>
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          
+          <div className="w-full dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all">
+            <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[12px] p-5 sm:p-6 shadow-xl border border-amber-100/60 dark:border-transparent space-y-4 text-left">
+              
+              <div className="space-y-1">
+                <label className="block text-xs font-extrabold text-black">
+                  Bank account title
+                </label>
+                <input
+                  type="text"
+                  value={bankTitle}
+                  onChange={(e) => setBankTitle(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-md h-9 px-3 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#DC6B0F]"
+                />
+              </div>
 
-                  <div>
-                    <div className="flex justify-between text-[9px] font-bold mb-0.5">
-                      <span className="text-gray-500">Progress</span>
-                      <span>{project.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${project.progressColor}`} style={{ width: `${project.progress}%` }} />
-                    </div>
-                  </div>
+              <div className="space-y-1">
+                <label className="block text-xs font-extrabold text-black">
+                  Bank name
+                </label>
+                <input
+                  type="text"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-md h-9 px-3 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#DC6B0F]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-extrabold text-black">
+                  Bank account number/IBAN
+                </label>
+                <input
+                  type="text"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  className="w-full bg-white border border-gray-300 rounded-md h-9 px-3 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#DC6B0F]"
+                />
+              </div>
+
+            </div>
+          </div>
+
+          <div className="w-full dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all">
+            <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[12px] p-5 sm:p-6 shadow-xl border border-amber-100/60 dark:border-transparent space-y-4 text-left">
+              
+              <div className="border-b border-gray-200/80 pb-2 max-w-[150px]">
+                <h2 className="text-xs font-extrabold uppercase tracking-wider text-black">
+                  ORDER SUMMARY
+                </h2>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="font-extrabold text-gray-800">Project budget</span>
+                  <span className="font-extrabold text-black">{selectedProjectDetails.budget}</span>
                 </div>
-              ))}
+
+                <div className="flex justify-between items-center">
+                  <span className="font-extrabold text-gray-800">Held in escrow</span>
+                  <span className="font-bold text-gray-600">By nexovate</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span className="font-extrabold text-gray-800">Released to</span>
+                  <span className="font-bold text-gray-600">{selectedProjectDetails.dev} on completion</span>
+                </div>
+
+                <hr className="border-gray-200/80 my-1" />
+
+                <div className="flex justify-between items-center pt-1">
+                  <span className="font-black text-sm text-black">Amount to pay</span>
+                  <span className="font-black text-sm text-black">{selectedProjectDetails.budget}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={paying}
+                onClick={handlePayNow}
+                className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white h-9 rounded-md font-extrabold text-xs tracking-wider uppercase shadow-xs hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer mt-2 flex items-center justify-center gap-1.5 disabled:opacity-60"
+              >
+                {paying ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Processing Escrow...</span>
+                  </>
+                ) : (
+                  'Pay now'
+                )}
+              </button>
+
+              <div className="bg-blue-100/80 border border-blue-200 text-blue-700 p-3 rounded-lg text-[10px] font-semibold text-center leading-relaxed">
+                Your payment is held securely by Nexovate and only released to the developer after you confirm project completion.
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  // VIEW 2: DETAILED MILESTONE TRACKING VIEW
+  if (selectedProjectDetails) {
+    return (
+      <div className="w-full text-black font-['Raleway',sans-serif] space-y-4 max-w-2xl sm:max-w-3xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
+        
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => {
+              setSelectedProjectId(null);
+              setSelectedProjectDetails(null);
+            }}
+            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
+          >
+            <ArrowLeft size={14} /> Back to my projects
+          </button>
+
+          {selectedProjectDetails.dev !== 'Not assigned yet' && (
+            <button
+              onClick={() => setShowSubmitPayment(true)}
+              className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs px-4 py-1.5 rounded-md shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+            >
+              Deposit Escrow Payment
+            </button>
+          )}
+        </div>
+
+        <div className="text-left space-y-1">
+          <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
+            {selectedProjectDetails.title}
+          </h1>
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-200">
+            Track development progress and milestone updates in real time.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-[#FFF6E9] dark:bg-white rounded-xl p-3.5 shadow-md flex items-center gap-3 border border-gray-100">
+            <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+              <Calendar size={16} strokeWidth={2.2} />
+            </div>
+            <div className="text-left leading-tight">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider text-gray-400 block mb-0.5">
+                TIMELINE
+              </span>
+              <span className="text-sm font-extrabold text-black">
+                {selectedProjectDetails.timelineText}
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-[#FFF6E9] dark:bg-white rounded-xl p-3.5 shadow-md flex items-center gap-3 border border-gray-100">
+            <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+              <Zap size={16} strokeWidth={2.2} />
+            </div>
+            <div className="text-left leading-tight">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider text-gray-400 block mb-0.5">
+                COMPLETION
+              </span>
+              <span className="text-sm font-extrabold text-black">
+                {selectedProjectDetails.progress}%
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-[#FFF6E9] dark:bg-white rounded-xl p-3.5 shadow-md flex items-center gap-3 border border-gray-100">
+            <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+              <Lock size={16} strokeWidth={2.2} />
+            </div>
+            <div className="text-left leading-tight">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider text-gray-400 block mb-0.5">
+                PAYMENT
+              </span>
+              <span className="text-sm font-extrabold text-black">
+                {selectedProjectDetails.paymentStatus}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full bg-[#FFF6E9] dark:bg-white text-black rounded-[12px] p-6 sm:p-8 shadow-xl border border-amber-100/60 dark:border-transparent space-y-6 text-left transition-colors duration-300">
+          
+          <h2 className="text-lg font-black text-black tracking-tight border-b border-gray-200/80 pb-3">
+            Project Milestones
+          </h2>
+
+          <div className="flex items-center gap-4 py-1">
+            <div className="relative w-16 h-16 flex items-center justify-center shrink-0">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-gray-200"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path
+                  className="text-emerald-600"
+                  strokeDasharray={`${selectedProjectDetails.progress}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <span className="absolute text-xs font-black text-black">
+                {selectedProjectDetails.progress}%
+              </span>
             </div>
 
-            {/* 💻 DESKTOP TABLE VIEW (Visible on 'md' screens and above) */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-separate border-spacing-y-2.5 min-w-[620px]">
+            <div className="space-y-0.5 text-left">
+              <h3 className="text-sm font-extrabold text-black">
+                {selectedProjectDetails.milestonesCount?.completed || 0} of {selectedProjectDetails.milestonesCount?.total || 10} milestones completed
+              </h3>
+              <p className="text-[10px] font-medium text-gray-500 leading-snug">
+                Progress is calculated automatically as developer completes milestones - it can't be set manually by anyone.
+              </p>
+            </div>
+          </div>
+
+          <hr className="border-gray-200/80" />
+
+          <div className="divide-y divide-gray-200/70">
+            {(selectedProjectDetails.milestones || []).map((m) => (
+              <div key={m.id} className="py-3 flex items-center justify-between gap-4">
+                <div className="text-left space-y-0.5">
+                  <h4 className={`text-xs font-extrabold tracking-tight ${
+                    m.status === 'completed' ? 'text-emerald-600' : 'text-black'
+                  }`}>
+                    {m.title}
+                  </h4>
+                  <p className="text-[10px] font-semibold text-gray-400">
+                    {m.detail}
+                  </p>
+                </div>
+
+                <span className="text-xs font-bold text-gray-800 shrink-0">
+                  {m.index}
+                </span>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  // VIEW 3: MAIN CLIENT PROJECTS LIST TABLE
+  return (
+    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none">
+      
+      <div className="text-left space-y-1">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-black dark:text-white">
+          My Projects
+        </h1>
+        <p className="text-xs font-medium text-gray-600 dark:text-gray-200">
+          Every idea you've submitted, from intake to delivery.
+        </p>
+      </div>
+
+      <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all">
+        
+        <div className="w-full bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent rounded-[8px] sm:rounded-[6px] shadow-xs transition-all duration-300 overflow-hidden">
+          
+          {loading ? (
+            <div className="flex items-center justify-center py-12 text-gray-500 gap-2">
+              <Loader2 size={18} className="animate-spin text-[#DC6B0F]" />
+              <span className="text-xs font-semibold">Loading projects...</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[620px]">
                 <thead>
-                  <tr className="bg-gray-400/40 dark:bg-gray-400 text-black uppercase font-['Raleway',sans-serif] font-bold text-[10px] tracking-wider">
-                    <th className="py-2.5 px-3.5 rounded-l-[4px]">Project Name</th>
-                    <th className="py-2.5 px-3.5">Status</th>
-                    <th className="py-2.5 px-3.5">Assigned Dev</th>
-                    <th className="py-2.5 px-3.5">Progress</th>
-                    <th className="py-2.5 px-3.5">Budget</th>
-                    <th className="py-2.5 px-3.5 rounded-r-[4px]">Timeline</th>
+                  <tr className="bg-[#FAF3E0] dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
+                    <th className="py-3.5 px-5">PROJECT NAME</th>
+                    <th className="py-3.5 px-4 text-center">STATUS</th>
+                    <th className="py-3.5 px-4">ASSIGNED DEV</th>
+                    <th className="py-3.5 px-4">PROGRESS</th>
+                    <th className="py-3.5 px-4">BUDGET</th>
+                    <th className="py-3.5 px-5 text-right">TIMELINE</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {activeProjectsList.map((project) => (
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
+                  {projects.map((project) => (
                     <tr 
-                      key={project.id}
-                      onClick={() => setActiveProjectView(project.id)}
-                      className="group bg-white/60 dark:bg-white hover:bg-white dark:hover:bg-gray-50/80 transition-colors duration-150 cursor-pointer"
+                      key={project.id} 
+                      onClick={() => handleSelectProject(project)}
+                      className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150 cursor-pointer"
                     >
-                      <td className="py-2.5 px-3.5 text-[11px] font-bold border-b border-gray-100 group-last:border-none">{project.title}</td>
-                      <td className="py-2.5 px-3.5 border-b border-gray-100 group-last:border-none">
-                        <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full select-none capitalize ${project.statusClass}`}>
-                          {project.status}
+                      <td className="py-4 px-5">
+                        <span className="font-extrabold text-xs text-black hover:text-blue-600 transition-colors tracking-tight block">
+                          {project.title}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3.5 text-[11px] font-medium text-gray-700">{project.dev}</td>
-                      <td className="py-2.5 px-3.5 border-b border-gray-100 group-last:border-none">
-                        <div className="flex items-center gap-1.5 max-w-[100px]">
-                          <div className="w-16 bg-gray-200 dark:bg-gray-100 h-1 rounded-full overflow-hidden shrink-0">
-                            <div className={`h-full rounded-full transition-all duration-300 ${project.progressColor}`} style={{ width: `${project.progress}%` }} />
+
+                      <td className="py-4 px-4 text-center">
+                        {getStatusBadge(project.status, project.statusType)}
+                      </td>
+
+                      <td className="py-4 px-4 text-xs font-bold text-gray-800">
+                        {project.dev}
+                      </td>
+
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-20 sm:w-24 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
+                            <div 
+                              className={`h-full rounded-full transition-all duration-300 ${project.progressColor}`} 
+                              style={{ width: `${project.progress}%` }}
+                            />
                           </div>
-                          <span className="text-[9px] font-bold w-7 text-right">{project.progress}%</span>
+                          <span className="text-[10px] font-extrabold text-gray-800 min-w-[28px]">
+                            {project.progress}%
+                          </span>
                         </div>
                       </td>
-                      <td className="py-2.5 px-3.5 text-[11px] font-bold">{project.budget}</td>
-                      <td className="py-2.5 px-3.5 text-[11px] font-medium text-gray-600 rounded-r-[4px]">{project.timeline}</td>
+
+                      <td className="py-4 px-4 text-xs font-bold text-black whitespace-nowrap">
+                        {project.budget}
+                      </td>
+
+                      <td className="py-4 px-5 text-right text-xs font-bold text-gray-700 whitespace-nowrap">
+                        {project.timeline}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          )}
 
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // =========================================================================
-  // VIEW 2: DEVELOPER INTEREST MATCHING PROFILE
-  // =========================================================================
-  if (activeProjectView === 'blue-sky') {
-    return (
-      <div className="w-full max-w-4xl sm:max-w-4xl mx-auto pb-8 px-3 sm:px-4 font-['Raleway',sans-serif] select-none text-left text-gray-900 dark:text-white animate-fade-in transition-colors duration-300">
-        <div className="mb-4 space-y-0.5">
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">A developer is interested in your project</h1>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Review the developer's profile before releasing payment for "Blue Sky Travel - Booking Engine".</p>
-        </div>
-
-        <div className="p-0 dark:p-3 sm:dark:p-4 rounded-[10px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-xl shadow-xs dark:shadow-xl w-full max-w-xl mx-auto mb-4 transition-all duration-300">
-          <div className="bg-[#FFF6E9] dark:bg-white text-gray-900 dark:text-black p-4 sm:p-5 rounded-[8px] sm:rounded-[6px] shadow-inner flex flex-col items-center text-center transition-colors duration-300">
-            <div className="w-10 h-10 rounded-full bg-[#1e40af] text-white flex items-center justify-center text-xs font-bold mb-1.5 shadow-xs">BA</div>
-            <h2 className="text-sm font-bold tracking-tight">Bilal Ahmed</h2>
-            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-4 block">Full stack developer</span>
-
-            <div className="w-full border-t border-black/5 dark:border-gray-300 pt-3 sm:pt-4 pb-3 sm:pb-4 text-center">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2">Bio</h3>
-              <p className="text-[11px] text-gray-650 dark:text-gray-600 font-medium leading-relaxed max-w-md mx-auto">
-                Experienced full-stack developer specializing in React, Next.js, and high-scale cloud platforms.
-              </p>
+          {!loading && projects.length === 0 && (
+            <div className="text-center py-8 text-xs text-gray-500 font-medium">
+              No projects found.
             </div>
+          )}
 
-            <div className="w-full border-t border-black/5 dark:border-gray-300 pt-3 sm:pt-4 pb-3 sm:pb-4 text-center">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2.5">Skills</h3>
-              <div className="flex flex-wrap justify-center gap-1 sm:gap-1.5 max-w-sm mx-auto">
-                {['React.js', 'Next.js', 'HTML', 'CSS', 'Tailwind', 'Node.js', 'AWS', 'PostgreSQL'].map(skill => (
-                  <span key={skill} className="bg-black dark:bg-zinc-800 text-white text-[8px] font-bold px-2 py-0.5 rounded-[4px] shadow-xs uppercase tracking-wide">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="w-full border-t border-black/5 dark:border-gray-300 pt-3 sm:pt-4 text-center">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest mb-2.5">Projects</h3>
-              <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
-                {['NEXOVATE', 'SAFAR KARO', 'TN - HRMS'].map(project => (
-                  <span key={project} className="bg-black dark:bg-zinc-800 text-white text-[8px] font-bold px-2.5 py-0.5 rounded-[4px] shadow-xs tracking-wide">
-                    {project}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#FFF6E9] dark:bg-white text-gray-900 dark:text-black rounded-[8px] sm:rounded-[6px] p-3.5 sm:p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3 max-w-xl mx-auto transition-colors duration-300">
-          <div className="text-center sm:text-left leading-tight">
-            <h4 className="text-xs font-bold tracking-tight mb-0.5">Ready to move forward ?</h4>
-            <p className="text-[9px] text-gray-500 dark:text-gray-400 font-semibold leading-relaxed max-w-xs">
-              Payment will be held securely by Nexovate in escrow until the project is completed.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="w-full sm:w-auto bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[11px] px-4 py-1.5 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all tracking-wide text-center shrink-0 cursor-pointer"
-          >
-            Release Payment
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // =========================================================================
-  // VIEW 3: CORE DETAILED MANAGEMENT WORKSPACE INTERFACE PANEL
-  // =========================================================================
-  return (
-    <div className="w-full max-w-4xl sm:max-w-4xl mx-auto pb-8 px-3 sm:px-4 font-['Raleway',sans-serif] select-none text-left text-gray-900 dark:text-white animate-fade-in transition-colors duration-300 space-y-4 sm:space-y-5">
-      
-      <div className="space-y-0.5">
-        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">Bon appetit</h1>
-        <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Track development progress and milestone updates in real time.</p>
-      </div>
-
-      {/* METRICS CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-gray-900 dark:text-black">
-        <div className="bg-[#FFF6E9] dark:bg-white rounded-[8px] sm:rounded-[6px] p-2.5 sm:p-3 flex items-center gap-2.5 shadow-xs border border-transparent transition-colors duration-300">
-          <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shrink-0">
-            <Calendar size={13} strokeWidth={2.2} />
-          </div>
-          <div className="leading-tight">
-            <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider">Timeline</span>
-            <span className="text-[11px] font-bold">6 of 8 weeks</span>
-          </div>
-        </div>
-
-        <div className="bg-[#FFF6E9] dark:bg-white rounded-[8px] sm:rounded-[6px] p-2.5 sm:p-3 flex items-center gap-2.5 shadow-xs border border-transparent transition-colors duration-300">
-          <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-            <Activity size={13} strokeWidth={2.2} />
-          </div>
-          <div className="leading-tight">
-            <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider">Completion</span>
-            <span className="text-[11px] font-bold">39%</span>
-          </div>
-        </div>
-
-        <div className="bg-[#FFF6E9] dark:bg-white rounded-[8px] sm:rounded-[6px] p-2.5 sm:p-3 flex items-center gap-2.5 shadow-xs border border-transparent transition-colors duration-300">
-          <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
-            <Lock size={13} strokeWidth={2.2} />
-          </div>
-          <div className="leading-tight">
-            <span className="block text-[8px] text-gray-400 font-bold uppercase tracking-wider">Payment</span>
-            <span className="text-[11px] font-bold uppercase tracking-tight">In Escrow</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 🎯 SECTION 1: PROGRESS STEPPER BAR INTERACTIVE CARD */}
-      <div className="p-0 dark:p-2 sm:dark:p-3 rounded-[10px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md shadow-xs dark:shadow-xl transition-all duration-300">
-        <div className="bg-[#FFF6E9] dark:bg-white text-black p-3.5 sm:p-5 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-none text-center">
-          <h3 className="text-xs font-bold text-black tracking-tight text-left mb-4">Progress stepper</h3>
-          
-          <div className="overflow-x-auto pb-1.5">
-            <div className="relative min-w-[420px] sm:min-w-0 max-w-xl mx-auto px-3 py-1">
-              {/* Background Line Tracks */}
-              <div className="absolute top-3.5 left-5 right-5 h-[2px] bg-gray-300 dark:bg-gray-200 z-0" />
-              <div className="absolute top-3.5 left-5 w-[36%] h-[2px] bg-emerald-700 z-0" /> 
-
-              {/* Stepper Nodes */}
-              <div className="flex items-center justify-between relative z-10 w-full text-center">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center cursor-pointer shadow-xs"><Check size={10} strokeWidth={3} /></div>
-                  <span className="text-[9px] font-bold text-gray-900">10%</span>
-                </div>
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center cursor-pointer shadow-xs"><Check size={10} strokeWidth={3} /></div>
-                  <span className="text-[9px] font-bold text-gray-900">20%</span>
-                </div>
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-full bg-[#CA4612] text-white flex items-center justify-center font-bold text-[9px] ring-2 ring-orange-500/20 cursor-pointer shadow-xs">40</div>
-                  <span className="text-[9px] font-bold text-gray-900">40%</span>
-                </div>
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-full bg-gray-500 text-white flex items-center justify-center font-bold text-[9px] cursor-pointer hover:bg-gray-600 transition-colors">60</div>
-                  <span className="text-[9px] font-bold text-gray-400">60%</span>
-                </div>
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-full bg-gray-500 text-white flex items-center justify-center font-bold text-[9px] cursor-pointer hover:bg-gray-600 transition-colors">80</div>
-                  <span className="text-[9px] font-bold text-gray-400">80%</span>
-                </div>
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-full bg-gray-500 text-white flex items-center justify-center font-bold text-[9px] cursor-pointer hover:bg-gray-600 transition-colors">100</div>
-                  <span className="text-[9px] font-bold text-gray-400">100%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 🎯 SECTION 2: HISTORICAL MILESTONES TIMELINE FEED CARD */}
-      <div className="p-0 dark:p-2 sm:dark:p-3 rounded-[10px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md shadow-xs dark:shadow-xl transition-all duration-300">
-        <div className="p-3.5 sm:p-5 text-black bg-[#FFF6E9] dark:bg-white rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-none text-left">
-          <h3 className="text-xs font-bold text-black tracking-tight mb-3 sm:mb-4">Developer Notes / Milestones</h3>
-          
-          <div className="space-y-3 max-w-sm font-sans pl-1">
-            <div className="flex gap-2.5 sm:gap-3 items-start border-b border-black/15 pb-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-800 mt-1 shrink-0" />
-              <div>
-                <h4 className="text-[11px] font-bold text-gray-900">Payment module completed</h4>
-                <span className="text-[9px] text-gray-500 font-semibold">Bilal Ahmed • Jul 10, 2026</span>
-              </div>
-            </div>
-            <div className="flex gap-2.5 sm:gap-3 items-start border-b border-black/15 pb-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-800 mt-1 shrink-0" />
-              <div>
-                <h4 className="text-[11px] font-bold text-gray-900">Database integrated</h4>
-                <span className="text-[9px] text-gray-500 font-semibold">Bilal Ahmed • Jul 6, 2026</span>
-              </div>
-            </div>
-            <div className="flex gap-2.5 sm:gap-3 items-start border-b border-black/15 pb-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-800 mt-1 shrink-0" />
-              <div>
-                <h4 className="text-[11px] font-bold text-gray-900">Dashboard finished</h4>
-                <span className="text-[9px] text-gray-500 font-semibold">Bilal Ahmed • Jul 2, 2026</span>
-              </div>
-            </div>
-            <div className="flex gap-2.5 sm:gap-3 items-start last:border-none last:pb-0">
-              <div className="w-2 h-2 rounded-full bg-emerald-800 mt-1 shrink-0" />
-              <div>
-                <h4 className="text-[11px] font-bold text-gray-900">Authentication completed</h4>
-                <span className="text-[9px] text-gray-500 font-semibold">Bilal Ahmed • Jun 28, 2026</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

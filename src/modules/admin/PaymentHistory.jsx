@@ -1,52 +1,117 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchAdminPaymentHistory } from '../../services/api';
+import { Loader2 } from 'lucide-react';
+
+const fallbackPaymentLogs = [
+  {
+    id: 1,
+    date: 'Jul 9, 2026',
+    project: 'Bon appetit',
+    client: 'Zara ahmed',
+    developer: 'Bilal ahmed',
+    amount: 'PKR 275,000',
+    commission: 'PKR 35,000',
+    status: 'Received',
+    statusType: 'received'
+  },
+  {
+    id: 2,
+    date: 'Jun 20, 2026',
+    project: 'TN-HRMS',
+    client: 'Rabia ali',
+    developer: 'Mustafa raza',
+    amount: 'PKR 275,000',
+    commission: 'PKR 35,000',
+    status: 'Received',
+    statusType: 'received'
+  },
+  {
+    id: 3,
+    date: 'May 31, 2026',
+    project: 'Blue sky travel',
+    client: 'Shazia raza',
+    developer: '-',
+    amount: 'PKR 275,000',
+    commission: '-',
+    status: 'Pending payment',
+    statusType: 'pending'
+  },
+  {
+    id: 4,
+    date: 'May 13, 2026',
+    project: 'Nexus desktop',
+    client: 'Sara kareem',
+    developer: 'Zain khan',
+    amount: 'PKR 275,000',
+    commission: 'PKR 35,000',
+    status: 'Released',
+    statusType: 'released'
+  }
+];
 
 export default function PaymentHistory() {
-  const [paymentLogs] = useState([
-    {
-      id: 1,
-      date: 'Jul 9, 2026',
-      project: 'Bon appetit',
-      client: 'Zara ahmed',
-      developer: 'Bilal ahmed',
-      amount: 'PKR 275,000',
-      commission: 'PKR 35,000',
-      status: 'Received',
-      statusType: 'received'
-    },
-    {
-      id: 2,
-      date: 'Jun 20, 2026',
-      project: 'TN-HRMS',
-      client: 'Rabia ali',
-      developer: 'Mustafa raza',
-      amount: 'PKR 275,000',
-      commission: 'PKR 35,000',
-      status: 'Received',
-      statusType: 'received'
-    },
-    {
-      id: 3,
-      date: 'May 31, 2026',
-      project: 'Blue sky travel',
-      client: 'Shazia raza',
-      developer: '-',
-      amount: 'PKR 275,000',
-      commission: '-',
-      status: 'Pending payment',
-      statusType: 'pending'
-    },
-    {
-      id: 4,
-      date: 'May 13, 2026',
-      project: 'Nexus desktop',
-      client: 'Sara kareem',
-      developer: 'Zain khan',
-      amount: 'PKR 275,000',
-      commission: 'PKR 35,000',
-      status: 'Released',
-      statusType: 'released'
-    }
-  ]);
+  const [paymentLogs, setPaymentLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        setLoading(true);
+        const res = await fetchAdminPaymentHistory();
+
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          const mappedLogs = res.data.map((item) => {
+            const rawAmount = parseFloat(item.amount) || 0;
+            const commissionVal = Math.round(rawAmount * 0.12);
+
+            let statusType = 'pending';
+            let statusLabel = 'Pending payment';
+
+            const rawStatus = (item.status || '').toLowerCase();
+            if (rawStatus === 'released') {
+              statusType = 'released';
+              statusLabel = 'Released';
+            } else if (rawStatus === 'held' || rawStatus === 'received' || rawStatus === 'verified') {
+              statusType = 'received';
+              statusLabel = 'Received';
+            }
+
+            const rawDate = item.deposited_at || item.released_at || item.created_at;
+            const formattedDate = rawDate
+              ? new Date(rawDate).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })
+              : 'Recent';
+
+            return {
+              id: item.payment_id || item.id,
+              date: formattedDate,
+              project: item.project_name || `Project #${item.project_id}`,
+              client: item.client_name || `Client #${item.client_id || '-'}`,
+              developer: item.developer_name || (item.developer_id ? `Dev #${item.developer_id}` : '-'),
+              amount: `PKR ${rawAmount.toLocaleString()}`,
+              commission: commissionVal > 0 ? `PKR ${commissionVal.toLocaleString()}` : '-',
+              status: statusLabel,
+              statusType: statusType
+            };
+          });
+
+          setPaymentLogs(mappedLogs);
+        } else {
+          setPaymentLogs(fallbackPaymentLogs);
+        }
+      } catch (err) {
+        console.warn('API error, loading fallback payment logs:', err);
+        setPaymentLogs(fallbackPaymentLogs);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, []);
 
   const getStatusBadge = (type, label) => {
     switch (type) {
@@ -95,96 +160,113 @@ export default function PaymentHistory() {
           
           <div className="w-full bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent p-4 sm:p-5 dark:p-0 rounded-[8px] sm:rounded-[6px] overflow-hidden shadow-xs transition-all duration-300">
             
-            <div className="block md:hidden p-3 space-y-2.5">
-              {paymentLogs.map((log) => (
-                <div 
-                  key={log.id} 
-                  className="bg-[#FFF6E9] dark:bg-white p-3.5 rounded-[6px] border border-black/5 dark:border-gray-200 shadow-xs space-y-2"
-                >
-                  <div className="flex justify-between items-start gap-2">
-                    <div>
-                      <h3 className="font-extrabold text-xs text-black">{log.project}</h3>
-                      <span className="text-[9px] font-bold text-gray-400">{log.date}</span>
-                    </div>
-                    {getStatusBadge(log.statusType, log.status)}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                    <div>
-                      <span className="block font-bold text-gray-400 uppercase text-[8px]">Client</span>
-                      <span className="font-bold text-gray-800">{log.client}</span>
-                    </div>
-                    <div>
-                      <span className="block font-bold text-gray-400 uppercase text-[8px]">Developer</span>
-                      <span className="font-bold text-gray-800">{log.developer}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-1.5 border-t border-black/5 dark:border-gray-100 text-[11px]">
-                    <div>
-                      <span className="text-[8px] font-bold text-gray-400 block uppercase">Amount</span>
-                      <span className="font-extrabold text-black">{log.amount}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[8px] font-bold text-gray-400 block uppercase">Commission</span>
-                      <span className="font-bold text-gray-700">{log.commission}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[580px]">
-                <thead>
-                  <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-600 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
-                    <th className="py-3.5 px-5">DATE</th>
-                    <th className="py-3.5 px-4">PROJECT</th>
-                    <th className="py-3.5 px-4">CLIENT</th>
-                    <th className="py-3.5 px-4">DEVELOPER</th>
-                    <th className="py-3.5 px-4">AMOUNT</th>
-                    <th className="py-3.5 px-4">COMMISSION</th>
-                    <th className="py-3.5 px-5 text-center">STATUS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
+            {loading ? (
+              <div className="flex items-center justify-center py-12 text-gray-500 gap-2">
+                <Loader2 size={20} className="animate-spin text-[#DC6B0F]" />
+                <span className="text-xs font-semibold">Loading payment transactions...</span>
+              </div>
+            ) : (
+              <>
+                {/* Mobile Cards View */}
+                <div className="block md:hidden p-3 space-y-2.5">
                   {paymentLogs.map((log) => (
-                    <tr 
+                    <div 
                       key={log.id} 
-                      className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
+                      className="bg-[#FFF6E9] dark:bg-white p-3.5 rounded-[6px] border border-black/5 dark:border-gray-200 shadow-xs space-y-2"
                     >
-                      <td className="py-4 px-5 text-[11px] font-medium text-gray-500 dark:text-gray-500 whitespace-normal max-w-[80px] leading-tight">
-                        {log.date}
-                      </td>
-
-                      <td className="py-4 px-4 text-[11px] font-black text-black whitespace-normal max-w-[95px] leading-tight">
-                        {log.project}
-                      </td>
-
-                      <td className="py-4 px-4 text-[11px] font-bold text-gray-900 whitespace-normal max-w-[80px] leading-tight">
-                        {log.client}
-                      </td>
-
-                      <td className="py-4 px-4 text-[11px] font-bold text-gray-900 whitespace-normal max-w-[85px] leading-tight">
-                        {log.developer}
-                      </td>
-
-                      <td className="py-4 px-4 text-[11px] font-extrabold text-black whitespace-nowrap">
-                        {log.amount}
-                      </td>
-
-                      <td className="py-4 px-4 text-[11px] font-medium text-gray-500 whitespace-nowrap">
-                        {log.commission}
-                      </td>
-
-                      <td className="py-4 px-5 text-center">
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <h3 className="font-extrabold text-xs text-black">{log.project}</h3>
+                          <span className="text-[9px] font-bold text-gray-400">{log.date}</span>
+                        </div>
                         {getStatusBadge(log.statusType, log.status)}
-                      </td>
-                    </tr>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div>
+                          <span className="block font-bold text-gray-400 uppercase text-[8px]">Client</span>
+                          <span className="font-bold text-gray-800">{log.client}</span>
+                        </div>
+                        <div>
+                          <span className="block font-bold text-gray-400 uppercase text-[8px]">Developer</span>
+                          <span className="font-bold text-gray-800">{log.developer}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pt-1.5 border-t border-black/5 dark:border-gray-100 text-[11px]">
+                        <div>
+                          <span className="text-[8px] font-bold text-gray-400 block uppercase">Amount</span>
+                          <span className="font-extrabold text-black">{log.amount}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[8px] font-bold text-gray-400 block uppercase">Commission</span>
+                          <span className="font-bold text-gray-700">{log.commission}</span>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[580px]">
+                    <thead>
+                      <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-600 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
+                        <th className="py-3.5 px-5">DATE</th>
+                        <th className="py-3.5 px-4">PROJECT</th>
+                        <th className="py-3.5 px-4">CLIENT</th>
+                        <th className="py-3.5 px-4">DEVELOPER</th>
+                        <th className="py-3.5 px-4">AMOUNT</th>
+                        <th className="py-3.5 px-4">COMMISSION</th>
+                        <th className="py-3.5 px-5 text-center">STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
+                      {paymentLogs.map((log) => (
+                        <tr 
+                          key={log.id} 
+                          className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
+                        >
+                          <td className="py-4 px-5 text-[11px] font-medium text-gray-500 dark:text-gray-500 whitespace-normal max-w-[80px] leading-tight">
+                            {log.date}
+                          </td>
+
+                          <td className="py-4 px-4 text-[11px] font-black text-black whitespace-normal max-w-[95px] leading-tight">
+                            {log.project}
+                          </td>
+
+                          <td className="py-4 px-4 text-[11px] font-bold text-gray-900 whitespace-normal max-w-[80px] leading-tight">
+                            {log.client}
+                          </td>
+
+                          <td className="py-4 px-4 text-[11px] font-bold text-gray-900 whitespace-normal max-w-[85px] leading-tight">
+                            {log.developer}
+                          </td>
+
+                          <td className="py-4 px-4 text-[11px] font-extrabold text-black whitespace-nowrap">
+                            {log.amount}
+                          </td>
+
+                          <td className="py-4 px-4 text-[11px] font-medium text-gray-500 whitespace-nowrap">
+                            {log.commission}
+                          </td>
+
+                          <td className="py-4 px-5 text-center">
+                            {getStatusBadge(log.statusType, log.status)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {paymentLogs.length === 0 && (
+                  <div className="text-center py-8 text-xs text-gray-500 font-medium">
+                    No payment history logs found.
+                  </div>
+                )}
+              </>
+            )}
 
           </div>
         </div>

@@ -10,7 +10,9 @@ import {
   ChevronLeft,
   UserCheck,
   CheckSquare,
-  CreditCard,Receipt
+  CreditCard,
+  Receipt,
+  Settings,
 } from 'lucide-react';
 
 import logoImg from '../assets/NEXOVATE_WHITE_BG.png';
@@ -43,11 +45,13 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
       { id: 'project-approval', name: 'Project approval', icon: <CheckSquare size={14} strokeWidth={2.2} />, path: '/admin/project-approval' },
       { id: 'payment-management', name: 'Payment Management', icon: <CreditCard size={14} strokeWidth={2.2} />, path: '/admin/payment-management' },
       { id: 'payment-history', name: 'Payment History', icon: <Receipt size={14} strokeWidth={2.2} />, path: '/admin/payment-history' },
+      { id: 'projects-monitoring', name: 'Projects monitoring', icon: <GitMerge size={14} strokeWidth={2.2} />, path: '/admin/projects-monitoring' },
       { id: 'chat-monitor', name: 'Chat Monitor', icon: <MessageSquareCode size={14} strokeWidth={2.2} />, path: '/admin/chat-monitor' },
+      { id: 'platform-setting', name: 'Platform Settings', icon: <Settings size={14} strokeWidth={2.2} />, path: '/admin/platform-setting' },
     ]
   };
 
-  const menuItems = menuConfig[roleKey];
+  const menuItems = menuConfig[roleKey] || menuConfig.developer;
   const isClient = roleKey === 'client';
 
   const handleItemClick = (item) => {
@@ -69,6 +73,24 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
       onLogout();
     }
     navigate('/login');
+  };
+
+  // Helper function to calculate strict active status
+  const checkIsActive = (item) => {
+    const currentPath = decodeURIComponent(location.pathname).toLowerCase().replace(/-/g, ' ');
+    const itemPath = decodeURIComponent(item.path).toLowerCase().replace(/-/g, ' ');
+
+    // 1. Root / Dashboard route checks
+    if (item.id === 'dashboard') {
+      return (
+        currentPath === `/${roleKey}` ||
+        currentPath === `/${roleKey}/` ||
+        currentPath === `/${roleKey}/dashboard`
+      );
+    }
+
+    // 2. Strict path matching for all other routes
+    return currentPath === itemPath;
   };
 
   return (
@@ -117,8 +139,8 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
 
         <nav className="flex-1 overflow-y-auto space-y-0.5 pr-0.5 mb-2 custom-scrollbar text-left">
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.path || 
-              (item.id === 'dashboard' && (location.pathname === `/${roleKey}` || location.pathname === `/${roleKey}/`));
+            const isActive = checkIsActive(item);
+
             return (
               <button
                 key={item.id}

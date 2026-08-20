@@ -1,44 +1,84 @@
 import React, { useState, useEffect } from "react";
-import { apiService } from "../../api/apiClient";
+import { useNavigate } from "react-router-dom";
+import { fetchDeveloperDashboard } from "../../services/api";
 import { 
   ClipboardList, 
   Zap, 
   CircleDollarSign, 
   Plane, 
   Utensils, 
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from "lucide-react";
 
 import Messages from "../shared/MessagesDashboard"; 
+
+const fallbackStats = { totalProjects: 0, activeProjects: 0, earned: "0 PKR" };
 
 export default function DeveloperDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState("dashboard");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    apiService.getDeveloperDashboard()
-      .then((res) => {
-        setData(res);
+    const loadDashboard = async () => {
+      try {
+        setLoading(true);
+        const res = await fetchDeveloperDashboard();
+
+        if (res?.success && res.dashboard) {
+          const d = res.dashboard;
+          const rawEarned = parseFloat(d.earned_money) || 0;
+          const formattedEarned = rawEarned >= 1000 
+            ? `${Math.round(rawEarned / 1000)}k PKR` 
+            : `${rawEarned} PKR`;
+
+          const mappedProjects = Array.isArray(res.projects)
+            ? res.projects.map((p) => {
+                const progressNum = parseInt(p.progress_percentage ?? p.progress) || 0;
+                const rawStatus = (p.status || p.project_status || "in progress").toLowerCase();
+                const displayPriority = rawStatus === "completed" || progressNum >= 100 ? "Completed" : "In Progress";
+
+                return {
+                  id: p.id || p.project_id,
+                  title: p.name || p.project_name || p.title || "Project",
+                  description: p.overview || p.description || p.purpose || "Active development project",
+                  priority: displayPriority,
+                  progress: `${progressNum}%`
+                };
+              })
+            : [];
+
+          setData({
+            stats: {
+              totalProjects: d.total_projects ?? 0,
+              activeProjects: d.active_projects ?? 0,
+              earned: formattedEarned
+            },
+            activeProjects: mappedProjects
+          });
+        } else {
+          setData({ stats: fallbackStats, activeProjects: [] });
+        }
+      } catch (err) {
+        console.warn("Dashboard API error, using default data:", err);
+        setData({ stats: fallbackStats, activeProjects: [] });
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Dashboard data load failed:", err);
-        setLoading(false);
-      });
+      }
+    };
+
+    loadDashboard();
   }, []);
 
-  const stats = data?.stats || { totalProjects: 12, activeProjects: 3, earned: "120k pkr" };
-  
-  const displayProjects = data?.activeProjects || [
-    { id: 1, title: "Bon Appetit", description: "Restaurant website", priority: "in progress", progress: "80%" },
-    { id: 2, title: "Blue Sky Travel", description: "Booking Engine Redesign", priority: "in progress", progress: "10%" },
-    { id: 3, title: "AK apparel store", description: "Ecommerce website", priority: "Completed", progress: "100%" }
-  ];
+  const stats = data?.stats || fallbackStats;
+  const displayProjects = data?.activeProjects || [];
 
   const getProgressColor = (progressStr) => {
     const val = parseInt(progressStr) || 0;
-    if (val === 100) return "bg-emerald-600"; 
+    if (val >= 100) return "bg-emerald-600"; 
+    if (val <= 0) return "bg-gray-300";
     if (val < 40) return "bg-[#BD1C22]";      
     if (val > 50) return "bg-[#2563eb]";      
     return "bg-[#DC6B0F]"; 
@@ -55,17 +95,26 @@ export default function DeveloperDashboard() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-16 text-black dark:text-white">
+        <Loader2 className="w-6 h-6 animate-spin text-[#DC6B0F] mr-2" />
+        <span className="text-xs font-semibold">Loading Developer Dashboard...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 max-w-4xl sm:max-w-4xl mx-auto text-black dark:text-white font-['Raleway',sans-serif] pb-8 px-3 sm:px-4">
       
       {currentView === 'dashboard' && (
         <>
           <div className="text-gray-900 dark:text-white space-y-0.5 text-left">
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight">Welcome back, Bilal!</h2>
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight">Welcome back!</h2>
             <p className="text-[11px] text-gray-500 dark:text-gray-300 font-medium">Here's what's happening with your projects today.</p>
           </div>
 
-          {/* TOP FLOATING METRIC ROW */}
+          {/* Top Floating Metric Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="bg-[#FFF6E9] p-3 rounded-[10px] flex items-center gap-3 shadow-xs text-left border border-black/5">
               <div className="w-8 h-8 rounded-[8px] bg-[#fca5a5]/40 flex items-center justify-center text-red-500 shrink-0">
@@ -98,17 +147,22 @@ export default function DeveloperDashboard() {
             </div>
           </div>
 
-          {/* LOWER SECTION CONTAINER - Stacked vertically */}
+          {/* Lower Section Container */}
           <div className="flex flex-col gap-4 w-full items-start">
             
-            {/* BOX 1: MY PROJECTS */}
+            {/* Box 1: My Projects */}
             <div className="p-0 dark:p-3 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md w-full transition-all duration-300 overflow-hidden">
               <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[8px] sm:rounded-[6px] overflow-hidden pb-3.5 transition-colors duration-300 border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl">
                 <div className="bg-white/40 dark:bg-white/80 px-3.5 py-2.5 flex justify-between items-center border-b border-black/5 dark:border-gray-200/60">
                   <h3 className="text-xs font-bold text-black tracking-tight flex items-center gap-1.5">
                     My projects
                   </h3>
-                  <button className="text-[11px] font-bold text-blue-600 hover:underline tracking-wide cursor-pointer uppercase">View All</button>
+                  <button 
+                    onClick={() => navigate('/developer/my projects')}
+                    className="text-[11px] font-bold text-blue-600 hover:underline tracking-wide cursor-pointer uppercase"
+                  >
+                    View All
+                  </button>
                 </div>
 
                 <div className="p-3 sm:p-4 space-y-3.5 text-left">
@@ -125,18 +179,24 @@ export default function DeveloperDashboard() {
                         <div className="flex-1 bg-gray-300/60 dark:bg-gray-200 h-1 rounded-full overflow-hidden">
                           <div 
                             className={`h-full rounded-full transition-all duration-500 ${getProgressColor(project.progress)}`}
-                            style={{ width: `${parseInt(project.progress)}%` }}
+                            style={{ width: `${parseInt(project.progress) || 0}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-gray-900 font-bold min-w-[28px] text-right shrink-0">{parseInt(project.progress)}%</span>
+                        <span className="text-[10px] text-gray-900 font-bold min-w-[28px] text-right shrink-0">{parseInt(project.progress) || 0}%</span>
                       </div>
                     </div>
                   ))}
+
+                  {displayProjects.length === 0 && (
+                    <div className="text-center py-6 text-xs text-gray-500 font-medium">
+                      No active projects assigned yet.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* BOX 2: RECENT MESSAGES MODULE CONTAINER */}
+            {/* Box 2: Recent Messages */}
             <div className="p-0 dark:p-3 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md w-full sm:max-w-md transition-all duration-300 overflow-hidden">
               <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[8px] sm:rounded-[6px] overflow-hidden pb-3.5 transition-colors duration-300 border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl">
                 

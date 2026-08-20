@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  ClipboardList, 
   ArrowLeft, 
-  Check, 
-  ExternalLink, 
-  CheckCircle2 
+  CheckCircle2, 
+  Loader2 
 } from 'lucide-react';
+import { fetchAdminProjectDetails, fetchAdminDashboard } from '../../services/api';
 
-const mockProjects = [
+const fallbackProjects = [
   {
     id: 1,
     title: "Bon appetit",
@@ -17,7 +16,6 @@ const mockProjects = [
     email: "zaraahmed@gmail.com",
     initials: "ZA",
     budget: "PKR 90,000",
-    client: "Foodies Ltd.",
     category: "Full Stack Web App",
     timeline: "3 weeks",
     targetAudience: "Young adults and professionals who want to explore new restaurants.",
@@ -27,19 +25,16 @@ const mockProjects = [
       "Due-date reminders via email",
       "Librarian admin panel for inventory"
     ],
-    description: "I run a small restaurant and want an app where customers can browse our menu, place orders for delivery or pickup, and pay online with a card or wallet. I also need a simple staff-facing dashboard to see incoming orders in real time and mark them as preparing, ready, or delivered. Eventually I'd like loyalty points for repeat customers.",
-    techStack: ["React.js", "Node.js", "Express", "MongoDB", "Tailwind CSS"],
-    projectUrl: "https://bonappetit-demo.com"
+    description: "I run a small restaurant and want an app where customers can browse our menu, place orders for delivery or pickup, and pay online with a card or wallet.",
   },
   {
     id: 2,
-    title: "Bon appetit",
+    title: "Ecommerce Store",
     subTitle: "Mobile Application",
-    submittedBy: "Zara ahmed",
-    email: "zaraahmed@gmail.com",
-    initials: "ZA",
+    submittedBy: "Sara ahmed",
+    email: "saraahmed@gmail.com",
+    initials: "SA",
     budget: "PKR 90,000",
-    client: "Gourmet Group",
     category: "Mobile Application",
     timeline: "4 weeks",
     targetAudience: "Food enthusiasts seeking quick ordering and reward tracking.",
@@ -49,37 +44,126 @@ const mockProjects = [
       "Push notifications"
     ],
     description: "Cross-platform mobile application for customer loyalty rewards and quick order tracking.",
-    techStack: ["React Native", "Firebase", "Redux Toolkit"],
-    projectUrl: "https://bonappetit-mobile.com"
-  },
-  {
-    id: 3,
-    title: "TN-HRMS",
-    subTitle: "Enterprise HR Portal",
-    submittedBy: "Zara ahmed",
-    email: "zaraahmed@gmail.com",
-    initials: "ZA",
-    budget: "PKR 90,000",
-    client: "Tech Solutions Inc.",
-    category: "Enterprise System",
-    timeline: "6 weeks",
-    targetAudience: "HR managers and internal company personnel.",
-    features: [
-      "Automated monthly payroll generation",
-      "Leave management and approvals",
-      "Employee attendance monitoring"
-    ],
-    description: "Human Resource Management System for handling payroll, employee attendance, leaves, and performance evaluations.",
-    techStack: ["Next.js", "PostgreSQL", "Prisma", "Tailwind CSS"],
-    projectUrl: "https://tnhrms.com"
   }
 ];
 
 export default function ProjectApproval() {
+  const [projectsList, setProjectsList] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [loadingList, setLoadingList] = useState(true);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestNotes, setRequestNotes] = useState('');
+  
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const loadProjectsList = async () => {
+      try {
+        setLoadingList(true);
+        const res = await fetchAdminDashboard();
+
+        if (res?.dashboard && Array.isArray(res.dashboard.projectsAwaitingApproval)) {
+          const mapped = res.dashboard.projectsAwaitingApproval.map((p) => {
+            const clientName = p.client_name || p.submittedBy || (p.purpose ? `Client (${p.purpose})` : "Client");
+            const rawBudget = parseFloat(p.budget) || 0;
+
+            return {
+              id: p.id || p.project_id,
+              title: p.projectname || p.project_name || p.title || "Untitled Project",
+              submittedBy: clientName,
+              budget: rawBudget > 0 ? `PKR ${rawBudget.toLocaleString()}` : "PKR 0"
+            };
+          });
+          setProjectsList(mapped);
+        } else {
+          setProjectsList(fallbackProjects);
+        }
+      } catch (err) {
+        console.warn("Could not load projects list, using fallback:", err);
+        setProjectsList(fallbackProjects);
+      } finally {
+        setLoadingList(false);
+      }
+    };
+
+    loadProjectsList();
+  }, []);
+
+  const handleSelectProject = async (projectSummary) => {
+    const projectId = projectSummary.id || projectSummary.project_id;
+    try {
+      setLoadingDetails(true);
+      const res = await fetchAdminProjectDetails(projectId);
+
+      if (res?.success && res.project) {
+        const p = res.project;
+        const clientName = p.client_name || projectSummary.submittedBy || "Client";
+        const parts = clientName.trim().split(' ');
+        const initials = parts.length > 1 
+          ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() 
+          : clientName.substring(0, 2).toUpperCase();
+        
+        const rawBudget = parseFloat(p.budget) || 0;
+
+        setSelectedProject({
+          id: p.id,
+          title: p.name || projectSummary.title,
+          subTitle: p.purpose || "Custom Web & Mobile Solution",
+          submittedBy: clientName,
+          email: p.client_email || "client@nexovate.com",
+          initials: initials || "CL",
+          budget: rawBudget > 0 ? `PKR ${rawBudget.toLocaleString()}` : "PKR 0",
+          category: p.purpose || "Full Stack Application",
+          timeline: p.timeline || "3-4 weeks",
+          targetAudience: p.target_audience || "Target users and customer segment specified in project scope.",
+          features: Array.isArray(p.features) && p.features.length > 0 
+            ? p.features 
+            : [
+                "Full-featured responsive UI layout",
+                "Secure backend API integration & authentication",
+                "Database design and state management modules"
+              ],
+          description: p.overview || "No extended overview provided."
+        });
+      } else {
+        setSelectedProject({
+          ...projectSummary,
+          subTitle: "Full Stack Application",
+          email: "client@nexovate.com",
+          initials: "CL",
+          category: "Web Application",
+          timeline: "3-4 weeks",
+          targetAudience: "Target users specified in project scope.",
+          features: ["Responsive UI", "Secure authentication", "State management"],
+          description: "Project description and scope details."
+        });
+      }
+    } catch (err) {
+      console.warn("Could not fetch project details from API, using summary:", err);
+      setSelectedProject({
+        ...projectSummary,
+        subTitle: "Full Stack Application",
+        email: "client@nexovate.com",
+        initials: "CL",
+        category: "Web Application",
+        timeline: "3-4 weeks",
+        targetAudience: "Target users specified in project scope.",
+        features: ["Responsive UI", "Secure authentication", "State management"],
+        description: "Project description and scope details."
+      });
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  useEffect(() => {
+    const passedProjectId = location.state?.projectId;
+    if (passedProjectId) {
+      handleSelectProject({ id: passedProjectId });
+    }
+  }, [location.state]);
 
   const handleAction = (status) => {
     alert(`Project ${status}!`);
@@ -99,11 +183,19 @@ export default function ProjectApproval() {
     setRequestNotes('');
   };
 
+  if (loadingDetails) {
+    return (
+      <div className="flex items-center justify-center p-16 text-black dark:text-white">
+        <Loader2 className="w-6 h-6 animate-spin text-[#DC6B0F] mr-2" />
+        <span className="text-xs font-semibold">Loading project details...</span>
+      </div>
+    );
+  }
+
   if (selectedProject) {
     return (
       <div className="w-full text-black font-['Raleway',sans-serif] space-y-3 max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none relative">
         
-        {/* Navigation Bar */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSelectedProject(null)}
@@ -113,16 +205,11 @@ export default function ProjectApproval() {
           </button>
         </div>
 
-        {/* Outer Glass Container */}
         <div className={`w-full dark:p-3 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md dark:shadow-xl transition-all duration-300 ${showRequestModal ? 'filter blur-xs' : ''}`}>
           
-          {/* Inner White Card */}
           <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[10px] p-6 sm:p-8 shadow-md border border-black/5 dark:border-transparent space-y-6 text-left transition-colors duration-300">
             
-            {/* Header: Title & Customer Info */}
             <div className="flex justify-between items-start pt-1">
-              
-              {/* LEFT: Title, Subtitle, and Short Underline */}
               <div className="text-left pb-2 border-b border-gray-300/80 max-w-[210px] sm:max-w-[240px] w-full">
                 <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight leading-none">
                   {selectedProject.title}
@@ -132,7 +219,6 @@ export default function ProjectApproval() {
                 </p>
               </div>
 
-              {/* RIGHT: Customer Avatar & Details */}
               <div className="text-right space-y-2">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-600 block">
                   CUSTOMER
@@ -146,18 +232,14 @@ export default function ProjectApproval() {
                       {selectedProject.submittedBy}
                     </span>
                     <span className="block text-[10px] font-medium text-gray-500">
-                      {selectedProject.email || 'zaraahmed@gmail.com'}
+                      {selectedProject.email}
                     </span>
                   </div>
                 </div>
               </div>
-
             </div>
 
-            {/* Q&A Section */}
             <div className="space-y-4 text-xs pt-1">
-              
-              {/* 1. Target Audience */}
               <div className="space-y-1">
                 <h3 className="font-bold text-black text-xs">1. Who is target audience?</h3>
                 <p className="font-extrabold text-black pl-3 text-xs leading-relaxed">
@@ -166,7 +248,6 @@ export default function ProjectApproval() {
               </div>
               <hr className="border-gray-200/60" />
 
-              {/* 2. Budget */}
               <div className="space-y-1">
                 <h3 className="font-bold text-black text-xs">2. What is the estimated budget?</h3>
                 <p className="font-extrabold text-black pl-3 text-xs">
@@ -175,16 +256,14 @@ export default function ProjectApproval() {
               </div>
               <hr className="border-gray-200/60" />
 
-              {/* 3. Timeline */}
               <div className="space-y-1">
                 <h3 className="font-bold text-black text-xs">3. What is the timeline?</h3>
                 <p className="font-extrabold text-black pl-3 text-xs">
-                  {selectedProject.timeline || '3 weeks'}
+                  {selectedProject.timeline}
                 </p>
               </div>
               <hr className="border-gray-200/60" />
 
-              {/* 4. Features */}
               <div className="space-y-1.5">
                 <h3 className="font-bold text-black text-xs">4. Write few features that you want?</h3>
                 <ul className="list-disc list-inside space-y-1 pl-3 font-extrabold text-black text-xs leading-relaxed">
@@ -195,19 +274,16 @@ export default function ProjectApproval() {
               </div>
               <hr className="border-gray-200/60" />
 
-              {/* 5. Description */}
               <div className="space-y-1">
                 <h3 className="font-bold text-black text-xs">5. Describe your project.</h3>
                 <p className="font-extrabold text-black pl-3 text-xs leading-relaxed">
                   {selectedProject.description}
                 </p>
               </div>
-
             </div>
 
             <hr className="border-gray-200/80 pt-1" />
 
-            {/* Bottom Action Buttons */}
             <div className="grid grid-cols-3 gap-3 pt-1">
               <button
                 onClick={() => handleAction('Approved')}
@@ -234,11 +310,9 @@ export default function ProjectApproval() {
           </div>
         </div>
 
-        {/* Request Changes Modal Popup */}
         {showRequestModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm transition-all">
             <div className="bg-white rounded-2xl shadow-2xl border border-gray-200/80 p-6 sm:p-7 w-full max-w-md text-left space-y-4 font-['Raleway',sans-serif]">
-              
               <div className="space-y-1">
                 <h3 className="text-base font-extrabold text-black tracking-tight">
                   Request Changes
@@ -273,7 +347,6 @@ export default function ProjectApproval() {
                   Send Request
                 </button>
               </div>
-
             </div>
           </div>
         )}
@@ -291,13 +364,9 @@ export default function ProjectApproval() {
         </h1>
       </div>
 
-      {/* Outer Wrapper */}
       <div className="p-0 dark:p-3 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-black/5 shadow-xs dark:shadow-md dark:border-white/20 dark:backdrop-blur-md w-full transition-all duration-300 overflow-hidden">
-        
-        {/* Main Outer Box */}
         <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[8px] sm:rounded-[6px] border border-black/10 dark:border-transparent shadow-xs dark:shadow-xl overflow-hidden transition-colors duration-300">
 
-          {/* Table Header Section */}
           <div className="bg-[#FFFaf3]/80 dark:bg-[#A2A6B0] px-3.5 py-4 flex items-center justify-between border-b border-black/5 dark:border-gray-200/60">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full bg-[#dbeafe] flex items-center justify-center text-blue-600 shrink-0">
@@ -309,34 +378,38 @@ export default function ProjectApproval() {
             </div>
           </div>
 
-          {/* Table Rows Section */}
           <div className="divide-y divide-gray-300/40 bg-[#FFF6E9] dark:bg-[#EFEEEA]">
-            {mockProjects.map((project) => (
-              <div 
-                key={project.id} 
-                className="px-10 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
-              >
-                {/* Left Side: Title & Info */}
-                <div className="text-left space-y-0.5">
-                  <h3 className="font-bold text-xs text-black tracking-tight">
-                    {project.title}
-                  </h3>
-                  <p className="text-[10px] text-gray-600 font-medium">
-                    Submitted by {project.submittedBy} <span className="mx-0.5">•</span> Budget {project.budget}
-                  </p>
-                </div>
-
-                {/* Right Side: View Project Link */}
-                <button 
-                  onClick={() => setSelectedProject(project)}
-                  className=" px-10 text-[11px] font-bold text-blue-600 hover:underline cursor-pointer transition-all shrink-0"
-                >
-                  View project
-                </button>
+            {loadingList ? (
+              <div className="flex items-center justify-center py-10 text-gray-500 gap-2">
+                <Loader2 size={18} className="animate-spin text-[#DC6B0F]" />
+                <span className="text-xs font-semibold">Loading projects...</span>
               </div>
-            ))}
+            ) : (
+              projectsList.map((project) => (
+                <div 
+                  key={project.id} 
+                  className="px-6 sm:px-10 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
+                >
+                  <div className="text-left space-y-0.5">
+                    <h3 className="font-bold text-xs text-black tracking-tight">
+                      {project.title}
+                    </h3>
+                    <p className="text-[10px] text-gray-600 font-medium">
+                      Submitted by {project.submittedBy} <span className="mx-0.5">•</span> Budget {project.budget}
+                    </p>
+                  </div>
 
-            {mockProjects.length === 0 && (
+                  <button 
+                    onClick={() => handleSelectProject(project)}
+                    className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer transition-all shrink-0"
+                  >
+                    View project
+                  </button>
+                </div>
+              ))
+            )}
+
+            {!loadingList && projectsList.length === 0 && (
               <div className="text-center py-6 text-xs text-gray-500 font-medium">
                 No projects awaiting approval.
               </div>
@@ -344,7 +417,6 @@ export default function ProjectApproval() {
           </div>
 
         </div>
-
       </div>
 
     </div>

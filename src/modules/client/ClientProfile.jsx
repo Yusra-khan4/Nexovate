@@ -1,25 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { updateClientProfile } from '../../services/api';
 
 export default function ClientProfile() {
   const navigate = useNavigate();
 
+  // Retrieve current user/client details from localStorage
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+
+  const clientId = storedUser.client_id || storedUser.id || 2;
+
   const [profileData, setProfileData] = useState({
-    fullName: 'Bilal ahmed',
-    emailAddress: 'bilalahmed@gmail.com',
-    phoneNumber: '+923311673628',
-    bankAccountTitle: '',
-    bankName: '',
-    bankAccountNumber: ''
+    fullName: storedUser.full_name || storedUser.name || 'Bilal ahmed',
+    emailAddress: storedUser.email_address || storedUser.email || 'bilalahmed@gmail.com',
+    phoneNumber: storedUser.phone || '+923311673628',
+    bankAccountTitle: storedUser.account_title || '',
+    bankName: storedUser.bank_name || '',
+    bankAccountNumber: storedUser.account_number || ''
   });
 
-  const handleSaveChanges = (e) => {
-    e.preventDefault();
-    console.log('Profile metrics successfully secured:', profileData);
+  const [saving, setSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+
+  // Compute initials dynamically
+  const getInitials = (name) => {
+    if (!name) return 'CL';
+    const parts = name.trim().split(' ');
+    if (parts.length > 1) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
-  const labelStyles = "block text-[11px] font-black text-gray-900 tracking-wide mb-1 text-left";
+  const handleSaveChanges = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      setStatusMessage({ type: '', text: '' });
+
+      const res = await updateClientProfile(clientId, profileData);
+
+      // Update local storage session cache with latest profile
+      const updatedUser = {
+        ...storedUser,
+        full_name: profileData.fullName,
+        email_address: profileData.emailAddress,
+        phone: profileData.phoneNumber,
+        account_title: profileData.bankAccountTitle,
+        bank_name: profileData.bankName,
+        account_number: profileData.bankAccountNumber,
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      setStatusMessage({ type: 'success', text: 'Profile updated successfully!' });
+    } catch (err) {
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to update profile.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const labelStyles = "block text-[11px] font-black text-gray-900 dark:text-gray-900 tracking-wide mb-1 text-left";
   const inputStyles = "w-full bg-white border border-gray-300 rounded-[5px] py-2 px-3 text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#DC6B0F] transition-colors duration-200 font-medium shadow-sm";
 
   return (
@@ -28,26 +76,31 @@ export default function ClientProfile() {
       {/* HEADER */}
       <div className="mb-6 sm:mb-8 space-y-1">
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">My Profile</h1>
-        <p className="text-[11px] sm:text-sm text-gray-500 dark:text-gray-200 font-medium">Manage your personal payment information.</p>     
+        <p className="text-[11px] sm:text-sm text-gray-500 dark:text-gray-200 font-medium">Manage your personal payment information.</p>    
       </div>
 
       {/* CARD CONTAINER */}
       <div className="p-0 dark:p-4 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md shadow-none dark:shadow-2xl w-full max-w-lg mx-auto overflow-hidden transition-all duration-300">
         
         <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-gray-900 dark:text-black p-4 sm:p-8 rounded-[8px] sm:rounded-[4px] shadow-inner border border-black/5 sm:border-transparent w-full transition-colors duration-300">
+          
+          {statusMessage.text && (
+            <div className={`mb-4 p-2.5 rounded-md text-xs font-semibold ${
+              statusMessage.type === 'error'
+                ? 'bg-red-100 text-red-700 border border-red-200'
+                : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+            }`}>
+              {statusMessage.text}
+            </div>
+          )}
+
           <form onSubmit={handleSaveChanges} className="space-y-3.5 sm:space-y-4">
             
-            {/* AVATAR & EDIT LINK */}
+            {/* AVATAR */}
             <div className="flex flex-col items-center justify-center mb-4 sm:mb-6">
               <div className="w-11 sm:w-12 h-11 sm:h-12 rounded-full bg-[#1e40af] text-white flex items-center justify-center text-xs sm:text-sm font-black shadow-md mb-1.5">
-                BA
+                {getInitials(profileData.fullName)}
               </div>
-              <button 
-                type="button" 
-                className="text-[11px] font-black text-gray-900 hover:underline tracking-wide cursor-pointer"
-              >
-                Edit
-              </button>
             </div>
 
             {/* FULL NAME */}
@@ -126,9 +179,17 @@ export default function ClientProfile() {
             <div className="pt-2 sm:pt-3 flex justify-start">
               <button 
                 type="submit" 
-                className="w-full sm:w-auto bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] py-2.5 px-6 rounded-[5px] font-extrabold text-xs tracking-wide shadow-md hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer text-center"
+                disabled={saving}
+                className="w-full sm:w-auto bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] py-2.5 px-6 rounded-[5px] font-extrabold text-xs tracking-wide shadow-md hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
-                Save changes
+                {saving ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  'Save changes'
+                )}
               </button>
             </div>
 

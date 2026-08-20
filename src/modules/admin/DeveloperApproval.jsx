@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   UserCheck,
   Hourglass,
@@ -8,217 +8,243 @@ import {
   MoreVertical,
   Trash2,
   UserX,
-  ShieldAlert
+  ShieldAlert,
+  BadgeCheck,
+  Loader2
 } from 'lucide-react';
+import { 
+  deleteDeveloperAdmin,
+  fetchDeveloperStatsAdmin,
+  fetchDevelopersByApprovalAdmin,
+  fetchDeveloperDetailsAdmin,
+  updateDeveloperApprovalAdmin,
+  updateDeveloperAccountStatusAdmin,
+  verifyDeveloperAdmin
+} from '../../services/api';
 
-const developerApprovalData = {
-  stats: {
-    approved: 38,
-    pending: 3,
-    rejected: 1
-  },
-  approvedList: [
-    {
-      id: 1,
-      name: "Zara ahmed",
-      date: "June 12, 2026",
-      initials: "ZA",
-      initialBg: "bg-blue-200/80 text-blue-700 dark:bg-blue-100 dark:text-blue-800",
-      domain: "Full stack development",
-      email: "zaraahmed@gmail.com",
-      phone: "+923311873628",
-      bio: "Full-stack developer specializing in booking & ordering platforms, with a focus on clean React frontends and reliable Node.js APIs.",
-      skills: {
-        web: ["React.js", "Next.js", "HTML", "CSS", "Tailwind", "Node.js"],
-        database: ["MySQL", "PostgreSQL"],
-        cloud: ["AWS"]
-      },
-      projectLinks: [
-        "https://tnhrms.com",
-        "https://bonappetit.com",
-        "https://raabtaai.com"
-      ],
-      bank: {
-        name: "Bank Al Habib",
-        title: "Zara Ahmed",
-        iban: "123456789000"
-      }
-    },
-    {
-      id: 2,
-      name: "Abdul hanan",
-      date: "May 28, 2026",
-      initials: "AH",
-      initialBg: "bg-orange-200/80 text-orange-700 dark:bg-orange-100 dark:text-orange-800",
-      domain: "Frontend Development",
-      email: "abdul.hanan@gmail.com",
-      phone: "+923001234567",
-      bio: "Frontend engineer focused on React UI components and responsive layout architectures.",
-      skills: {
-        web: ["React.js", "HTML", "CSS", "Tailwind"],
-        database: ["MySQL"],
-        cloud: []
-      },
-      projectLinks: ["https://portfolio-abdul.com"],
-      bank: {
-        name: "Meezan Bank",
-        title: "Abdul Hanan",
-        iban: "987654321000"
-      }
-    },
-    {
-      id: 3,
-      name: "Zain rehman",
-      date: "Oct 24, 2026",
-      initials: "ZR",
-      initialBg: "bg-blue-200/80 text-blue-700 dark:bg-blue-100 dark:text-blue-800",
-      domain: "Backend Developer",
-      email: "zain.rehman@gmail.com",
-      phone: "+923211234567",
-      bio: "Node.js microservices developer experienced with high-load API systems.",
-      skills: {
-        web: ["Node.js", "Express"],
-        database: ["PostgreSQL"],
-        cloud: ["AWS"]
-      },
-      projectLinks: ["https://zainrehman.dev"],
-      bank: {
-        name: "HBL",
-        title: "Zain Rehman",
-        iban: "554433221100"
-      }
-    },
-    {
-      id: 4,
-      name: "Maham khan",
-      date: "Oct 30, 2026",
-      initials: "MK",
-      initialBg: "bg-emerald-200/80 text-emerald-700 dark:bg-emerald-100 dark:text-emerald-800",
-      domain: "UI/UX Developer",
-      email: "maham.khan@gmail.com",
-      phone: "+923129876543",
-      bio: "UI/UX designer and frontend React implementer creating intuitive dashboards.",
-      skills: {
-        web: ["React.js", "Tailwind CSS"],
-        database: [],
-        cloud: []
-      },
-      projectLinks: ["https://maham.design"],
-      bank: {
-        name: "Meezan Bank",
-        title: "Maham Khan",
-        iban: "667788990011"
-      }
-    }
-  ],
-  pendingList: [
-    {
-      id: 6,
-      name: "Hamza Sheikh",
-      date: "July 02, 2026",
-      initials: "HS",
-      initialBg: "bg-amber-200/80 text-amber-700 dark:bg-amber-100 dark:text-amber-800",
-      domain: "Full Stack Engineer",
-      email: "hamza.sheikh@gmail.com",
-      phone: "+923334445556",
-      bio: "Full stack developer interested in scalable cloud solutions.",
-      skills: {
-        web: ["React.js", "Node.js"],
-        database: ["PostgreSQL"],
-        cloud: ["AWS"]
-      },
-      projectLinks: ["https://hamza-dev.com"],
-      bank: {
-        name: "UBL",
-        title: "Hamza Sheikh",
-        iban: "112233445566"
-      }
-    }
-  ],
-  rejectedList: [
-    {
-      id: 9,
-      name: "Ali Mustafa",
-      date: "Feb 11, 2026",
-      initials: "AM",
-      initialBg: "bg-red-200/80 text-red-700 dark:bg-red-100 dark:text-red-800",
-      domain: "Mobile App Developer",
-      email: "ali.mustafa@gmail.com",
-      phone: "+923456789012",
-      bio: "Flutter & React Native developer.",
-      skills: {
-        web: ["React.js"],
-        database: ["MySQL"],
-        cloud: []
-      },
-      projectLinks: ["https://alimustafa.app"],
-      bank: {
-        name: "Allied Bank",
-        title: "Ali Mustafa",
-        iban: "998877665544"
-      }
-    }
-  ],
-  suspendedList: [
-    {
-      id: 12,
-      name: "Zara ahmed",
-      date: "June 12, 2026",
-      initials: "ZA",
-      initialBg: "bg-blue-200/80 text-blue-700 dark:bg-blue-100 dark:text-blue-800",
-      domain: "Full stack development",
-      email: "zaraahmed@gmail.com",
-      phone: "+923311873628",
-      bio: "Full-stack developer specializing in booking & ordering platforms, with a focus on clean React frontends and reliable Node.js APIs.",
-      skills: {
-        web: ["React.js", "Next.js", "HTML", "CSS", "Tailwind", "Node.js"],
-        database: ["MySQL", "PostgreSQL"],
-        cloud: ["AWS"]
-      },
-      projectLinks: [
-        "https://tnhrms.com",
-        "https://bonappetit.com",
-        "https://raabtaai.com"
-      ],
-      bank: {
-        name: "Bank Al Habib",
-        title: "Zara Ahmed",
-        iban: "123456789000"
-      }
-    }
-  ]
-};
+const avatarColors = [
+  "bg-blue-200/80 text-blue-700 dark:bg-blue-100 dark:text-blue-800",
+  "bg-orange-200/80 text-orange-700 dark:bg-orange-100 dark:text-orange-800",
+  "bg-emerald-200/80 text-emerald-700 dark:bg-emerald-100 dark:text-emerald-800",
+  "bg-amber-200/80 text-amber-700 dark:bg-amber-100 dark:text-amber-800",
+  "bg-purple-200/80 text-purple-700 dark:bg-purple-100 dark:text-purple-800"
+];
 
 export default function DeveloperApproval() {
+  const [stats, setStats] = useState({ approved: 0, pending: 0, rejected: 0 });
+  const [developers, setDevelopers] = useState([]);
   const [activeTab, setActiveTab] = useState('approved');
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
-  const getActiveList = () => {
-    switch (activeTab) {
-      case 'pending':
-        return developerApprovalData.pendingList;
-      case 'rejected':
-        return developerApprovalData.rejectedList;
-      case 'suspended':
-        return developerApprovalData.suspendedList;
-      case 'approved':
-      default:
-        return developerApprovalData.approvedList;
+  // 1. Fetch Developer Stats
+  const loadStats = async () => {
+    try {
+      const res = await fetchDeveloperStatsAdmin();
+      if (res?.success && res.stats) {
+        setStats({
+          approved: res.stats.total_approved ?? 0,
+          pending: res.stats.total_pending ?? 0,
+          rejected: res.stats.total_rejected ?? 0
+        });
+      }
+    } catch (err) {
+      console.warn("Could not load developer stats:", err);
     }
   };
 
-  const activeList = getActiveList();
+  // 2. Fetch Developer List (Filtered by active tab)
+  const loadDevelopers = async () => {
+    try {
+      setLoading(true);
+      const statusParam = activeTab === 'suspended' ? '' : activeTab;
+      const res = await fetchDevelopersByApprovalAdmin(statusParam);
 
-  const handleAction = (actionName, devName) => {
-    alert(`${actionName} action performed for ${devName}`);
-    setSelectedDeveloper(null);
+      if (res?.success && Array.isArray(res.developers)) {
+        let list = res.developers;
+
+        if (activeTab === 'suspended') {
+          list = list.filter(d => (d.account_status || '').toLowerCase() === 'suspended');
+        }
+
+        const mapped = list.map((dev, idx) => {
+          const name = dev.full_name || `Developer #${dev.id}`;
+          const parts = name.trim().split(' ');
+          const initials = parts.length > 1 
+            ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() 
+            : name.substring(0, 2).toUpperCase();
+
+          const rawDate = dev.created_at || dev.updated_at;
+          const formattedDate = rawDate 
+            ? new Date(rawDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+            : 'Recent';
+
+          return {
+            id: dev.id,
+            name: name,
+            date: formattedDate,
+            initials: initials || "DV",
+            initialBg: avatarColors[idx % avatarColors.length],
+            domain: dev.your_domain || "Full Stack Development",
+            email: dev.email_address || "developer@example.com",
+            is_verified: Boolean(dev.is_verified),
+            approval_status: dev.approval_status || 'pending',
+            account_status: dev.account_status || 'active'
+          };
+        });
+
+        setDevelopers(mapped);
+      } else {
+        setDevelopers([]);
+      }
+    } catch (err) {
+      console.warn("Could not fetch developers:", err);
+      setDevelopers([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleMenuAction = (action, devName) => {
-    alert(`${action} performed for ${devName}`);
-    setOpenMenuId(null);
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  useEffect(() => {
+    loadDevelopers();
+  }, [activeTab]);
+
+  // 3. Fetch Full Developer Profile on Click
+  const handleViewProfile = async (devSummary) => {
+    try {
+      setLoadingProfile(true);
+      const res = await fetchDeveloperDetailsAdmin(devSummary.id);
+
+      if (res?.success && res.developer) {
+        const d = res.developer;
+        const name = d.full_name || devSummary.name;
+        const parts = name.trim().split(' ');
+        const initials = parts.length > 1 
+          ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() 
+          : name.substring(0, 2).toUpperCase();
+
+        const techStackArray = Array.isArray(d.tech_stack) 
+          ? d.tech_stack 
+          : typeof d.tech_stack === 'string' 
+            ? d.tech_stack.split(',').map(s => s.trim()) 
+            : ["React.js", "Node.js"];
+
+        const links = [];
+        if (d.linkdin_url) links.push(d.linkdin_url);
+        if (d.github_url) links.push(d.github_url);
+        if (links.length === 0) links.push("https://portfolio.com");
+
+        setSelectedDeveloper({
+          id: d.id,
+          name: name,
+          initials: initials || "DV",
+          domain: d.your_domain || "Full Stack Development",
+          email: d.email_address || "developer@example.com",
+          phone: d.phone_number || d.phone || "+923000000000",
+          bio: d.bio || "Full-stack developer specializing in scalable web applications and clean code architecture.",
+          skills: {
+            web: techStackArray,
+            database: ["MySQL", "PostgreSQL"],
+            cloud: ["AWS"]
+          },
+          projectLinks: links,
+          bank: {
+            name: d.bank_name || "Not linked",
+            title: d.bank_account_title || name,
+            iban: d.bank_account_number_iban || "Not provided"
+          },
+          is_verified: Boolean(d.is_verified),
+          approval_status: d.approval_status || devSummary.approval_status,
+          account_status: d.account_status || devSummary.account_status
+        });
+      } else {
+        setSelectedDeveloper(devSummary);
+      }
+    } catch (err) {
+      console.warn("Could not fetch detailed developer profile, using summary:", err);
+      setSelectedDeveloper(devSummary);
+    } finally {
+      setLoadingProfile(false);
+    }
   };
+
+  // 4. Handle Developer Verification Toggle
+  const handleToggleVerification = async (dev) => {
+    const nextStatus = !dev.is_verified;
+    try {
+      await verifyDeveloperAdmin(dev.id, nextStatus);
+
+      setDevelopers(prev => 
+        prev.map(d => d.id === dev.id ? { ...d, is_verified: nextStatus } : d)
+      );
+
+      if (selectedDeveloper && selectedDeveloper.id === dev.id) {
+        setSelectedDeveloper(prev => ({ ...prev, is_verified: nextStatus }));
+      }
+
+      setOpenMenuId(null);
+      alert(`Developer ${dev.name} is now ${nextStatus ? 'verified' : 'unverified'}.`);
+    } catch (err) {
+      alert(err.message || 'Failed to update verification status.');
+    }
+  };
+
+  // Handle Accept / Reject Application
+  const handleApprovalAction = async (dev, approvalStatus) => {
+    try {
+      await updateDeveloperApprovalAdmin(dev.id, approvalStatus);
+      alert(`Developer application has been ${approvalStatus}.`);
+      setSelectedDeveloper(null);
+      loadStats();
+      loadDevelopers();
+    } catch (err) {
+      alert(`Failed to ${approvalStatus} developer.`);
+    }
+  };
+
+  // Handle Account Status (Suspension / Unsuspend / Block)
+  const handleAccountStatusChange = async (dev, accountStatus) => {
+    try {
+      await updateDeveloperAccountStatusAdmin(dev.id, accountStatus);
+      alert(`Developer account status changed to ${accountStatus}.`);
+      setSelectedDeveloper(null);
+      setOpenMenuId(null);
+      loadDevelopers();
+    } catch (err) {
+      alert(`Failed to update account status to ${accountStatus}.`);
+    }
+  };
+
+  // Handle Delete Account
+  const handleDeleteDeveloper = async (dev) => {
+    if (!window.confirm(`Are you sure you want to delete ${dev.name}'s account?`)) return;
+
+    try {
+      await deleteDeveloperAdmin(dev.id);
+      alert(`Developer ${dev.name} deleted successfully.`);
+      setSelectedDeveloper(null);
+      setOpenMenuId(null);
+      loadStats();
+      loadDevelopers();
+    } catch (err) {
+      alert(`Failed to delete developer.`);
+    }
+  };
+
+  if (loadingProfile) {
+    return (
+      <div className="flex items-center justify-center p-16 text-black dark:text-white">
+        <Loader2 className="w-6 h-6 animate-spin text-[#DC6B0F] mr-2" />
+        <span className="text-xs font-semibold">Loading developer profile...</span>
+      </div>
+    );
+  }
 
   if (selectedDeveloper) {
     return (
@@ -232,26 +258,35 @@ export default function DeveloperApproval() {
           </button>
         </div>
 
-        {/* PROFILE CARD DETAIL CONTAINER */}
+        {/* Profile Card Container */}
         <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[12px] dark:shadow-2xl transition-all">
           <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[8px] sm:rounded-[6px] p-5 sm:p-7 shadow-xs border border-amber-100/60 dark:border-transparent space-y-5 text-left transition-colors duration-300">
             
-            {/* AVATAR BADGE */}
-            <div className="flex justify-center pt-1">
+            <div className="flex flex-col items-center justify-center pt-1 gap-1">
               <div className="w-14 h-14 rounded-full bg-[#0d52cd] text-white font-extrabold text-lg flex items-center justify-center shadow-xs tracking-wider">
-                {selectedDeveloper.initials || 'ZA'}
+                {selectedDeveloper.initials}
+              </div>
+              <div className="flex items-center gap-1 mt-1">
+                {selectedDeveloper.is_verified ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    <BadgeCheck size={12} /> Verified Developer
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+                    Unverified
+                  </span>
+                )}
               </div>
             </div>
 
-            {/* NAME & DOMAIN (COMPACT INPUTS) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-xs font-bold text-black block mb-1">Your name</label>
+                <label className="text-xs font-bold text-black block mb-1">Developer name</label>
                 <input 
                   type="text" 
                   readOnly 
-                  value={selectedDeveloper.name} 
-                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                  value={selectedDeveloper.name || ''} 
+                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                 />
               </div>
 
@@ -260,8 +295,8 @@ export default function DeveloperApproval() {
                 <input 
                   type="text" 
                   readOnly 
-                  value={selectedDeveloper.domain || 'Full stack development'} 
-                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                  value={selectedDeveloper.domain || 'Full Stack Development'} 
+                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                 />
               </div>
 
@@ -270,8 +305,8 @@ export default function DeveloperApproval() {
                 <input 
                   type="email" 
                   readOnly 
-                  value={selectedDeveloper.email || 'zaraahmed@gmail.com'} 
-                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                  value={selectedDeveloper.email || ''} 
+                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                 />
               </div>
 
@@ -280,60 +315,28 @@ export default function DeveloperApproval() {
                 <input 
                   type="text" 
                   readOnly 
-                  value={selectedDeveloper.phone || '+923311873628'} 
-                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                  value={selectedDeveloper.phone || 'Not specified'} 
+                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                 />
               </div>
             </div>
 
-            {/* BIO (COMPACT WIDTH & HEIGHT) */}
             <div>
               <label className="text-xs font-bold text-black block mb-1">Bio</label>
               <textarea 
                 readOnly 
                 rows={2} 
-                value={selectedDeveloper.bio || 'Full-stack developer specializing in booking & ordering platforms, with a focus on clean React frontends and reliable Node.js APIs.'} 
-                className="w-full max-w-[460px] bg-white border border-gray-300/80 rounded-md p-2 text-xs font-medium text-gray-800 leading-relaxed resize-none outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                value={selectedDeveloper.bio || 'No bio provided.'} 
+                className="w-full max-w-[460px] bg-white border border-gray-300/80 rounded-md p-2 text-xs font-medium text-gray-800 leading-relaxed resize-none outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
               />
             </div>
 
-            {/* SKILLS SECTION */}
             <div className="space-y-3 pt-1">
               <h3 className="text-sm font-extrabold text-[#0088cc]">Skills</h3>
-              
-              {/* Web Development */}
               <div>
-                <label className="text-xs font-bold text-black block mb-1.5">Web Development</label>
+                <label className="text-xs font-bold text-black block mb-1.5">Tech Stack</label>
                 <div className="flex flex-wrap gap-1.5">
-                  {(selectedDeveloper.skills?.web || ["React.js", "Next.js", "HTML", "CSS", "Tailwind", "Node.js"]).map((skill, i) => (
-                    <span key={i} className="inline-flex items-center gap-1 bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded-md">
-                      {skill} <Check size={10} strokeWidth={3} />
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <hr className="border-gray-200 my-2" />
-
-              {/* Database */}
-              <div>
-                <label className="text-xs font-bold text-black block mb-1.5">Database</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {(selectedDeveloper.skills?.database || ["MySQL", "PostgreSQL"]).map((skill, i) => (
-                    <span key={i} className="inline-flex items-center gap-1 bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded-md">
-                      {skill} <Check size={10} strokeWidth={3} />
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <hr className="border-gray-200 my-2" />
-
-              {/* Cloud */}
-              <div>
-                <label className="text-xs font-bold text-black block mb-1.5">Cloud</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {(selectedDeveloper.skills?.cloud || ["AWS"]).map((skill, i) => (
+                  {(selectedDeveloper.skills?.web || ["React.js", "Node.js"]).map((skill, i) => (
                     <span key={i} className="inline-flex items-center gap-1 bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded-md">
                       {skill} <Check size={10} strokeWidth={3} />
                     </span>
@@ -344,91 +347,118 @@ export default function DeveloperApproval() {
 
             <hr className="border-gray-200 my-2" />
 
-            {/* PROJECT LINKS (SHORTENED & STACKED AS SHOWN IN IMAGE) */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-black block">Project links</label>
-              {(selectedDeveloper.projectLinks || ["https://tnhrms.com", "https://bonappetit.com", "https://raabtaai.com"]).map((link, idx) => (
+              <label className="text-xs font-bold text-black block">Links</label>
+              {(selectedDeveloper.projectLinks || []).map((link, idx) => (
                 <input
                   key={idx}
                   type="text"
                   readOnly
                   value={link}
-                  className="w-full max-w-[260px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] block"
+                  className="w-full max-w-[260px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] block"
                 />
               ))}
             </div>
 
-            {/* BANK DETAILS SECTION (COMPACT MATCHING IMAGE) */}
             <div className="space-y-3 pt-2">
               <h3 className="text-sm font-extrabold text-[#0088cc]">Bank details</h3>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-xs font-bold text-black block mb-1">Bank name</label>
                   <input 
                     type="text" 
                     readOnly 
-                    value={selectedDeveloper.bank?.name || "Bank Al Habib"} 
-                    className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                    value={selectedDeveloper.bank?.name || "Not linked"} 
+                    className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-black block mb-1">Bank account title</label>
+                  <label className="text-xs font-bold text-black block mb-1">Account title</label>
                   <input 
                     type="text" 
                     readOnly 
-                    value={selectedDeveloper.bank?.title || "Zara Ahmed"} 
-                    className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                    value={selectedDeveloper.bank?.title || selectedDeveloper.name} 
+                    className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-black block mb-1">Bank account number/IBAN</label>
+                <label className="text-xs font-bold text-black block mb-1">Account number / IBAN</label>
                 <input 
                   type="text" 
                   readOnly 
-                  value={selectedDeveloper.bank?.iban || "123456789000"} 
-                  className="w-full max-w-[280px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none focus:ring-0 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                  value={selectedDeveloper.bank?.iban || "Not provided"} 
+                  className="w-full max-w-[280px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                 />
               </div>
             </div>
 
-            {/* ACTION BUTTONS */}
-            <div className="flex flex-wrap items-center justify-start gap-3 pt-4">
-              <button
-                onClick={() => handleAction('Delete Account', selectedDeveloper.name)}
-                className="px-4 py-1.5 rounded-md bg-[#f8bdc4] hover:bg-[#f4aab3] text-[#9b2226] font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-95"
-              >
-                Delete account
-              </button>
+            {/* Action Buttons in Details */}
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 w-full">
+  <button
+    onClick={() => handleToggleVerification(selectedDeveloper)}
+    className={`w-full py-1.5 px-2 rounded-md font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 flex items-center justify-center gap-1 truncate ${
+      selectedDeveloper.is_verified 
+        ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' 
+        : 'bg-[#dbeafe] hover:bg-[#bfdbfe] text-[#1e40af]'
+    }`}
+  >
+    <BadgeCheck size={13} className="shrink-0" />
+    <span className="truncate">{selectedDeveloper.is_verified ? 'Unverify dev' : 'Verify dev'}</span>
+  </button>
 
-              {activeTab === 'suspended' ? (
-                <button
-                  onClick={() => handleAction('Unsuspend Account', selectedDeveloper.name)}
-                  className="px-4 py-1.5 rounded-md bg-[#fcd5b5] hover:bg-[#f2c4a0] text-[#a0522d] font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-95"
-                >
-                  Unsuspend account
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleAction('Block Account', selectedDeveloper.name)}
-                    className="px-4 py-1.5 rounded-md bg-[#b8cefb] hover:bg-[#a6c1fa] text-[#1e3a8a] font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-95"
-                  >
-                    Block account
-                  </button>
+  {activeTab === 'pending' ? (
+    <>
+      <button
+        onClick={() => handleApprovalAction(selectedDeveloper, 'rejected')}
+        className="w-full py-1.5 px-2 rounded-md bg-[#f8bdc4] hover:bg-[#f4aab3] text-[#9b2226] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
+      >
+        Reject
+      </button>
 
-                  <button
-                    onClick={() => handleAction('Suspend Account', selectedDeveloper.name)}
-                    className="px-4 py-1.5 rounded-md bg-[#fcd5b5] hover:bg-[#f2c4a0] text-[#a0522d] font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-95"
-                  >
-                    Suspend account
-                  </button>
-                </>
-              )}
-            </div>
+      <button
+        onClick={() => handleApprovalAction(selectedDeveloper, 'approved')}
+        className="w-full py-1.5 px-2 rounded-md bg-[#a7d3c0] hover:bg-[#96c6b2] text-[#1e4d2b] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
+      >
+        Accept
+      </button>
+    </>
+  ) : (
+    <>
+      <button
+        onClick={() => handleDeleteDeveloper(selectedDeveloper)}
+        className="w-full py-1.5 px-2 rounded-md bg-[#f8bdc4] hover:bg-[#f4aab3] text-[#9b2226] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
+      >
+        Delete account
+      </button>
+
+      <button
+        onClick={() => handleAccountStatusChange(selectedDeveloper, selectedDeveloper.account_status === 'blocked' ? 'active' : 'blocked')}
+        className="w-full py-1.5 px-2 rounded-md bg-[#b8cefb] hover:bg-[#a6c1fa] text-[#1e3a8a] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
+      >
+        {selectedDeveloper.account_status === 'blocked' ? 'Unblock' : 'Block account'}
+      </button>
+
+      {activeTab === 'suspended' || selectedDeveloper.account_status === 'suspended' ? (
+        <button
+          onClick={() => handleAccountStatusChange(selectedDeveloper, 'active')}
+          className="w-full py-1.5 px-2 rounded-md bg-[#a7d3c0] hover:bg-[#96c6b2] text-[#1e4d2b] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
+        >
+          Unsuspend
+        </button>
+      ) : (
+        <button
+          onClick={() => handleAccountStatusChange(selectedDeveloper, 'suspended')}
+          className="w-full py-1.5 px-2 rounded-md bg-[#fcd5b5] hover:bg-[#f2c4a0] text-[#a0522d] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
+        >
+          Suspend account
+        </button>
+      )}
+    </>
+  )}
+</div>
 
           </div>
         </div>
@@ -441,14 +471,13 @@ export default function DeveloperApproval() {
       className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-2xl sm:max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none"
       onClick={() => setOpenMenuId(null)}
     >
-      {/* HEADER SECTION */}
       <div className="text-left">
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white">
           Developer Approval
         </h1>
       </div>
 
-      {/* STATS CARDS */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-[#FFF6E9] dark:bg-white text-gray-900 px-4 py-3 rounded-[10px] shadow-xs flex items-center gap-3 border border-amber-100/60 dark:border-transparent">
           <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
@@ -456,7 +485,7 @@ export default function DeveloperApproval() {
           </div>
           <div className="text-left">
             <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500 block leading-tight">APPROVED</span>
-            <span className="text-sm font-extrabold text-black leading-tight mt-0.5 block">{developerApprovalData.stats.approved}</span>
+            <span className="text-sm font-extrabold text-black leading-tight mt-0.5 block">{stats.approved}</span>
           </div>
         </div>
 
@@ -466,7 +495,7 @@ export default function DeveloperApproval() {
           </div>
           <div className="text-left">
             <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500 block leading-tight">PENDING</span>
-            <span className="text-sm font-extrabold text-black leading-tight mt-0.5 block">{developerApprovalData.stats.pending}</span>
+            <span className="text-sm font-extrabold text-black leading-tight mt-0.5 block">{stats.pending}</span>
           </div>
         </div>
 
@@ -476,12 +505,12 @@ export default function DeveloperApproval() {
           </div>
           <div className="text-left">
             <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500 block leading-tight">REJECTED</span>
-            <span className="text-sm font-extrabold text-black leading-tight mt-0.5 block">{developerApprovalData.stats.rejected}</span>
+            <span className="text-sm font-extrabold text-black leading-tight mt-0.5 block">{stats.rejected}</span>
           </div>
         </div>
       </div>
 
-      {/* FILTER TABS */}
+      {/* Filter Tabs */}
       <div className="flex items-center">
         <div className="inline-flex p-2 rounded-lg bg-[#FFF6E9] dark:bg-white/10 backdrop-blur-md border border-amber-100/60 dark:border-white/15 gap-1">
           {['approved', 'pending', 'rejected', 'suspended'].map((tab) => (
@@ -500,117 +529,130 @@ export default function DeveloperApproval() {
         </div>
       </div>
 
-      {/* MAIN CONTAINER WITH GLASS FRAME */}
+      {/* Table Container */}
       <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[12px] dark:shadow-2xl transition-all">
-        
-        {/* INNER WHITE CARD */}
         <div className="w-full bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent dark:p-0 rounded-[8px] sm:rounded-[6px] shadow-xs transition-all duration-300">
           
-          <table className="w-full text-left border-collapse min-w-[540px]">
-            <thead>
-              <tr className="bg-white/40 dark:bg-[#A2A6B0] border-b border-black/5 text-gray-600 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
-                <th className="py-3.5 px-6">DEVELOPER</th>
-                <th className="py-3.5 px-4 text-center">
-                  {activeTab === 'approved' ? 'APPROVED ON' : 'APPLIED ON'}
-                </th>
-                <th className="py-3.5 px-6 text-right pr-10">ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-              {activeList.map((dev) => (
-                <tr 
-                  key={dev.id} 
-                  className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
-                >
-                  {/* Developer Name & Avatar */}
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-[4px] font-bold text-[10px] flex items-center justify-center shrink-0 ${dev.initialBg}`}>
-                        {dev.name.charAt(0).toLowerCase()}
+          {loading ? (
+            <div className="flex items-center justify-center py-12 text-gray-500 gap-2">
+              <Loader2 size={18} className="animate-spin text-[#DC6B0F]" />
+              <span className="text-xs font-semibold">Loading developers...</span>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse min-w-[540px]">
+              <thead>
+                <tr className="bg-white/40 dark:bg-[#A2A6B0] border-b border-black/5 text-gray-600 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
+                  <th className="py-3.5 px-6">DEVELOPER</th>
+                  <th className="py-3.5 px-4 text-center">
+                    {activeTab === 'approved' ? 'APPROVED ON' : 'APPLIED ON'}
+                  </th>
+                  <th className="py-3.5 px-6 text-right pr-10">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
+                {developers.map((dev) => (
+                  <tr 
+                    key={dev.id} 
+                    className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
+                  >
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-[4px] font-bold text-[10px] flex items-center justify-center shrink-0 ${dev.initialBg}`}>
+                          {dev.name.charAt(0).toLowerCase()}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-xs text-black tracking-tight">
+                            {dev.name}
+                          </span>
+                          {dev.is_verified && (
+                            <BadgeCheck size={14} className="text-blue-600" title="Verified Developer" />
+                          )}
+                        </div>
                       </div>
-                      <span className="font-extrabold text-xs text-black tracking-tight">
-                        {dev.name}
-                      </span>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Date */}
-                  <td className="py-4 px-4 text-center text-[11px] font-medium text-gray-500">
-                    {dev.date}
-                  </td>
+                    <td className="py-4 px-4 text-center text-[11px] font-medium text-gray-500">
+                      {dev.date}
+                    </td>
 
-                  {/* Action Links & Explicit Gap */}
-                  <td className="py-4 px-6 text-right">
-                    <div className="flex items-center justify-end gap-18 relative">
-                      <button 
-                        onClick={() => setSelectedDeveloper(dev)}
-                        className="text-[11px] font-bold text-blue-600 dark:text-blue-600 hover:underline cursor-pointer inline-block"
-                      >
-                        View profile
-                      </button>
-
-                      <div className="relative inline-block">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(openMenuId === dev.id ? null : dev.id);
-                          }}
-                          className="p-1 text-gray-700 dark:text-gray-800 hover:text-black rounded-md hover:bg-gray-200/50 transition-all cursor-pointer flex items-center"
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex items-center justify-end gap-18 relative">
+                        <button 
+                          onClick={() => handleViewProfile(dev)}
+                          className="text-[11px] font-bold text-blue-600 dark:text-blue-600 hover:underline cursor-pointer inline-block"
                         >
-                          <MoreVertical size={16} />
+                          View profile
                         </button>
 
-                        {/* POPUP OPENING UPWARDS & TO THE LEFT */}
-                        {openMenuId === dev.id && (
-                          <div 
-                            className="absolute bottom-full right-0 mb-1.5 w-44 bg-white rounded-md shadow-xl border border-gray-200/80 py-1 z-50 text-left text-xs font-semibold text-gray-800"
-                            onClick={(e) => e.stopPropagation()}
+                        <div className="relative inline-block z-20">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(openMenuId === dev.id ? null : dev.id);
+                            }}
+                            className="p-1 text-gray-700 dark:text-gray-800 hover:text-black rounded-md hover:bg-gray-200/50 transition-all cursor-pointer flex items-center"
                           >
-                            <button
-                              onClick={() => handleMenuAction('Delete Account', dev.name)}
-                              className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors border-b border-gray-100"
-                            >
-                              <Trash2 size={13} className="shrink-0" />
-                              <span>Delete account</span>
-                            </button>
+                            <MoreVertical size={16} />
+                          </button>
 
-                            {/* DYNAMICALLY TOGGLE BETWEEN SUSPEND / UNSUSPEND */}
-                            {activeTab === 'suspended' ? (
-                              <button
-                                onClick={() => handleMenuAction('Unsuspend Account', dev.name)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors border-b border-gray-100"
-                              >
-                                <UserCheck size={13} className="shrink-0" />
-                                <span>Unsuspend account</span>
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleMenuAction('Suspend Account', dev.name)}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors border-b border-gray-100"
-                              >
-                                <UserX size={13} className="shrink-0" />
-                                <span>Suspend account</span>
-                              </button>
-                            )}
-
-                            <button
-                              onClick={() => handleMenuAction('Block Account', dev.name)}
-                              className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors"
+                          {openMenuId === dev.id && (
+                            <div 
+                              className="absolute top-full right-0 mt-1.5 w-44 bg-white rounded-md shadow-xl border border-gray-200/80 py-1 z-50 text-left text-xs font-semibold text-gray-800"
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <ShieldAlert size={13} className="shrink-0" />
-                              <span>Block account</span>
-                            </button>
-                          </div>
-                        )}
+                              <button
+                                onClick={() => handleToggleVerification(dev)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors border-b border-gray-100 cursor-pointer"
+                              >
+                                <BadgeCheck size={13} className="shrink-0 text-blue-600" />
+                                <span>{dev.is_verified ? 'Unverify' : 'Verify developer'}</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteDeveloper(dev)}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors border-b border-gray-100 cursor-pointer"
+                              >
+                                <Trash2 size={13} className="shrink-0 text-red-500" />
+                                <span>Delete account</span>
+                              </button>
+
+                              {activeTab === 'suspended' ? (
+                                <button
+                                  onClick={() => handleAccountStatusChange(dev, 'active')}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors border-b border-gray-100 cursor-pointer"
+                                >
+                                  <UserCheck size={13} className="shrink-0 text-emerald-600" />
+                                  <span>Unsuspend account</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleAccountStatusChange(dev, 'suspended')}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors border-b border-gray-100 cursor-pointer"
+                                >
+                                  <UserX size={13} className="shrink-0 text-amber-600" />
+                                  <span>Suspend account</span>
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => handleAccountStatusChange(dev, 'blocked')}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-100 text-gray-700 whitespace-nowrap transition-colors cursor-pointer"
+                              >
+                                <ShieldAlert size={13} className="shrink-0 text-blue-600" />
+                                <span>Block account</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
-          {activeList.length === 0 && (
+          {!loading && developers.length === 0 && (
             <div className="text-center py-8 text-xs text-gray-500 font-medium">
               No developers found in {activeTab}.
             </div>

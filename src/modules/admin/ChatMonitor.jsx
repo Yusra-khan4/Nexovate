@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { fetchAllChats, fetchChatByProjectId } from '../../services/api';
 
-const mockChatMonitorData = [
+const fallbackChats = [
   {
     id: 1,
+    projectId: 27,
     project: "Bon appetit",
     client: "Zain khan",
     developer: "Bilal ahmed",
@@ -37,6 +39,7 @@ const mockChatMonitorData = [
   },
   {
     id: 2,
+    projectId: 13,
     project: "Nexus desktop",
     client: "Sara kareem",
     developer: "Zain khan",
@@ -62,6 +65,7 @@ const mockChatMonitorData = [
   },
   {
     id: 3,
+    projectId: 14,
     project: "TN-HRMS",
     client: "Rabia ali",
     developer: "Mustafa raza",
@@ -88,20 +92,73 @@ const mockChatMonitorData = [
 ];
 
 export default function ChatMonitor() {
+  const [chatList, setChatList] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [loadingList, setLoadingList] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  useEffect(() => {
+    const loadAllChats = async () => {
+      try {
+        setLoadingList(true);
+        const res = await fetchAllChats();
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+          setChatList(res.data);
+        } else {
+          setChatList(fallbackChats);
+        }
+      } catch (err) {
+        setChatList(fallbackChats);
+      } finally {
+        setLoadingList(false);
+      }
+    };
+
+    loadAllChats();
+  }, []);
+
+  const handleOpenChat = async (chatItem) => {
+    const targetId = chatItem.projectId || chatItem.project_id || chatItem.id;
+    
+    try {
+      setLoadingMessages(true);
+      setSelectedChat({ ...chatItem, messages: chatItem.messages || [] });
+
+      const res = await fetchChatByProjectId(targetId);
+      if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+        setSelectedChat(prev => ({
+          ...prev,
+          messages: res.data.map(m => ({
+            id: m.id || m._id || m.message_id,
+            sender: m.sender_name || m.sender || "User",
+            role: m.sender_role?.toLowerCase() || m.role?.toLowerCase() || "client",
+            text: m.message_text || m.text || m.content || "",
+            time: m.time || m.created_at ? new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
+            avatar: m.avatar || (m.sender_role === 'developer' 
+              ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" 
+              : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80")
+          }))
+        }));
+      }
+    } catch (err) {
+      console.warn("Using default message threads:", err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
 
   if (selectedChat) {
     return (
       <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-3 max-w-4xl sm:max-w-3xl mx-auto pb-8 px-3 sm:px-4">
         
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <button
             onClick={() => setSelectedChat(null)}
             className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
           >
             <ArrowLeft size={14} /> Back to chat list
           </button>
-        </div>
+        </div> */}
 
         <div className="p-0 dark:p-2 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border-black/5 shadow-xs dark:shadow-md dark:border-white/20 dark:backdrop-blur-md w-full transition-all duration-300 overflow-hidden">
           
@@ -110,59 +167,69 @@ export default function ChatMonitor() {
             {/* Header Banner */}
             <div className="bg-[#FFF6E9] dark:bg-[#9fa6b2] border-b border-black/10 dark:border-transparent px-4 sm:px-6 py-2.5 flex items-center justify-between text-black font-extrabold text-xs tracking-wider uppercase">
               <span>
-                {selectedChat.client} &rarr; {selectedChat.developer}
+                {selectedChat.client || selectedChat.client_name || "Client"} &rarr; {selectedChat.developer || selectedChat.developer_name || "Developer"}
               </span>
               <span className="text-gray-800 text-[11px]">
-                {selectedChat.project}
+                {selectedChat.project || selectedChat.project_name || "Project"}
               </span>
             </div>
 
-            {/* Conversation Window */}
             <div className="bg-[#FFF6E9] dark:bg-[#fcfbf9] p-4 sm:p-6 space-y-5 min-h-[380px] max-h-[480px] overflow-y-auto custom-scrollbar">
               
-              {/* Date Divider */}
-              <div className="text-center">
-                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-                  {selectedChat.date}
-                </span>
-              </div>
+              {loadingMessages ? (
+                <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-2">
+                  <Loader2 size={24} className="animate-spin text-[#DC6B0F]" />
+                  <span className="text-xs font-semibold">Loading conversation...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="text-center">
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                      {selectedChat.date || "TODAY"}
+                    </span>
+                  </div>
 
-              {/* Message Feed */}
-              <div className="space-y-4 max-w-2xl mx-auto">
-                {selectedChat.messages.map((msg) => {
-                  const isIncoming = msg.role === 'client';
+                  <div className="space-y-4 max-w-2xl mx-auto">
+                    {selectedChat.messages && selectedChat.messages.length > 0 ? (
+                      selectedChat.messages.map((msg) => {
+                        const isIncoming = msg.role === 'client';
 
-                  return (
-                    <div 
-                      key={msg.id} 
-                      className={`flex flex-col ${isIncoming ? 'items-start' : 'items-end'}`}
-                    >
-                      {/* Bubble Container */}
-                      <div 
-                        className={`max-w-[85%] sm:max-w-[75%] p-3 sm:p-3.5 rounded-xl shadow-xs leading-relaxed text-xs font-medium ${
-                          isIncoming 
-                            ? 'bg-white border border-black/5 dark:border-transparent dark:bg-[#d8d8d8] text-gray-900 rounded-tl-xs' 
-                            : 'bg-gradient-to-r from-[#e89d67] to-[#e47d54] text-gray-900 rounded-tr-xs'
-                        }`}
-                      >
-                        {msg.text}
+                        return (
+                          <div 
+                            key={msg.id} 
+                            className={`flex flex-col ${isIncoming ? 'items-start' : 'items-end'}`}
+                          >
+                            <div 
+                              className={`max-w-[85%] sm:max-w-[75%] p-3 sm:p-3.5 rounded-xl shadow-xs leading-relaxed text-xs font-medium ${
+                                isIncoming 
+                                  ? 'bg-white border border-black/5 dark:border-transparent dark:bg-[#d8d8d8] text-gray-900 rounded-tl-xs' 
+                                  : 'bg-gradient-to-r from-[#e89d67] to-[#e47d54] text-gray-900 rounded-tr-xs'
+                              }`}
+                            >
+                              {msg.text}
+                            </div>
+
+                            <div className={`flex items-center gap-1.5 mt-1 ${isIncoming ? 'flex-row' : 'flex-row-reverse'}`}>
+                              <img 
+                                src={msg.avatar} 
+                                alt={msg.sender} 
+                                className="w-4 h-4 rounded-full object-cover border border-gray-300 shadow-xs" 
+                              />
+                              <span className="text-[9px] font-bold text-gray-500">
+                                {msg.sender} &middot; {msg.time}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-16 text-xs text-gray-500 font-semibold">
+                        No messages in this chat history yet.
                       </div>
-
-                      {/* Avatar and Timestamp Metadata */}
-                      <div className={`flex items-center gap-1.5 mt-1 ${isIncoming ? 'flex-row' : 'flex-row-reverse'}`}>
-                        <img 
-                          src={msg.avatar} 
-                          alt={msg.sender} 
-                          className="w-4 h-4 rounded-full object-cover border border-gray-300 shadow-xs"
-                        />
-                        <span className="text-[9px] font-bold text-gray-500">
-                          {msg.sender} &middot; {msg.time}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    )}
+                  </div>
+                </>
+              )}
 
             </div>
 
@@ -174,11 +241,9 @@ export default function ChatMonitor() {
     );
   }
 
-  // ---------------- MAIN CHAT MONITOR LIST VIEW ----------------
   return (
     <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 max-w-2xl sm:max-w-3xl mx-auto pb-8 px-3 sm:px-4">
 
-      {/* Header Title */}
       <div className="text-left">
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white">
           Chat monitor
@@ -189,7 +254,7 @@ export default function ChatMonitor() {
         
         <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[8px] sm:rounded-[6px] border border-black/10 dark:border-transparent shadow-xs dark:shadow-xl overflow-hidden transition-colors duration-300">
 
-          <div className="bg-[#FFFaf3]/80 dark:bg-white/80 px-3.5 py-2.5 grid grid-cols-4 items-center border-b border-black/5 dark:border-gray-200/60 text-[10px] font-bold tracking-wider text-gray-600 dark:text-gray-500 uppercase">
+          <div className="bg-white/40 dark:bg-[#A2A6B0] px-3.5 py-2.5 grid grid-cols-4 items-center border-b border-black/5 dark:border-gray-200/60 text-[10px] font-bold tracking-wider text-gray-600 dark:text-black uppercase">
             <span className="text-left">PROJECT</span>
             <span className="text-center">CLIENT</span>
             <span className="text-center">DEVELOPER</span>
@@ -198,36 +263,41 @@ export default function ChatMonitor() {
 
           {/* Table Rows Section */}
           <div className="divide-y divide-gray-300/40 bg-[#FFF6E9] dark:bg-[#EFEEEA]">
-            {mockChatMonitorData.map((row) => (
+            {loadingList ? (
+              <div className="flex items-center justify-center py-10 text-gray-500 gap-2">
+                <Loader2 size={18} className="animate-spin text-[#DC6B0F]" />
+                <span className="text-xs font-medium">Loading project chats...</span>
+              </div>
+            ) : chatList.map((row) => (
               <div 
-                key={row.id} 
+                key={row.id || row.projectId || row.project_id} 
                 className="px-3.5 py-2.5 grid grid-cols-4 items-center hover:bg-black/[0.02] transition-colors"
               >
                 {/* Project Title */}
                 <div className="text-left">
                   <h3 className="font-bold text-xs text-black tracking-tight">
-                    {row.project}
+                    {row.project || row.project_name}
                   </h3>
                 </div>
 
                 {/* Client Name */}
                 <div className="text-center">
                   <span className="text-[11px] text-gray-700 font-medium">
-                    {row.client}
+                    {row.client || row.client_name}
                   </span>
                 </div>
 
                 {/* Developer Name */}
                 <div className="text-center">
                   <span className="text-[11px] text-gray-700 font-medium">
-                    {row.developer}
+                    {row.developer || row.developer_name}
                   </span>
                 </div>
 
                 {/* Action Link */}
                 <div className="text-right">
                   <button 
-                    onClick={() => setSelectedChat(row)}
+                    onClick={() => handleOpenChat(row)}
                     className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer transition-all inline-block"
                   >
                     View chat
@@ -236,7 +306,7 @@ export default function ChatMonitor() {
               </div>
             ))}
 
-            {mockChatMonitorData.length === 0 && (
+            {!loadingList && chatList.length === 0 && (
               <div className="text-center py-6 text-xs text-gray-500 font-medium">
                 No active project chats found.
               </div>

@@ -215,3 +215,373 @@ export const downloadScopePdf = async (scopeId) => {
   a.remove();
   window.URL.revokeObjectURL(url);
 };
+
+export const fetchAllChats = async () => {
+  const response = await fetch(`${BASE_URL}/admin/chats`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch chats.');
+};
+
+export const fetchChatByProjectId = async (projectId) => {
+  const response = await fetch(`${BASE_URL}/admin/chats/${projectId}`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch conversation history.');
+};
+
+export const updateMinWithdrawal = async (amount) => {
+  const response = await fetch(`${BASE_URL}/admin/settings/min-withdrawal`, {
+    method: 'PATCH',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      min_withdrawal_amount: Number(amount)
+    }),
+  });
+
+  return handleResponse(response, 'Failed to update minimum withdrawal amount.');
+};
+
+export const updateCommission = async (percentage) => {
+  const response = await fetch(`${BASE_URL}/admin/settings/commission`, {
+    method: 'PATCH',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      commission_percentage: Number(percentage)
+    }),
+  });
+
+  return handleResponse(response, 'Failed to update commission percentage.');
+};
+
+export const fetchPlatformSettings = async () => {
+  const response = await fetch(`${BASE_URL}/admin/settings`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch platform settings.');
+};
+
+export const releaseEscrowFunds = async (paymentId) => {
+  const response = await fetch(`${BASE_URL}/payment/${paymentId}/release`, {
+    method: 'PATCH',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to release escrow funds.');
+};
+
+export const fetchAdminPaymentHistory = async () => {
+  const response = await fetch(`${BASE_URL}/payment/admin/history`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch payment history.');
+};
+
+export const deleteDeveloperAdmin = async (developerId) => {
+  const response = await fetch(`${BASE_URL}/admin/developers/${developerId}`, {
+    method: 'DELETE',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to delete developer account.');
+};
+
+export const deleteClientAdmin = async (clientId) => {
+  const response = await fetch(`${BASE_URL}/admin/clients/${clientId}`, {
+    method: 'DELETE',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to delete client account.');
+};
+
+export const fetchProjectMonitoring = async () => {
+  const response = await fetch(`${BASE_URL}/admin/project-monitoring`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch project monitoring data.');
+};
+
+export const updateClientStatusAdmin = async (clientId, status) => {
+  const response = await fetch(`${BASE_URL}/admin/clients/${clientId}/status`, {
+    method: 'PUT',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      account_status: status.toLowerCase(),
+    }),
+  });
+
+  return handleResponse(response, `Failed to update client status to ${status}.`);
+};
+export const fetchAllClientsAdmin = async () => {
+  const response = await fetch(`${BASE_URL}/admin/clients`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch clients list.');
+};
+
+export const fetchAdminDashboard = async () => {
+  const response = await fetch(`${BASE_URL}/admin/dashboard`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch admin dashboard data.');
+};
+
+export const fetchAdminProjectDetails = async (projectId) => {
+  const response = await fetch(`${BASE_URL}/admin/projects/${projectId}`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch project details.');
+};
+
+export const fetchDeveloperStatsAdmin = async () => {
+  const response = await fetch(`${BASE_URL}/admin/stats`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch developer statistics.');
+};
+
+export const fetchDevelopersByApprovalAdmin = async (status = '') => {
+  const url = status 
+    ? `${BASE_URL}/admin/approval?status=${status}` 
+    : `${BASE_URL}/admin/approval`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch developers list.');
+};
+
+export const updateDeveloperApprovalAdmin = async (developerId, approvalStatus) => {
+  const response = await fetch(`${BASE_URL}/admin/approval/${developerId}`, {
+    method: 'PUT',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      approval_status: approvalStatus.toLowerCase(),
+    }),
+  });
+
+  return handleResponse(response, `Failed to update developer approval status.`);
+};
+
+export const updateDeveloperAccountStatusAdmin = async (developerId, accountStatus) => {
+  const response = await fetch(`${BASE_URL}/admin/${developerId}/account-status`, {
+    method: 'PUT',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      account_status: accountStatus.toLowerCase(),
+    }),
+  });
+
+  return handleResponse(response, `Failed to update developer account status.`);
+};
+
+export const fetchDeveloperDetailsAdmin = async (developerId) => {
+  const response = await fetch(`${BASE_URL}/admin/developers/${developerId}`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch developer details.');
+};
+
+export const fetchAdminPayments = async () => {
+  const response = await fetch(`${BASE_URL}/admin/payments`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch admin payments list.');
+};
+
+export const fetchClientDetailsAdmin = async (clientId) => {
+  const response = await fetch(`${BASE_URL}/admin/clients/${clientId}`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch client profile details.');
+};
+
+export const applyToProject = async (projectId, applicationData) => {
+  const response = await fetch(`${BASE_URL}/api/projects/${projectId}/apply`, {
+    method: 'PATCH',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      cover_letter: applicationData.cover_letter,
+      bid_amount: Number(applicationData.bid_amount),
+    }),
+  });
+
+  return handleResponse(response, 'Failed to submit project application.');
+};
+
+export const fetchDeveloperDashboard = async () => {
+  const response = await fetch(`${BASE_URL}/api/developers/dashboard`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch developer dashboard data.');
+};
+
+export const fetchDeveloperMyProjects = async () => {
+  const response = await fetch(`${BASE_URL}/api/developers/projects`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch developer projects.');
+};
+
+export const fetchOpenProjects = async () => {
+  const response = await fetch(`${BASE_URL}/api/projects/`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch open projects.');
+};
+
+export const updateDeveloperProjectProgress = async (projectId, progressData) => {
+  const response = await fetch(`${BASE_URL}/api/developers/${projectId}/progress`, {
+    method: 'PUT',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      progress_percentage: Number(progressData.progress_percentage),
+      status: progressData.status || 'in_progress',
+      milestone_note: progressData.milestone_note || '',
+    }),
+  });
+
+  return handleResponse(response, 'Failed to update project progress.');
+};
+
+export const downloadProjectReport = async (projectId) => {
+  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+
+  const response = await fetch(`${BASE_URL}/api/projects/${projectId}/download`, {
+    method: 'GET',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!response.ok) {
+    let errorMsg = 'Failed to download scope document.';
+    try {
+      const errJson = await response.json();
+      errorMsg = errJson.message || errorMsg;
+    } catch {
+      const errText = await response.text();
+      if (errText) errorMsg = errText;
+    }
+    throw new Error(errorMsg);
+  }
+
+  return await response.blob();
+};
+
+export const updateClientProfile = async (clientId, profileData) => {
+  const response = await fetch(`${BASE_URL}/api/client/${clientId}`, {
+    method: 'PUT',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      full_name: profileData.fullName,
+      email_address: profileData.emailAddress,
+      phone: profileData.phoneNumber,
+      account_title: profileData.bankAccountTitle,
+      bank_name: profileData.bankName,
+      account_number: profileData.bankAccountNumber,
+      ...(profileData.password ? { password: profileData.password } : {}),
+    }),
+  });
+
+  return handleResponse(response, 'Failed to update client profile.');
+};
+
+export const fetchClientProjectsList = async () => {
+  const response = await fetch(`${BASE_URL}/api/projects/projectsDetail`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch client projects list.');
+};
+
+export const fetchProjectMilestoneReport = async (projectId) => {
+  const response = await fetch(`${BASE_URL}/api/projects/${projectId}/milestone-report`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch project milestone report.');
+};
+
+export const verifyDeveloperAdmin = async (developerId, isVerified = true) => {
+  const response = await fetch(`${BASE_URL}/admin/developers/${developerId}/verify`, {
+    method: 'PATCH',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      is_verified: isVerified,
+    }),
+  });
+
+  return handleResponse(response, 'Failed to update developer verification status.');
+};
+//confirmation
+export const updateDeveloperEnabledStatusAdmin = async (developerId, isEnabled = true) => {
+  const response = await fetch(`${BASE_URL}/admin/developers/${developerId}/status`, {
+    method: 'PATCH',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      is_enabled: Boolean(isEnabled),
+    }),
+  });
+
+  return handleResponse(response, `Failed to update developer enabled status.`);
+};
+
+export const depositEscrowPayment = async ({ projectId, amount, transactionRef }) => {
+  const response = await fetch(`${BASE_URL}/payment/deposit`, {
+    method: 'POST',
+    headers: getHeaders(true),
+    body: JSON.stringify({
+      projectId: Number(projectId),
+      amount: Number(amount),
+      transactionRef: transactionRef || `TXN-${Date.now()}`,
+    }),
+  });
+
+  return handleResponse(response, 'Failed to deposit escrow funds.');
+};
+//confirmation
+export const fetchPaymentHistory = async () => {
+  const response = await fetch(`${BASE_URL}/payment/history`, {
+    method: 'GET',
+    headers: getHeaders(true),
+  });
+
+  return handleResponse(response, 'Failed to fetch payment history.');
+};
+

@@ -40,7 +40,6 @@ const Login = () => {
     try {
       const data = await loginUser(email, password);
 
-      // Save user details
       if (data?.user) {
         localStorage.setItem('user', JSON.stringify(data.user));
         
