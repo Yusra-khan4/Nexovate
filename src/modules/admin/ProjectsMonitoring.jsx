@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { 
+  ArrowLeft, 
+  CheckCircle2, 
+  Loader2 
+} from 'lucide-react';
 import { fetchProjectMonitoring } from '../../services/api';
 
 const fallbackMonitoringData = [
@@ -135,14 +140,14 @@ export default function ProjectsMonitoring() {
     return (
       <div className="w-full text-black font-['Raleway',sans-serif] space-y-4 max-w-2xl sm:max-w-3xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
         
-        {/* <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => setSelectedProject(null)}
             className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
           >
             <ArrowLeft size={14} /> Back to monitoring
           </button>
-        </div> */}
+        </div>
 
         <div className="text-left space-y-1">
           <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
@@ -246,7 +251,7 @@ export default function ProjectsMonitoring() {
             </div>
           ) : (
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[680px]">
+              <table className="w-full text-left border-collapse min-w-[760px]">
                 <thead>
                   <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
                     <th className="py-3.5 pl-5 pr-3">PROJECT NAME</th>
@@ -254,19 +259,20 @@ export default function ProjectsMonitoring() {
                     <th className="py-3.5 px-3">CLIENT</th>
                     <th className="py-3.5 px-3">DEVELOPER</th>
                     <th className="py-3.5 px-3">PROGRESS</th>
-                    <th className="py-3.5 pl-3 pr-6 text-right">BUDGET</th>
+                    <th className="py-3.5 px-3 text-center">MILESTONES</th>
+                    <th className="py-3.5 px-3 text-right">BUDGET</th>
+                    <th className="py-3.5 pl-3 pr-6 text-center">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
                   {projects.map((item) => (
                     <tr 
                       key={item.id} 
-                      onClick={() => setSelectedProject(item)}
-                      className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150 cursor-pointer"
+                      className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
                     >
                       {/* Project Name */}
                       <td className="py-4 pl-5 pr-3">
-                        <span className="font-bold text-xs text-black hover:text-blue-600 transition-colors tracking-tight block max-w-[150px] truncate" title={item.projectName}>
+                        <span className="font-bold text-xs text-black tracking-tight block max-w-[140px] truncate" title={item.projectName}>
                           {item.projectName}
                         </span>
                       </td>
@@ -289,7 +295,7 @@ export default function ProjectsMonitoring() {
                       {/* Progress Bar & Percentage */}
                       <td className="py-4 px-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-16 sm:w-20 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
+                          <div className="w-14 sm:w-18 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
                             <div 
                               className={`h-full rounded-full transition-all duration-300 ${item.progressColor}`} 
                               style={{ width: `${item.progress}%` }}
@@ -301,9 +307,24 @@ export default function ProjectsMonitoring() {
                         </div>
                       </td>
 
+                      {/* Milestones Achieved Column */}
+                      <td className="py-4 px-3 text-center text-xs font-extrabold text-gray-700 whitespace-nowrap">
+                        {item.milestonesCount.completed}/{item.milestonesCount.total}
+                      </td>
+
                       {/* Budget */}
-                      <td className="py-4 pl-3 pr-6 text-right text-xs font-bold text-black whitespace-nowrap">
+                      <td className="py-4 px-3 text-right text-xs font-bold text-black whitespace-nowrap">
                         {item.budget}
+                      </td>
+
+                      {/* Gradient View Button Column */}
+                      <td className="py-4 pl-3 pr-6 text-center">
+                        <button 
+                          onClick={() => setSelectedProject(item)}
+                          className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-[6px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer tracking-wide inline-block"
+                        >
+                          View
+                        </button>
                       </td>
                     </tr>
                   ))}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAdminPayments, releaseEscrowFunds } from '../../services/api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 
 const fallbackPaymentData = [
   {
@@ -59,7 +59,7 @@ const fallbackPaymentData = [
 
 export default function PaymentManagement() {
   const [payments, setPayments] = useState([]);
-  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState(null); // For modal/view form
   const [loading, setLoading] = useState(false);
   const [loadingList, setLoadingList] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -128,7 +128,7 @@ export default function PaymentManagement() {
     loadPayments();
   }, []);
 
-  const handleOpenReleaseModal = (paymentItem) => {
+  const handleOpenReleaseView = (paymentItem) => {
     setErrorMessage('');
     setSelectedPayment(paymentItem);
   };
@@ -202,6 +202,128 @@ export default function PaymentManagement() {
     }
   };
 
+  // If a payment is selected, render the detailed payment release form view
+  if (selectedPayment) {
+    const commission = Math.round(selectedPayment.numericAmount * 0.12);
+    const netPayout = selectedPayment.numericAmount - commission;
+
+    return (
+      <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 max-w-2xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setSelectedPayment(null)}
+            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
+          >
+            <ArrowLeft size={14} /> Back to payments list
+          </button>
+        </div>
+
+        <div className="w-full bg-[#FFF6E9] dark:bg-white text-black rounded-[12px] p-6 sm:p-8 shadow-xl border border-amber-100/60 dark:border-transparent space-y-6 text-left transition-colors duration-300">
+          
+          <div className="border-b border-gray-200/80 pb-3 space-y-1">
+            <h2 className="text-lg sm:text-xl font-black text-black tracking-tight">
+              Payment Release Form
+            </h2>
+            <p className="text-xs text-gray-600 font-medium">
+              Review project escrow funds and disburse payout to the assigned developer.
+            </p>
+          </div>
+
+          {errorMessage && (
+            <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md font-medium">
+              {errorMessage}
+            </div>
+          )}
+
+          <div className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-gray-500 font-bold block mb-1">Project Name</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedPayment.project} 
+                  className="w-full bg-white border border-gray-300/80 rounded-md h-8 px-3 font-extrabold text-gray-900 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-gray-500 font-bold block mb-1">Status</label>
+                <div className="pt-1.5">
+                  {getStatusBadge(selectedPayment.status, selectedPayment.statusType)}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-gray-500 font-bold block mb-1">Client Name</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedPayment.client} 
+                  className="w-full bg-white border border-gray-300/80 rounded-md h-8 px-3 font-semibold text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-gray-500 font-bold block mb-1">Assigned Developer</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedPayment.developer} 
+                  className="w-full bg-white border border-gray-300/80 rounded-md h-8 px-3 font-semibold text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+            </div>
+
+            <div className="bg-white/60 p-4 rounded-lg border border-amber-200/60 space-y-2 mt-2">
+              <div className="flex justify-between font-bold text-gray-700">
+                <span>Total Escrow Amount:</span>
+                <span>{selectedPayment.amount}</span>
+              </div>
+              <div className="flex justify-between font-bold text-gray-600">
+                <span>Platform Commission (12%):</span>
+                <span>PKR {commission.toLocaleString()}</span>
+              </div>
+              <hr className="border-gray-200" />
+              <div className="flex justify-between font-black text-sm text-black">
+                <span>Net Developer Payout:</span>
+                <span className="text-emerald-700">PKR {netPayout.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200/80">
+            <button
+              disabled={loading}
+              onClick={() => setSelectedPayment(null)}
+              className="px-5 h-9 rounded-md bg-white border border-gray-300 text-gray-700 font-extrabold text-xs hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              disabled={loading}
+              onClick={handleConfirmRelease}
+              className="px-6 h-9 rounded-md bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={13} className="animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                'Release Payment'
+              )}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none relative">
       
@@ -214,7 +336,7 @@ export default function PaymentManagement() {
         </p>
       </div>
 
-      <div className={`w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all ${selectedPayment ? 'filter blur-xs' : ''}`}>
+      <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all">
         
         <div className="w-full bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent rounded-[8px] sm:rounded-[6px] shadow-xs transition-all duration-300 overflow-hidden">
           
@@ -225,14 +347,15 @@ export default function PaymentManagement() {
             </div>
           ) : (
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[620px]">
+              <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
                   <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
-                    <th className="py-3.5 px-5">PROJECT</th>
+                    <th className="py-3.5 px-4">PROJECT</th>
                     <th className="py-3.5 px-4">CLIENT</th>
                     <th className="py-3.5 px-4">DEVELOPER</th>
                     <th className="py-3.5 px-4">AMOUNT</th>
-                    <th className="py-3.5 px-10 ">STATUS</th>
+                    <th className="py-3.5 px-4">STATUS</th>
+                    <th className="py-3.5 px-5 text-right">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
@@ -241,7 +364,7 @@ export default function PaymentManagement() {
                       key={item.id} 
                       className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
                     >
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-4">
                         <span className="font-extrabold text-xs text-black tracking-tight block">
                           {item.project}
                         </span>
@@ -259,27 +382,25 @@ export default function PaymentManagement() {
                         {item.amount}
                       </td>
 
-                      <td className="py-4 px-6">
-                        <div className="flex items-center justify-between gap-3 min-w-[210px]">
-                          <div>
-                            {getStatusBadge(item.status, item.statusType)}
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            {item.hasAction ? (
-                              <button
-                                onClick={() => handleOpenReleaseModal(item)}
-                                className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3 py-1.5 rounded-[5px] shadow-2xs hover:brightness-105 active:scale-95 transition-all cursor-pointer tracking-wider"
-                              >
-                                Release funds
-                              </button>
-                            ) : (
-                              <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-600 block leading-tight max-w-[110px]">
-                                {item.subtext}
-                              </span>
-                            )}
-                          </div>
+                      <td className="py-4 px-4">
+                        <div>
+                          {getStatusBadge(item.status, item.statusType)}
                         </div>
+                      </td>
+
+                      <td className="py-4 px-5 text-right whitespace-nowrap">
+                        {item.hasAction ? (
+                          <button
+                            onClick={() => handleOpenReleaseView(item)}
+                            className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-[5px] shadow-2xs hover:brightness-105 active:scale-95 transition-all cursor-pointer tracking-wider"
+                          >
+                            View
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-600 inline-block max-w-[130px] truncate">
+                            {item.subtext}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -296,55 +417,6 @@ export default function PaymentManagement() {
 
         </div>
       </div>
-
-      {/* Confirmation Modal */}
-      {selectedPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-all">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200/80 p-6 sm:p-7 w-full max-w-md text-left space-y-4 font-['Raleway',sans-serif]">
-            
-            <div className="space-y-2">
-              <h3 className="text-base sm:text-lg font-black text-black tracking-tight">
-                Release Funds to Developer
-              </h3>
-              <p className="text-xs text-gray-600 font-medium leading-relaxed">
-                The customer confirmed completion of "{selectedPayment.project}". You're about to release {selectedPayment.amount} from escrow to {selectedPayment.developer}, minus a 12% platform commission (PKR {(selectedPayment.numericAmount * 0.12).toLocaleString()}). They'll receive PKR {(selectedPayment.numericAmount * 0.88).toLocaleString()}. This action cannot be undone.
-              </p>
-            </div>
-
-            {errorMessage && (
-              <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-md font-medium">
-                {errorMessage}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                disabled={loading}
-                onClick={() => setSelectedPayment(null)}
-                className="px-5 h-9 rounded-md bg-white border border-gray-300 text-gray-700 font-extrabold text-xs hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                disabled={loading}
-                onClick={handleConfirmRelease}
-                className="px-5 h-9 rounded-md bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 size={13} className="animate-spin" />
-                    <span>Releasing...</span>
-                  </>
-                ) : (
-                  'Confirm & Release'
-                )}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
     </div>
   );

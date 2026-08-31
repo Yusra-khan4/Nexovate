@@ -11,6 +11,7 @@ const fallbackPaymentLogs = [
     developer: 'Bilal ahmed',
     amount: 'PKR 275,000',
     commission: 'PKR 35,000',
+    sentMoney: 'PKR 240,000',
     status: 'Received',
     statusType: 'received'
   },
@@ -22,6 +23,7 @@ const fallbackPaymentLogs = [
     developer: 'Mustafa raza',
     amount: 'PKR 275,000',
     commission: 'PKR 35,000',
+    sentMoney: 'PKR 240,000',
     status: 'Received',
     statusType: 'received'
   },
@@ -33,6 +35,7 @@ const fallbackPaymentLogs = [
     developer: '-',
     amount: 'PKR 275,000',
     commission: '-',
+    sentMoney: '-',
     status: 'Pending payment',
     statusType: 'pending'
   },
@@ -44,6 +47,7 @@ const fallbackPaymentLogs = [
     developer: 'Zain khan',
     amount: 'PKR 275,000',
     commission: 'PKR 35,000',
+    sentMoney: 'PKR 240,000',
     status: 'Released',
     statusType: 'released'
   }
@@ -63,6 +67,7 @@ export default function PaymentHistory() {
           const mappedLogs = res.data.map((item) => {
             const rawAmount = parseFloat(item.amount) || 0;
             const commissionVal = Math.round(rawAmount * 0.12);
+            const sentMoneyVal = rawAmount - commissionVal;
 
             let statusType = 'pending';
             let statusLabel = 'Pending payment';
@@ -93,6 +98,7 @@ export default function PaymentHistory() {
               developer: item.developer_name || (item.developer_id ? `Dev #${item.developer_id}` : '-'),
               amount: `PKR ${rawAmount.toLocaleString()}`,
               commission: commissionVal > 0 ? `PKR ${commissionVal.toLocaleString()}` : '-',
+              sentMoney: sentMoneyVal > 0 ? `PKR ${sentMoneyVal.toLocaleString()}` : '-',
               status: statusLabel,
               statusType: statusType
             };
@@ -143,7 +149,7 @@ export default function PaymentHistory() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen py-4 sm:py-6 px-3 sm:px-4 max-w-2xl sm:max-w-3xl mx-auto w-full font-['Raleway',sans-serif] antialiased text-left select-none">
+    <div className="flex flex-col min-h-screen py-4 sm:py-6 px-3 sm:px-4 max-w-3xl sm:max-w-4xl mx-auto w-full font-['Raleway',sans-serif] antialiased text-left select-none">
       
       <div className="w-full mb-4 sm:mb-5 text-left space-y-0.5">
         <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[#FFFFFF] tracking-tight">
@@ -193,14 +199,18 @@ export default function PaymentHistory() {
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center pt-1.5 border-t border-black/5 dark:border-gray-100 text-[11px]">
+                      <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-black/5 dark:border-gray-100 text-[11px]">
                         <div>
                           <span className="text-[8px] font-bold text-gray-400 block uppercase">Amount</span>
                           <span className="font-extrabold text-black">{log.amount}</span>
                         </div>
-                        <div className="text-right">
+                        <div>
                           <span className="text-[8px] font-bold text-gray-400 block uppercase">Commission</span>
                           <span className="font-bold text-gray-700">{log.commission}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[8px] font-bold text-gray-400 block uppercase">Sent Money</span>
+                          <span className="font-extrabold text-emerald-700">{log.sentMoney}</span>
                         </div>
                       </div>
                     </div>
@@ -209,16 +219,17 @@ export default function PaymentHistory() {
 
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[580px]">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                       <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-600 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
-                        <th className="py-3.5 px-5">DATE</th>
+                        <th className="py-3.5 px-4">DATE</th>
                         <th className="py-3.5 px-4">PROJECT</th>
                         <th className="py-3.5 px-4">CLIENT</th>
                         <th className="py-3.5 px-4">DEVELOPER</th>
                         <th className="py-3.5 px-4">AMOUNT</th>
                         <th className="py-3.5 px-4">COMMISSION</th>
-                        <th className="py-3.5 px-5 text-center">STATUS</th>
+                        <th className="py-3.5 px-4">SENT MONEY</th>
+                        <th className="py-3.5 px-4 text-center">STATUS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
@@ -227,7 +238,7 @@ export default function PaymentHistory() {
                           key={log.id} 
                           className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
                         >
-                          <td className="py-4 px-5 text-[11px] font-medium text-gray-500 dark:text-gray-500 whitespace-normal max-w-[80px] leading-tight">
+                          <td className="py-4 px-4 text-[11px] font-medium text-gray-500 dark:text-gray-500 whitespace-normal max-w-[80px] leading-tight">
                             {log.date}
                           </td>
 
@@ -251,7 +262,11 @@ export default function PaymentHistory() {
                             {log.commission}
                           </td>
 
-                          <td className="py-4 px-5 text-center">
+                          <td className="py-4 px-4 text-[11px] font-extrabold text-emerald-700 whitespace-nowrap">
+                            {log.sentMoney}
+                          </td>
+
+                          <td className="py-4 px-4 text-center">
                             {getStatusBadge(log.statusType, log.status)}
                           </td>
                         </tr>

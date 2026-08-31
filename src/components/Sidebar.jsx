@@ -13,6 +13,7 @@ import {
   CreditCard,
   Receipt,
   Settings,
+  MessageSquare
 } from 'lucide-react';
 
 import logoImg from '../assets/NEXOVATE_WHITE_BG.png';
@@ -48,6 +49,8 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
       { id: 'projects-monitoring', name: 'Projects monitoring', icon: <GitMerge size={14} strokeWidth={2.2} />, path: '/admin/projects-monitoring' },
       { id: 'chat-monitor', name: 'Chat Monitor', icon: <MessageSquareCode size={14} strokeWidth={2.2} />, path: '/admin/chat-monitor' },
       { id: 'platform-setting', name: 'Platform Settings', icon: <Settings size={14} strokeWidth={2.2} />, path: '/admin/platform-setting' },
+      { id: 'platform-feedback', name: 'Platform Feedback', icon: <MessageSquare size={14} strokeWidth={2.2} />, path: '/admin/platform-feedback' },
+
     ]
   };
 
@@ -176,7 +179,7 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
           <button 
             type="button"
             onClick={handleLogoutClick} 
-            className="w-full bg-white dark:bg-[#FFFFFF] text-black dark:text-[#000000] font-bold text-[11px] py-2 rounded-[6px] shadow-xs border border-black/10 dark:border-transparent flex items-center justify-center gap-1.5 hover:bg-gray-50 active:scale-[0.99] transition-all cursor-pointer"
+            className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[12px] py-2 rounded-[6px] shadow-xs hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <LogOut size={13} strokeWidth={2.2} /> Logout
           </button>

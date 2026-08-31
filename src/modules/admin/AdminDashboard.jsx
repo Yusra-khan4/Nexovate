@@ -25,7 +25,6 @@ const fallbackDashboardData = {
   projectsAwaitingApproval: [
     { id: 1, title: "Bon appetit", submittedBy: "Zara Ahmed", budget: "PKR 90,000" },
     { id: 2, title: "Ecommerce Store", submittedBy: "Sara Ahmed", budget: "PKR 90,000" },
-    // { id: 3, title: "TN-HRMS", submittedBy: "Zara Ahmed", budget: "PKR 90,000" }
   ]
 };
 
@@ -227,7 +226,12 @@ export default function AdminDashboard() {
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-black/5 dark:border-gray-200/40 last:border-0 pb-2 last:pb-0"
               >
                 <div>
-                  <h3 className="font-bold text-xs text-black tracking-tight">{project.title}</h3>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[12px] font-mono font-bold text-gray-700">
+                      {project.id}
+                    </span>
+                    <h3 className="font-bold text-xs text-black tracking-tight">{project.title}</h3>
+                  </div>
                   <p className="text-[10px] text-gray-600 dark:text-gray-700 font-medium mt-0.5">
                     Submitted by {project.submittedBy} · Budget {project.budget}
                   </p>

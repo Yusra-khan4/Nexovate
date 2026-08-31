@@ -24,6 +24,8 @@ import ClientManagement from './modules/admin/ClientManagement';
 import ProjectsMonitoring from './modules/admin/ProjectsMonitoring';
 import PaymentManagement from './modules/admin/PaymentManagement';
 import PlatformSetting from './modules/admin/PlatformSetting';
+import PlatformFeedback from './modules/admin/PlatformFeedback';
+
 
 
 const ProtectedRoute = ({ allowedRole }) => {
@@ -100,6 +102,8 @@ function App() {
             <Route path="projects-monitoring" element={<ProjectsMonitoring />} />
             <Route path="payment-management" element={<PaymentManagement />} />
             <Route path="platform-setting" element={<PlatformSetting />} />
+            <Route path="platform-feedback" element={<PlatformFeedback />} />
+
           </Route>
 
         </Route>

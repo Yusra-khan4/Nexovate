@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
+import { 
   ArrowLeft,
   MoreVertical,
   Trash2,
@@ -24,6 +24,7 @@ const fallbackClientData = [
     email: "zaraahmed@gmail.com",
     phone: "+923311873628",
     status: "active",
+    domain: "E-commerce",
     bank: {
       name: "Bank Al Habib",
       title: "Zara Ahmed",
@@ -38,6 +39,7 @@ const fallbackClientData = [
     email: "abdul.hanan@gmail.com",
     phone: "+923001234567",
     status: "active",
+    domain: "Fintech",
     bank: {
       name: "Meezan Bank",
       title: "Abdul Hanan",
@@ -84,6 +86,7 @@ export default function ClientManagement() {
               email: c.email_address || "No email provided",
               phone: c.phone || "Not specified",
               status: (c.account_status || 'active').toLowerCase(),
+              domain: c.domain || c.your_domain || "General Business",
               bank: {
                 name: c.bank_name || "Not linked",
                 title: c.account_title || fullName,
@@ -127,6 +130,7 @@ export default function ClientManagement() {
           email: c.email_address || "No email provided",
           phone: c.phone || "Not specified",
           status: (c.account_status || 'active').toLowerCase(),
+          domain: c.domain || c.your_domain || clientSummary.domain || "General Business",
           bank: {
             name: c.bank_name || "Not linked",
             title: c.account_title || fullName,
@@ -240,14 +244,26 @@ export default function ClientManagement() {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-bold text-black block mb-1">Your name</label>
-              <input 
-                type="text" 
-                readOnly 
-                value={selectedClient.name || ''} 
-                className="w-full max-w-[240px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-black block mb-1">Your name</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedClient.name || ''} 
+                  className="w-full max-w-[240px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-black block mb-1">Domain</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedClient.domain || 'General Business'} 
+                  className="w-full max-w-[240px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -357,7 +373,7 @@ export default function ClientManagement() {
 
   return (
     <div 
-      className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-2xl sm:max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none min-h-[420px]"
+      className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl sm:max-w-4xl mx-auto pb-8 px-3 sm:px-4 text-left select-none min-h-[420px]"
       onClick={() => setOpenMenuId(null)}
     >
       <div className="text-left space-y-1">
@@ -370,6 +386,7 @@ export default function ClientManagement() {
       </div>
 
       <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[12px] dark:shadow-2xl transition-all">
+        {/* Removed overflow classes completely to allow absolute floating dropdowns to display natively outside card boundaries */}
         <div className="w-full bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent rounded-[8px] sm:rounded-[6px] shadow-xs transition-all duration-300">
           
           {loading ? (
@@ -378,11 +395,14 @@ export default function ClientManagement() {
               <span className="text-xs font-semibold">Loading clients...</span>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse min-w-[480px]">
+            <table className="w-full text-left border-collapse min-w-[620px]">
               <thead>
                 <tr className="bg-white/40 dark:bg-[#A2A6B0] border-b border-black/5 text-gray-600 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
-                  <th className="py-5 px-3.5 rounded-tl-[8px] sm:rounded-tl-[6px]">CLIENT</th>
-                  <th className="py-5 px-3.5 text-right pr-10 rounded-tr-[8px] sm:rounded-tr-[6px]">ACTIONS</th>
+                  <th className="py-3.5 px-4 rounded-tl-[8px] sm:rounded-tl-[6px]">ID</th>
+                  <th className="py-3.5 px-6">CLIENT</th>
+                  <th className="py-3.5 px-4">DOMAIN</th>
+                  <th className="py-3.5 px-4 text-center">VIEW PROFILE</th>
+                  <th className="py-3.5 px-6 text-right rounded-tr-[8px] sm:rounded-tr-[6px]">ACTIONS</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
@@ -391,7 +411,11 @@ export default function ClientManagement() {
                     key={client.id} 
                     className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
                   >
-                    <td className="py-4 px-3.5">
+                    <td className="py-4 px-4 text-xs font-mono font-bold text-gray-700">
+                      {client.id}
+                    </td>
+
+                    <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className={`w-5 h-5 rounded-[4px] font-bold text-[10px] flex items-center justify-center shrink-0 ${client.initialBg}`}>
                           {client.name.charAt(0).toLowerCase()}
@@ -413,15 +437,21 @@ export default function ClientManagement() {
                       </div>
                     </td>
 
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-38 relative">
-                        <button 
-                          onClick={() => handleViewProfile(client)}
-                          className="text-[11px] font-bold text-blue-600 dark:text-blue-600 hover:underline cursor-pointer inline-block"
-                        >
-                          View profile
-                        </button>
+                    <td className="py-4 px-4 text-xs font-bold text-gray-700">
+                      {client.domain || 'General Business'}
+                    </td>
 
+                    <td className="py-4 px-4 text-center">
+                      <button 
+                        onClick={() => handleViewProfile(client)}
+                        className="text-[11px] font-bold text-blue-600 dark:text-blue-600 hover:underline cursor-pointer inline-block"
+                      >
+                        View profile
+                      </button>
+                    </td>
+
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex items-center justify-end relative">
                         <div className="relative inline-block z-20">
                           <button
                             onClick={(e) => {
@@ -435,7 +465,7 @@ export default function ClientManagement() {
 
                           {openMenuId === client.id && (
                             <div 
-                              className="absolute top-full right-0 mt-1.5 w-44 bg-white rounded-md shadow-xl border border-gray-200/80 py-1 z-50 text-left text-xs font-semibold text-gray-800"
+                              className="absolute bottom-full right-0 mb-2 w-44 bg-white rounded-md shadow-2xl border border-gray-200/90 py-1 z-50 text-left text-xs font-semibold text-gray-800"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button

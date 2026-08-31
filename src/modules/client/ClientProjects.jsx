@@ -51,7 +51,6 @@ export default function ClientProjects() {
   const [selectedProjectDetails, setSelectedProjectDetails] = useState(null);
   const [showSubmitPayment, setShowSubmitPayment] = useState(false);
 
-  // Bank Form State
   const [bankTitle, setBankTitle] = useState('Bilal ahmed');
   const [bankName, setBankName] = useState('Meezan bank');
   const [accountNumber, setAccountNumber] = useState('4821 9876 3584 4821');
@@ -249,17 +248,16 @@ export default function ClientProjects() {
     );
   }
 
-  // VIEW 1: SUBMIT PAYMENT CHECKOUT SCREEN
   if (selectedProjectDetails && showSubmitPayment) {
     return (
       <div className="w-full text-black font-['Raleway',sans-serif] space-y-4 max-w-3xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
         <div className="flex items-center justify-between">
-          <button
+          {/* <button
             onClick={() => setShowSubmitPayment(false)}
             className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
           >
             <ArrowLeft size={14} /> Back to details
-          </button>
+          </button> */}
         </div>
 
         <div className="text-left mb-6 space-y-1">
@@ -377,7 +375,6 @@ export default function ClientProjects() {
     );
   }
 
-  // VIEW 2: DETAILED MILESTONE TRACKING VIEW
   if (selectedProjectDetails) {
     return (
       <div className="w-full text-black font-['Raleway',sans-serif] space-y-4 max-w-2xl sm:max-w-3xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
@@ -526,7 +523,6 @@ export default function ClientProjects() {
     );
   }
 
-  // VIEW 3: MAIN CLIENT PROJECTS LIST TABLE
   return (
     <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none">
       
@@ -552,7 +548,7 @@ export default function ClientProjects() {
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse min-w-[620px]">
                 <thead>
-                  <tr className="bg-[#FAF3E0] dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
+                  <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
                     <th className="py-3.5 px-5">PROJECT NAME</th>
                     <th className="py-3.5 px-4 text-center">STATUS</th>
                     <th className="py-3.5 px-4">ASSIGNED DEV</th>

@@ -108,8 +108,8 @@ export default function ProjectApproval() {
         const rawBudget = parseFloat(p.budget) || 0;
 
         setSelectedProject({
-          id: p.id,
-          title: p.name || projectSummary.title,
+          id: p.id || p.project_id,
+          title: p.name || p.projectname || projectSummary.title,
           subTitle: p.purpose || "Custom Web & Mobile Solution",
           submittedBy: clientName,
           email: p.client_email || "client@nexovate.com",
@@ -214,7 +214,10 @@ export default function ProjectApproval() {
                 <h1 className="text-2xl sm:text-3xl font-black text-black tracking-tight leading-none">
                   {selectedProject.title}
                 </h1>
-                <p className="text-xs sm:text-sm font-semibold text-gray-600 mt-1.5">
+                <p className="text-[12px] font-mono font-bold text-gray-700 mt-1">
+                  Project ID: {selectedProject.id}
+                </p>
+                <p className="text-xs sm:text-sm font-semibold text-gray-600 mt-1">
                   {selectedProject.subTitle || selectedProject.category}
                 </p>
               </div>
@@ -388,12 +391,17 @@ export default function ProjectApproval() {
               projectsList.map((project) => (
                 <div 
                   key={project.id} 
-                  className="px-6 sm:px-10 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
+                  className="px-6 sm:px-4 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
                 >
                   <div className="text-left space-y-0.5">
-                    <h3 className="font-bold text-xs text-black tracking-tight">
-                      {project.title}
-                    </h3>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[12px] font-mono font-bold text-gray-700">
+                        {project.id}
+                      </span>
+                      <h3 className="font-bold text-xs text-black tracking-tight">
+                        {project.title}
+                      </h3>
+                    </div>
                     <p className="text-[10px] text-gray-600 font-medium">
                       Submitted by {project.submittedBy} <span className="mx-0.5">•</span> Budget {project.budget}
                     </p>

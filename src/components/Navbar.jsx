@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Sun, Moon } from 'lucide-react';
 
 export default function Navbar({ isDarkMode, setIsDarkMode }) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -51,47 +51,26 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
         {/* 🟢 CONTROLS WRAPPER (Theme Switch + Bell Notification) */}
         <div className="order-1 sm:order-2 flex items-center gap-2.5 sm:gap-3 ml-auto sm:ml-0">
           
-          {/* 🎯 THEME SWITCH TOGGLE BUTTON */}
-          <div className="flex items-center gap-1.5 sm:gap-2 font-sans text-[11px] font-bold select-none tracking-wide transition-colors">
-            <span className={`hidden xs:inline transition-colors duration-300 ${!isDarkMode ? 'text-gray-900 font-extrabold' : 'text-gray-400'}`}>
-              Light
-            </span>
-            
-            <button
-              type="button"
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="w-11 sm:w-12 h-6 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] rounded-full p-0.5 relative flex items-center shadow-inner cursor-pointer transition-all focus:outline-none"
-              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          {/* 🎯 STANDARDIZED SUN/MOON THEME TOGGLE (Matched to Login/Signup) */}
+          <button
+            type="button"
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="w-14 h-7 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] rounded-full p-0.5 relative flex items-center shadow-md cursor-pointer transition-all duration-300 focus:outline-none"
+            title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          >
+            <div 
+              className={`w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center transform transition-transform duration-300 text-gray-900 ${
+                isDarkMode ? 'translate-x-7' : 'translate-x-0'
+              }`}
             >
-              <div 
-                className={`w-4 h-4 rounded-full bg-white shadow-xs flex items-center justify-center transform transition-transform duration-300 relative ${
-                  isDarkMode ? 'translate-x-5 sm:translate-x-6' : 'translate-x-0'
-                }`}
-              >
-                {isDarkMode && (
-                  <div className="absolute inset-0 flex items-center justify-center p-0.5">
-                    <div className="w-0.5 h-0.5 bg-blue-100 rounded-full absolute top-0.5 right-1" />
-                    <div className="w-1 h-1 bg-blue-100 rounded-full absolute bottom-0.5 right-1" />
-                  </div>
-                )}
-              </div>
-
-              {!isDarkMode ? (
-                <div className="absolute right-1.5 w-1 h-1 bg-white/60 rounded-full animate-pulse" />
+              {isDarkMode ? (
+                <Moon size={13} className="text-[#1e1e1e] fill-current" />
               ) : (
-                <div className="absolute left-1.5 flex gap-0.5">
-                  <div className="w-1 h-1 bg-white/40 rounded-full" />
-                  <div className="w-0.5 h-0.5 bg-white/40 rounded-full mt-0.5" />
-                </div>
+                <Sun size={13} className="text-[#DC6B0F] fill-current" />
               )}
-            </button>
+            </div>
+          </button>
 
-            <span className={`hidden xs:inline transition-colors duration-300 ${isDarkMode ? 'text-white font-extrabold' : 'text-gray-400'}`}>
-              Dark
-            </span>
-          </div>
-
-          {/* 🔔 NOTIFICATION BELL */}
           <div ref={dropdownRef} className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
@@ -105,11 +84,9 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
               <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
             </button>
 
-            {/* 🎨 DUAL-THEME POPUP DECK */}
             {showNotifications && (
               <div className="absolute right-0 top-10 w-[260px] sm:w-[310px] bg-[#FFF6E9] dark:bg-[#FFFFFF]/95 border border-black/5 dark:border-white/10 rounded-[6px] p-3 shadow-lg dark:shadow-xl z-50 text-left transition-all duration-300 animate-fade-in flex gap-2.5">
                 
-                {/* Scrollable Items */}
                 <div className="flex-1 space-y-2.5 max-h-[240px] overflow-y-auto pr-1.5 custom-scrollbar">
                   <h3 className="text-xs font-bold text-gray-900 dark:text-gray-900 tracking-tight mb-1 select-none">
                     Notifications
@@ -130,7 +107,6 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
                   ))}
                 </div>
 
-                {/* Styled Scrollbar Strip */}
                 <div className="w-1 bg-black/10 dark:bg-white/10 rounded-full relative overflow-hidden shrink-0 hidden sm:flex flex-col items-center shadow-inner">
                   <div className="w-full h-1/3 bg-gray-800 dark:bg-gray-400 rounded-full absolute top-1.5 shadow-xs" />
                 </div>

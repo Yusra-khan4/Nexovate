@@ -87,7 +87,7 @@ export default function DeveloperApproval() {
             date: formattedDate,
             initials: initials || "DV",
             initialBg: avatarColors[idx % avatarColors.length],
-            domain: dev.your_domain || "Full Stack Development",
+            domain: dev.your_domain || dev.domain || "Full Stack Development",
             email: dev.email_address || "developer@example.com",
             is_verified: Boolean(dev.is_verified),
             approval_status: dev.approval_status || 'pending',
@@ -144,7 +144,7 @@ export default function DeveloperApproval() {
           id: d.id,
           name: name,
           initials: initials || "DV",
-          domain: d.your_domain || "Full Stack Development",
+          domain: d.your_domain || d.domain || devSummary.domain || "Full Stack Development",
           email: d.email_address || "developer@example.com",
           phone: d.phone_number || d.phone || "+923000000000",
           bio: d.bio || "Full-stack developer specializing in scalable web applications and clean code architecture.",
@@ -396,69 +396,69 @@ export default function DeveloperApproval() {
             </div>
 
             {/* Action Buttons in Details */}
-<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 w-full">
-  <button
-    onClick={() => handleToggleVerification(selectedDeveloper)}
-    className={`w-full py-1.5 px-2 rounded-md font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 flex items-center justify-center gap-1 truncate ${
-      selectedDeveloper.is_verified 
-        ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' 
-        : 'bg-[#dbeafe] hover:bg-[#bfdbfe] text-[#1e40af]'
-    }`}
-  >
-    <BadgeCheck size={13} className="shrink-0" />
-    <span className="truncate">{selectedDeveloper.is_verified ? 'Unverify dev' : 'Verify dev'}</span>
-  </button>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 w-full">
+              <button
+                onClick={() => handleToggleVerification(selectedDeveloper)}
+                className={`w-full py-1.5 px-2 rounded-md font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 flex items-center justify-center gap-1 truncate ${
+                  selectedDeveloper.is_verified 
+                    ? 'bg-gray-200 text-gray-800 hover:bg-gray-300' 
+                    : 'bg-[#dbeafe] hover:bg-[#bfdbfe] text-[#1e40af]'
+                }`}
+              >
+                <BadgeCheck size={13} className="shrink-0" />
+                <span className="truncate">{selectedDeveloper.is_verified ? 'Unverify dev' : 'Verify dev'}</span>
+              </button>
 
-  {activeTab === 'pending' ? (
-    <>
-      <button
-        onClick={() => handleApprovalAction(selectedDeveloper, 'rejected')}
-        className="w-full py-1.5 px-2 rounded-md bg-[#f8bdc4] hover:bg-[#f4aab3] text-[#9b2226] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
-      >
-        Reject
-      </button>
+              {activeTab === 'pending' ? (
+                <>
+                  <button
+                    onClick={() => handleApprovalAction(selectedDeveloper, 'rejected')}
+                    className="w-full py-1.5 px-2 rounded-md bg-[#f8bdc4] hover:bg-[#f4aab3] text-[#9b2226] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
+                  >
+                    Reject
+                  </button>
 
-      <button
-        onClick={() => handleApprovalAction(selectedDeveloper, 'approved')}
-        className="w-full py-1.5 px-2 rounded-md bg-[#a7d3c0] hover:bg-[#96c6b2] text-[#1e4d2b] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
-      >
-        Accept
-      </button>
-    </>
-  ) : (
-    <>
-      <button
-        onClick={() => handleDeleteDeveloper(selectedDeveloper)}
-        className="w-full py-1.5 px-2 rounded-md bg-[#f8bdc4] hover:bg-[#f4aab3] text-[#9b2226] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
-      >
-        Delete account
-      </button>
+                  <button
+                    onClick={() => handleApprovalAction(selectedDeveloper, 'approved')}
+                    className="w-full py-1.5 px-2 rounded-md bg-[#a7d3c0] hover:bg-[#96c6b2] text-[#1e4d2b] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
+                  >
+                    Accept
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleDeleteDeveloper(selectedDeveloper)}
+                    className="w-full py-1.5 px-2 rounded-md bg-[#f8bdc4] hover:bg-[#f4aab3] text-[#9b2226] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95"
+                  >
+                    Delete account
+                  </button>
 
-      <button
-        onClick={() => handleAccountStatusChange(selectedDeveloper, selectedDeveloper.account_status === 'blocked' ? 'active' : 'blocked')}
-        className="w-full py-1.5 px-2 rounded-md bg-[#b8cefb] hover:bg-[#a6c1fa] text-[#1e3a8a] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
-      >
-        {selectedDeveloper.account_status === 'blocked' ? 'Unblock' : 'Block account'}
-      </button>
+                  <button
+                    onClick={() => handleAccountStatusChange(selectedDeveloper, selectedDeveloper.account_status === 'blocked' ? 'active' : 'blocked')}
+                    className="w-full py-1.5 px-2 rounded-md bg-[#b8cefb] hover:bg-[#a6c1fa] text-[#1e3a8a] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
+                  >
+                    {selectedDeveloper.account_status === 'blocked' ? 'Unblock' : 'Block account'}
+                  </button>
 
-      {activeTab === 'suspended' || selectedDeveloper.account_status === 'suspended' ? (
-        <button
-          onClick={() => handleAccountStatusChange(selectedDeveloper, 'active')}
-          className="w-full py-1.5 px-2 rounded-md bg-[#a7d3c0] hover:bg-[#96c6b2] text-[#1e4d2b] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
-        >
-          Unsuspend
-        </button>
-      ) : (
-        <button
-          onClick={() => handleAccountStatusChange(selectedDeveloper, 'suspended')}
-          className="w-full py-1.5 px-2 rounded-md bg-[#fcd5b5] hover:bg-[#f2c4a0] text-[#a0522d] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
-        >
-          Suspend account
-        </button>
-      )}
-    </>
-  )}
-</div>
+                  {activeTab === 'suspended' || selectedDeveloper.account_status === 'suspended' ? (
+                    <button
+                      onClick={() => handleAccountStatusChange(selectedDeveloper, 'active')}
+                      className="w-full py-1.5 px-2 rounded-md bg-[#a7d3c0] hover:bg-[#96c6b2] text-[#1e4d2b] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
+                    >
+                      Unsuspend
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleAccountStatusChange(selectedDeveloper, 'suspended')}
+                      className="w-full py-1.5 px-2 rounded-md bg-[#fcd5b5] hover:bg-[#f2c4a0] text-[#a0522d] font-bold text-[11px] transition-all cursor-pointer shadow-xs active:scale-95 truncate"
+                    >
+                      Suspend account
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
 
           </div>
         </div>
@@ -468,7 +468,7 @@ export default function DeveloperApproval() {
 
   return (
     <div 
-      className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-2xl sm:max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none"
+      className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl sm:max-w-4xl mx-auto pb-8 px-3 sm:px-4 text-left select-none"
       onClick={() => setOpenMenuId(null)}
     >
       <div className="text-left">
@@ -539,14 +539,17 @@ export default function DeveloperApproval() {
               <span className="text-xs font-semibold">Loading developers...</span>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse min-w-[540px]">
+            <table className="w-full text-left border-collapse min-w-[620px]">
               <thead>
                 <tr className="bg-white/40 dark:bg-[#A2A6B0] border-b border-black/5 text-gray-600 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
+                  <th className="py-3.5 px-4 rounded-tl-[8px] sm:rounded-tl-[6px]">ID</th>
                   <th className="py-3.5 px-6">DEVELOPER</th>
+                  <th className="py-3.5 px-4">DOMAIN</th>
                   <th className="py-3.5 px-4 text-center">
                     {activeTab === 'approved' ? 'APPROVED ON' : 'APPLIED ON'}
                   </th>
-                  <th className="py-3.5 px-6 text-right pr-10">ACTIONS</th>
+                  <th className="py-3.5 px-4 text-center">VIEW PROFILE</th>
+                  <th className="py-3.5 px-6 text-right rounded-tr-[8px] sm:rounded-tr-[6px]">ACTIONS</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
@@ -555,6 +558,10 @@ export default function DeveloperApproval() {
                     key={dev.id} 
                     className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
                   >
+                    <td className="py-4 px-4 text-xs font-mono font-bold text-gray-700">
+                      {dev.id}
+                    </td>
+
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className={`w-5 h-5 rounded-[4px] font-bold text-[10px] flex items-center justify-center shrink-0 ${dev.initialBg}`}>
@@ -571,19 +578,25 @@ export default function DeveloperApproval() {
                       </div>
                     </td>
 
+                    <td className="py-4 px-4 text-xs font-bold text-gray-700">
+                      {dev.domain || 'Full Stack Development'}
+                    </td>
+
                     <td className="py-4 px-4 text-center text-[11px] font-medium text-gray-500">
                       {dev.date}
                     </td>
 
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-18 relative">
-                        <button 
-                          onClick={() => handleViewProfile(dev)}
-                          className="text-[11px] font-bold text-blue-600 dark:text-blue-600 hover:underline cursor-pointer inline-block"
-                        >
-                          View profile
-                        </button>
+                    <td className="py-4 px-4 text-center">
+                      <button 
+                        onClick={() => handleViewProfile(dev)}
+                        className="text-[11px] font-bold text-blue-600 dark:text-blue-600 hover:underline cursor-pointer inline-block"
+                      >
+                        View profile
+                      </button>
+                    </td>
 
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex items-center justify-end relative">
                         <div className="relative inline-block z-20">
                           <button
                             onClick={(e) => {
@@ -597,7 +610,7 @@ export default function DeveloperApproval() {
 
                           {openMenuId === dev.id && (
                             <div 
-                              className="absolute top-full right-0 mt-1.5 w-44 bg-white rounded-md shadow-xl border border-gray-200/80 py-1 z-50 text-left text-xs font-semibold text-gray-800"
+                              className="absolute bottom-full right-0 mb-2 w-44 bg-white rounded-md shadow-2xl border border-gray-200/90 py-1 z-50 text-left text-xs font-semibold text-gray-800"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button

@@ -1,317 +1,319 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { fetchAllChats, fetchChatByProjectId } from '../../services/api';
+import { Loader2, Send, LifeBuoy, SearchCode, UserRound } from 'lucide-react';
+import { fetchAllChats } from '../../services/api';
 
-const fallbackChats = [
+const fallbackClientSupportChats = [
   {
     id: 1,
-    projectId: 27,
-    project: "Bon appetit",
-    client: "Zain khan",
-    developer: "Bilal ahmed",
-    date: "29 JUL 2026",
+    name: "Zara Ahmed",
+    subtitle: "Brand · onboarding question",
+    time: "9:42 AM",
+    unread: 2,
+    initials: "ZA",
     messages: [
-      {
-        id: 101,
-        sender: "Zain",
-        role: "client",
-        text: "Hi Bilal! I've reviewed the requirement document for Blue Sky Travel. I understand that you want to redesign the booking engine to make it faster and more user-friendly. I'd be happy to work on this project.",
-        time: "10:45 AM",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-      },
-      {
-        id: 102,
-        sender: "Bilal",
-        role: "developer",
-        text: "Great! One of my main goals is to simplify the booking process and make it mobile-friendly. I'd also like users to easily compare hotels and flight options before making a reservation.",
-        time: "10:48 AM",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
-      },
-      {
-        id: 103,
-        sender: "Zain",
-        role: "client",
-        text: "That sounds good. I can implement a modern interface with advanced search and filtering, responsive design, and secure booking features. We can discuss the timeline and any additional requirements before getting started.",
-        time: "10:45 AM",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-      }
+      { sender: "Zara Ahmed", text: "Hi! We submitted our brand application two days ago.", time: "9:38 AM", role: "client" },
+      { sender: "Zara Ahmed", text: "How long does brand verification usually take?", time: "9:42 AM", role: "client" }
     ]
   },
   {
     id: 2,
-    projectId: 13,
-    project: "Nexus desktop",
-    client: "Sara kareem",
-    developer: "Zain khan",
-    date: "28 JUL 2026",
+    name: "Rabia Ali",
+    subtitle: "Payment · escrow dispute inquiry",
+    time: "Yesterday",
+    unread: 0,
+    initials: "RA",
     messages: [
-      {
-        id: 201,
-        sender: "Sara",
-        role: "client",
-        text: "Zain, did you review the Figma updates for the analytics dashboard layout?",
-        time: "5:50 PM",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80"
-      },
-      {
-        id: 202,
-        sender: "Zain",
-        role: "developer",
-        text: "Yes Sara! The dark mode toggle and chart components have been updated in the staging branch.",
-        time: "6:10 PM",
-        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80"
-      }
+      { sender: "Rabia Ali", text: "Thanks for clearing up the escrow deposit rules!", time: "10:15 AM", role: "client" }
+    ]
+  }
+];
+
+const fallbackDeveloperSupportChats = [
+  {
+    id: 101,
+    name: "Bilal Ahmed",
+    subtitle: "Developer · profile approval",
+    time: "11:05 AM",
+    unread: 1,
+    initials: "BA",
+    messages: [
+      { sender: "Bilal Ahmed", text: "Hello admin, when will my developer profile get verified?", time: "11:05 AM", role: "developer" }
     ]
   },
   {
-    id: 3,
-    projectId: 14,
-    project: "TN-HRMS",
-    client: "Rabia ali",
-    developer: "Mustafa raza",
-    date: "26 JUL 2026",
+    id: 102,
+    name: "Zain Khan",
+    subtitle: "Tech Stack · project matching",
+    time: "Tue",
+    unread: 0,
+    initials: "ZK",
     messages: [
-      {
-        id: 301,
-        sender: "Rabia",
-        role: "client",
-        text: "We need to fix the CSV export for monthly payroll records.",
-        time: "11:00 AM",
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop&q=80"
-      },
-      {
-        id: 302,
-        sender: "Mustafa",
-        role: "developer",
-        text: "Got it! I will patch the route and push an update by end of day.",
-        time: "11:15 AM",
-        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80"
-      }
+      { sender: "Zain Khan", text: "Can I update my portfolio link on my dashboard?", time: "2:20 PM", role: "developer" }
     ]
   }
 ];
 
 export default function ChatMonitor() {
-  const [chatList, setChatList] = useState([]);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [loadingList, setLoadingList] = useState(true);
-  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState('support'); // 'support' | 'disputes'
+  const [supportSubTab, setSupportSubTab] = useState('client'); // 'client' | 'developer'
+  
+  const [clientChats, setClientChats] = useState(fallbackClientSupportChats);
+  const [developerChats, setDeveloperChats] = useState(fallbackDeveloperSupportChats);
+  const [disputeChats, setDisputeChats] = useState([]);
+
+  const [activeChat, setActiveChat] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadAllChats = async () => {
+    const loadData = async () => {
       try {
-        setLoadingList(true);
+        setLoading(true);
         const res = await fetchAllChats();
-        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-          setChatList(res.data);
-        } else {
-          setChatList(fallbackChats);
-        }
       } catch (err) {
-        setChatList(fallbackChats);
+        console.warn("Using fallback support threads:", err);
       } finally {
-        setLoadingList(false);
+        setLoading(false);
       }
     };
-
-    loadAllChats();
+    loadData();
   }, []);
 
-  const handleOpenChat = async (chatItem) => {
-    const targetId = chatItem.projectId || chatItem.project_id || chatItem.id;
-    
-    try {
-      setLoadingMessages(true);
-      setSelectedChat({ ...chatItem, messages: chatItem.messages || [] });
-
-      const res = await fetchChatByProjectId(targetId);
-      if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-        setSelectedChat(prev => ({
-          ...prev,
-          messages: res.data.map(m => ({
-            id: m.id || m._id || m.message_id,
-            sender: m.sender_name || m.sender || "User",
-            role: m.sender_role?.toLowerCase() || m.role?.toLowerCase() || "client",
-            text: m.message_text || m.text || m.content || "",
-            time: m.time || m.created_at ? new Date(m.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
-            avatar: m.avatar || (m.sender_role === 'developer' 
-              ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" 
-              : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80")
-          }))
-        }));
+  useEffect(() => {
+    if (activeMainTab === 'support') {
+      if (supportSubTab === 'client' && clientChats.length > 0) {
+        setActiveChat(clientChats[0]);
+      } else if (supportSubTab === 'developer' && developerChats.length > 0) {
+        setActiveChat(developerChats[0]);
       }
-    } catch (err) {
-      console.warn("Using default message threads:", err);
-    } finally {
-      setLoadingMessages(false);
+    } else {
+      if (disputeChats.length > 0) {
+        setActiveChat(disputeChats[0]);
+      } else {
+        setActiveChat(null);
+      }
     }
+  }, [activeMainTab, supportSubTab]);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!replyText.trim() || !activeChat) return;
+
+    const newMsg = {
+      sender: "Admin (You)",
+      text: replyText,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      role: 'admin'
+    };
+
+    const updateList = (list) =>
+      list.map(c => c.id === activeChat.id ? { ...c, messages: [...c.messages, newMsg] } : c);
+
+    if (activeMainTab === 'support') {
+      if (supportSubTab === 'client') {
+        const updated = updateList(clientChats);
+        setClientChats(updated);
+        setActiveChat(updated.find(c => c.id === activeChat.id));
+      } else {
+        const updated = updateList(developerChats);
+        setDeveloperChats(updated);
+        setActiveChat(updated.find(c => c.id === activeChat.id));
+      }
+    } else {
+      const updated = updateList(disputeChats);
+      setDisputeChats(updated);
+      setActiveChat(updated.find(c => c.id === activeChat.id));
+    }
+
+    setReplyText('');
   };
 
-  if (selectedChat) {
-    return (
-      <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-3 max-w-4xl sm:max-w-3xl mx-auto pb-8 px-3 sm:px-4">
+  const currentSidebarList = activeMainTab === 'support' 
+    ? (supportSubTab === 'client' ? clientChats : developerChats) 
+    : disputeChats;
+
+  return (
+    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] max-w-6xl mx-auto pb-6 px-2 sm:px-4 text-left select-none">
+      
+      {/* Main Support / Disputes Container Card matching project theme */}
+      <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/90 border border-black/10 dark:border-white/15 rounded-[16px] shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[580px] max-h-[640px]">
         
-        {/* <div className="flex items-center justify-between">
-          <button
-            onClick={() => setSelectedChat(null)}
-            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
-          >
-            <ArrowLeft size={14} /> Back to chat list
-          </button>
-        </div> */}
-
-        <div className="p-0 dark:p-2 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border-black/5 shadow-xs dark:shadow-md dark:border-white/20 dark:backdrop-blur-md w-full transition-all duration-300 overflow-hidden">
+        {/* LEFT SIDEBAR PANEL */}
+        <div className="md:col-span-4 border-r border-black/10 dark:border-white/10 flex flex-col bg-white/40 dark:bg-[#13110f]/40">
           
-          <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[10px] border border-black/10 dark:border-transparent shadow-md dark:shadow-xl overflow-hidden transition-colors duration-300">
+          {/* Top Main Tabs (Support vs Disputes) */}
+          <div className="p-3 border-b border-black/10 dark:border-white/10 flex items-center gap-2">
+            <button
+              onClick={() => setActiveMainTab('support')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeMainTab === 'support'
+                  ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white shadow-xs'
+                  : 'bg-white/80 dark:bg-white/5 text-gray-800 dark:text-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              <LifeBuoy size={13} /> Support
+            </button>
 
-            {/* Header Banner */}
-            <div className="bg-[#FFF6E9] dark:bg-[#9fa6b2] border-b border-black/10 dark:border-transparent px-4 sm:px-6 py-2.5 flex items-center justify-between text-black font-extrabold text-xs tracking-wider uppercase">
-              <span>
-                {selectedChat.client || selectedChat.client_name || "Client"} &rarr; {selectedChat.developer || selectedChat.developer_name || "Developer"}
-              </span>
-              <span className="text-gray-800 text-[11px]">
-                {selectedChat.project || selectedChat.project_name || "Project"}
-              </span>
+            <button
+              onClick={() => setActiveMainTab('disputes')}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeMainTab === 'disputes'
+                  ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white shadow-xs'
+                  : 'bg-white/80 dark:bg-white/5 text-gray-800 dark:text-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              Disputes
+            </button>
+          </div>
+
+          {/* Under Support: Sub-options for Client and Developer */}
+          {activeMainTab === 'support' && (
+            <div className="px-3 py-2 bg-white/30 dark:bg-white/5 border-b border-black/10 dark:border-white/10 flex items-center gap-1.5">
+              <button
+                onClick={() => setSupportSubTab('client')}
+                className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[11px] font-extrabold transition-all cursor-pointer ${
+                  supportSubTab === 'client'
+                    ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+                    : 'text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                <UserRound size={11} /> Client
+              </button>
+
+              <button
+                onClick={() => setSupportSubTab('developer')}
+                className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[11px] font-extrabold transition-all cursor-pointer ${
+                  supportSubTab === 'developer'
+                    ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
+                    : 'text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                <SearchCode size={11} /> Developer
+              </button>
             </div>
+          )}
 
-            <div className="bg-[#FFF6E9] dark:bg-[#fcfbf9] p-4 sm:p-6 space-y-5 min-h-[380px] max-h-[480px] overflow-y-auto custom-scrollbar">
-              
-              {loadingMessages ? (
-                <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-2">
-                  <Loader2 size={24} className="animate-spin text-[#DC6B0F]" />
-                  <span className="text-xs font-semibold">Loading conversation...</span>
-                </div>
-              ) : (
-                <>
-                  <div className="text-center">
-                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-                      {selectedChat.date || "TODAY"}
-                    </span>
-                  </div>
+          {/* Conversation List Sidebar */}
+          <div className="flex-1 overflow-y-auto divide-y divide-black/5 dark:divide-white/5 custom-scrollbar">
+            {loading ? (
+              <div className="flex items-center justify-center py-16 text-gray-500 gap-2">
+                <Loader2 size={16} className="animate-spin text-[#DC6B0F]" />
+                <span className="text-xs font-medium">Loading threads...</span>
+              </div>
+            ) : currentSidebarList.length > 0 ? (
+              currentSidebarList.map((chat) => {
+                const isSelected = activeChat?.id === chat.id;
+                return (
+                  <div
+                    key={chat.id}
+                    onClick={() => setActiveChat(chat)}
+                    className={`p-3.5 flex items-start gap-3 cursor-pointer transition-colors ${
+                      isSelected 
+                        ? 'bg-[#FFE8CC] dark:bg-white/10 border-l-4 border-[#DC6B0F]' 
+                        : 'hover:bg-black/[0.03] dark:hover:bg-white/[0.03]'
+                    }`}
+                  >
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#F2A508] to-[#BD1C22] text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                      {chat.initials}
+                    </div>
 
-                  <div className="space-y-4 max-w-2xl mx-auto">
-                    {selectedChat.messages && selectedChat.messages.length > 0 ? (
-                      selectedChat.messages.map((msg) => {
-                        const isIncoming = msg.role === 'client';
-
-                        return (
-                          <div 
-                            key={msg.id} 
-                            className={`flex flex-col ${isIncoming ? 'items-start' : 'items-end'}`}
-                          >
-                            <div 
-                              className={`max-w-[85%] sm:max-w-[75%] p-3 sm:p-3.5 rounded-xl shadow-xs leading-relaxed text-xs font-medium ${
-                                isIncoming 
-                                  ? 'bg-white border border-black/5 dark:border-transparent dark:bg-[#d8d8d8] text-gray-900 rounded-tl-xs' 
-                                  : 'bg-gradient-to-r from-[#e89d67] to-[#e47d54] text-gray-900 rounded-tr-xs'
-                              }`}
-                            >
-                              {msg.text}
-                            </div>
-
-                            <div className={`flex items-center gap-1.5 mt-1 ${isIncoming ? 'flex-row' : 'flex-row-reverse'}`}>
-                              <img 
-                                src={msg.avatar} 
-                                alt={msg.sender} 
-                                className="w-4 h-4 rounded-full object-cover border border-gray-300 shadow-xs" 
-                              />
-                              <span className="text-[9px] font-bold text-gray-500">
-                                {msg.sender} &middot; {msg.time}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="text-center py-16 text-xs text-gray-500 font-semibold">
-                        No messages in this chat history yet.
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-extrabold text-xs text-gray-900 dark:text-white truncate">{chat.name}</h4>
+                        <span className="text-[10px] text-gray-500 shrink-0">{chat.time}</span>
                       </div>
+                      <p className="text-[11px] text-gray-600 dark:text-gray-400 truncate mt-0.5">{chat.subtitle}</p>
+                    </div>
+
+                    {chat.unread > 0 && (
+                      <span className="w-4 h-4 rounded-full bg-[#DC6B0F] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                        {chat.unread}
+                      </span>
                     )}
                   </div>
-                </>
-              )}
-
-            </div>
-
+                );
+              })
+            ) : (
+              <div className="text-center py-16 text-xs text-gray-500 px-4">
+                No active {activeMainTab === 'support' ? supportSubTab : 'dispute'} threads available.
+              </div>
+            )}
           </div>
 
         </div>
 
-      </div>
-    );
-  }
+        {/* RIGHT CHAT WINDOW PANEL */}
+        <div className="md:col-span-8 flex flex-col bg-[#FFF6E9] dark:bg-[#1a1815]">
+          
+          {activeChat ? (
+            <>
+              {/* Chat Header */}
+              <div className="px-5 py-3.5 border-b border-black/10 dark:border-white/10 flex items-center justify-between bg-white/60 dark:bg-[#1a1815]">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F2A508] to-[#BD1C22] text-white font-extrabold text-xs flex items-center justify-center shrink-0">
+                    {activeChat.initials}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-xs text-gray-900 dark:text-white">{activeChat.name}</h3>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">{activeChat.subtitle}</p>
+                  </div>
+                </div>
 
-  return (
-    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 max-w-2xl sm:max-w-3xl mx-auto pb-8 px-3 sm:px-4">
-
-      <div className="text-left">
-        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-black dark:text-white">
-          Chat monitor
-        </h1>
-      </div>
-
-      <div className="p-0 dark:p-3 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-black/5 shadow-xs dark:shadow-md dark:border-white/20 dark:backdrop-blur-md w-full transition-all duration-300 overflow-hidden">
-        
-        <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[8px] sm:rounded-[6px] border border-black/10 dark:border-transparent shadow-xs dark:shadow-xl overflow-hidden transition-colors duration-300">
-
-          <div className="bg-white/40 dark:bg-[#A2A6B0] px-3.5 py-2.5 grid grid-cols-4 items-center border-b border-black/5 dark:border-gray-200/60 text-[10px] font-bold tracking-wider text-gray-600 dark:text-black uppercase">
-            <span className="text-left">PROJECT</span>
-            <span className="text-center">CLIENT</span>
-            <span className="text-center">DEVELOPER</span>
-            <span className="text-right sr-only">ACTION</span>
-          </div>
-
-          {/* Table Rows Section */}
-          <div className="divide-y divide-gray-300/40 bg-[#FFF6E9] dark:bg-[#EFEEEA]">
-            {loadingList ? (
-              <div className="flex items-center justify-center py-10 text-gray-500 gap-2">
-                <Loader2 size={18} className="animate-spin text-[#DC6B0F]" />
-                <span className="text-xs font-medium">Loading project chats...</span>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40">
+                  Unresolved
+                </span>
               </div>
-            ) : chatList.map((row) => (
-              <div 
-                key={row.id || row.projectId || row.project_id} 
-                className="px-3.5 py-2.5 grid grid-cols-4 items-center hover:bg-black/[0.02] transition-colors"
-              >
-                {/* Project Title */}
-                <div className="text-left">
-                  <h3 className="font-bold text-xs text-black tracking-tight">
-                    {row.project || row.project_name}
-                  </h3>
-                </div>
 
-                {/* Client Name */}
-                <div className="text-center">
-                  <span className="text-[11px] text-gray-700 font-medium">
-                    {row.client || row.client_name}
-                  </span>
-                </div>
+              {/* Message Flow Body */}
+              <div className="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar bg-white/40 dark:bg-[#13110f]/20">
+                {activeChat.messages.map((msg, index) => {
+                  const isAdmin = msg.role === 'admin';
+                  return (
+                    <div key={index} className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}>
+                      <span className="text-[10px] font-bold text-gray-500 mb-1 px-1">
+                        {msg.sender}
+                      </span>
+                      <div className={`max-w-[75%] p-3.5 rounded-xl text-xs font-medium leading-relaxed shadow-xs ${
+                        isAdmin
+                          ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white rounded-tr-xs'
+                          : 'bg-white dark:bg-white/10 border border-black/10 dark:border-white/15 text-gray-900 dark:text-white rounded-tl-xs'
+                      }`}>
+                        {msg.text}
+                      </div>
+                      <span className="text-[9px] text-gray-400 mt-1 px-1">{msg.time}</span>
+                    </div>
+                  );
+                })}
+              </div>
 
-                {/* Developer Name */}
-                <div className="text-center">
-                  <span className="text-[11px] text-gray-700 font-medium">
-                    {row.developer || row.developer_name}
-                  </span>
-                </div>
-
-                {/* Action Link */}
-                <div className="text-right">
-                  <button 
-                    onClick={() => handleOpenChat(row)}
-                    className="text-[11px] font-bold text-blue-600 hover:underline cursor-pointer transition-all inline-block"
+              {/* Reply Input Bar */}
+              {activeMainTab === 'support' ? (
+                <form onSubmit={handleSendMessage} className="p-3 bg-white/80 dark:bg-[#1a1815] border-t border-black/10 dark:border-white/10 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Type a reply..."
+                    className="flex-1 bg-white dark:bg-black/30 border border-gray-300 dark:border-white/15 rounded-lg h-10 px-3.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#DC6B0F] font-medium"
+                  />
+                  <button
+                    type="submit"
+                    className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white flex items-center justify-center shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer shrink-0"
                   >
-                    View chat
+                    <Send size={15} />
                   </button>
+                </form>
+              ) : (
+                <div className="p-3 bg-gray-50 dark:bg-black/20 border-t border-black/10 dark:border-white/10 text-center text-[11px] font-bold text-gray-500">
+                  🔒 Monitoring only — admin cannot post in dispute threads.
                 </div>
-              </div>
-            ))}
-
-            {!loadingList && chatList.length === 0 && (
-              <div className="text-center py-6 text-xs text-gray-500 font-medium">
-                No active project chats found.
-              </div>
-            )}
-          </div>
+              )}
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-xs text-gray-400 p-6 text-center">
+              Select a conversation from the sidebar to inspect messages.
+            </div>
+          )}
 
         </div>
 

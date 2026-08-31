@@ -13,7 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  Download
+  Download,
+  Check
 } from 'lucide-react';
 
 const parseBudgetToNumeric = (budgetInput) => {
@@ -28,12 +29,10 @@ const parseBudgetToNumeric = (budgetInput) => {
 export default function ProjectCreationForm() {
   const navigate = useNavigate();
 
-  // API State Tracking
   const [loading, setLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   
-  // Database identifiers
   const [createdProjectInfo, setCreatedProjectInfo] = useState(null); 
   const [savedScopeRecord, setSavedScopeRecord] = useState(null);     
   const [generatedScope, setGeneratedScope] = useState(null);        
@@ -45,7 +44,7 @@ export default function ProjectCreationForm() {
   const [selectedPurpose, setSelectedPurpose] = useState('Restaurant web');
   const [customPurposeInput, setCustomPurposeInput] = useState('');
   const [projectDescription, setProjectDescription] = useState(
-    "I run a small restaurant and want an app where customers can browse our menu, place orders for delivery or pickup, and pay online with a card or wallet. I also need a simple staff-facing dashboard to see incoming orders in real time and mark them as preparing, ready, or delivered. Eventually I'd like loyalty points for repeat customers."
+    ""
   );
   const [projectBudget, setProjectBudget] = useState('$1,000 - $3,000');
   const [customBudgetInput, setCustomBudgetInput] = useState('');
@@ -249,7 +248,7 @@ export default function ProjectCreationForm() {
 
         <div className="p-0 sm:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md transition-all duration-300 w-full max-w-xl mx-auto relative">
           <div className="bg-[#FFF6E9] dark:bg-white text-black p-3.5 sm:p-5 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl flex flex-col min-h-[400px] sm:min-h-[420px] relative transition-all duration-300">
-            <div className="text-left mb-1.5">
+            <div className="text-center mb-1.5">
               <h3 className="text-xs font-bold text-gray-900 capitalize tracking-wide">{projectNameInput || "Bon appetit"}</h3>
             </div>
 
@@ -398,9 +397,6 @@ export default function ProjectCreationForm() {
     );
   }
 
-  // =========================================================================
-  // STATE VIEW 2: MULTI-STEP SCOPE CONFIGURATOR GENERATOR
-  // =========================================================================
   return (
     <div className="w-full max-w-4xl sm:max-w-4xl mx-auto min-h-[calc(100vh-180px)] flex flex-col items-center justify-start pt-2 sm:pt-4 font-['Raleway',sans-serif] select-none text-white transition-colors duration-300 relative px-2 sm:px-4">
       <div className="w-full text-left mb-4 sm:mb-6 space-y-0.5">
@@ -417,11 +413,11 @@ export default function ProjectCreationForm() {
             {currentStep}
           </div>
         </div>
-      )}                    
+      )}
 
       <div className="p-0 sm:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md transition-all duration-300 mt-1 sm:mt-2 w-full max-w-[380px] mx-auto">
         <div className="bg-[#FFF6E9] dark:bg-white text-black p-4 sm:p-6 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl flex flex-col min-h-[300px] sm:min-h-[320px] justify-between transition-colors duration-300">
-          
+
           {/* Error Banner Notification */}
           {errorMessage && (
             <div className="mb-3 p-2 bg-red-100 border border-red-300 text-red-700 text-[10px] rounded-[4px] font-bold text-center">
@@ -429,25 +425,22 @@ export default function ProjectCreationForm() {
             </div>
           )}
 
-          {/* STEP 5: PROCESSED SCOPE SUMMARY RESULTS */}
           {currentStep === 5 && (
             <div className="flex-1 flex flex-col justify-between">
-              <div className="text-center border-b border-gray-200 pb-3 mb-3 sm:mb-4">
+              <div className="text-center border-b border-gray-200/80 pb-3 mb-3 sm:mb-4">
                 <h3 className="text-xs font-bold text-gray-900 uppercase tracking-tight max-w-[240px] mx-auto leading-tight">
-                  Project Requirements Processed successfully
+                  Project Requirements Processed
                 </h3>
-                {savedScopeRecord?.id && (
-                  <p className="text-[9px] text-gray-400 font-bold mt-0.5">
-                    Questionnaire ID: #{createdProjectInfo?.questionnaireId} | Scope DB ID: #{savedScopeRecord.id}
-                  </p>
-                )}
+                <p className="text-[10px] text-gray-500 font-medium mt-0.5">
+                  {projectNameInput || 'Custom Application'}
+                </p>
               </div>
 
               <div className="space-y-3 my-auto">
                 <h4 className="text-xs font-bold tracking-wide text-center bg-gradient-to-r from-[#F2A508] to-[#BD1C22] bg-clip-text text-transparent">
                   Recommended TechStack & Scope
                 </h4>
-                
+
                 {generatedScope?.executiveSummary ? (
                   <div className="max-h-28 overflow-y-auto p-2.5 bg-gray-50 rounded text-left text-[10px] text-gray-700 leading-snug font-sans custom-scrollbar border border-gray-200/60 shadow-inner">
                     <p className="font-bold text-gray-900 mb-0.5">Executive Summary:</p>
@@ -493,7 +486,7 @@ export default function ProjectCreationForm() {
                     Regenerate
                   </button>
                 </div>
-                
+
                 <button
                   type="button"
                   disabled={loading}
@@ -523,12 +516,12 @@ export default function ProjectCreationForm() {
               </div>
 
               <div className="w-full flex-1 flex flex-col justify-start">
-                <textarea 
+                <textarea
                   rows={4}
                   value={regenerationPrompt}
                   onChange={(e) => setRegenerationPrompt(e.target.value)}
-                  placeholder="Describe the changes you'd like to make before regenerating the report (e.g. Change backend runtime to NestJS with TypeScript)." 
-                  className="w-full bg-[#000000] text-[#FFFFFF] rounded-[4px] p-2.5 sm:p-3 text-[11px] font-medium placeholder-gray-400 outline-none resize-none leading-snug shadow-inner"
+                  placeholder="Describe the changes you'd like to make before regenerating the report (e.g. Change backend runtime to NestJS with TypeScript)."
+                  className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] p-3 text-xs font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all resize-none leading-relaxed shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                   required
                 />
               </div>
@@ -574,76 +567,113 @@ export default function ProjectCreationForm() {
                 {currentStep === 3 && "Describe your project"}
                 {currentStep === 4 && "What is your estimated budget?"}
               </h3>
-              
+
               <div className="w-full flex-1 flex flex-col justify-start space-y-2">
+                {/* STEP 1: Project Name */}
                 {currentStep === 1 && (
-                  <input 
-                    type="text" 
-                    value={projectNameInput}
-                    onChange={(e) => setProjectNameInput(e.target.value)}
-                    className="w-full bg-[#000000] text-[#FFFFFF] rounded-[4px] py-2 px-3 text-[11px] font-bold text-center outline-none shadow-xs"
-                  />
+                  <div className="space-y-1.5 text-left">
+                    <input
+                      type="text"
+                      value={projectNameInput}
+                      onChange={(e) => setProjectNameInput(e.target.value)}
+                      placeholder="e.g. Bon Appetit Restaurant App"
+                      className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-2.5 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                    />
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                      Give your project a clear, descriptive title.
+                    </p>
+                  </div>
                 )}
 
+                {/* STEP 2: Purpose */}
                 {currentStep === 2 && (
-                  <div className="space-y-1.5">
-                    {['Online store', 'Social platform', 'Restaurant web', 'Other'].map(opt => (
-                      <button 
-                        key={opt} 
-                        type="button" 
-                        onClick={() => setSelectedPurpose(opt)} 
-                        className={`w-full text-center text-[11px] font-bold py-2 px-3 rounded-[4px] shadow-xs transition-all duration-200 cursor-pointer text-white ${
-                          selectedPurpose === opt ? 'bg-black ring-2 ring-orange-500 scale-[1.01]' : 'bg-black hover:bg-gray-900'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {['Online store', 'Social platform', 'Restaurant web', 'Other'].map((opt) => {
+                        const isSelected = selectedPurpose === opt;
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setSelectedPurpose(opt)}
+                            className={`w-full flex items-center justify-between text-[11px] font-bold py-2 px-3 rounded-[6px] transition-all duration-150 cursor-pointer border ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-[#DC6B0F]/10 to-[#F2A508]/10 dark:from-[#DC6B0F]/20 dark:to-[#F2A508]/20 border-[#DC6B0F] text-[#DC6B0F] dark:text-[#F2A508] shadow-xs'
+                                : 'bg-white dark:bg-black text-gray-800 dark:text-white border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 hover:bg-gray-50/80 dark:hover:bg-black/80 shadow-2xs'
+                            }`}
+                          >
+                            <span>{opt}</span>
+                            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all ${
+                              isSelected ? 'border-[#DC6B0F] bg-[#DC6B0F] text-white' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-black'
+                            }`}>
+                              {isSelected && <Check size={10} strokeWidth={3} />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
                     {selectedPurpose === 'Other' && (
-                      <div className="pt-1 animate-fade-in">
-                        <input 
-                          type="text" 
+                      <div className="pt-1 text-left">
+                        <input
+                          type="text"
                           value={customPurposeInput}
                           onChange={(e) => setCustomPurposeInput(e.target.value)}
-                          placeholder="Enter your custom answer" 
-                          className="w-full bg-black text-white border border-gray-600/50 rounded-[4px] py-2 px-3 text-[11px] font-bold placeholder-gray-500 outline-none shadow-inner"
+                          placeholder="Type your custom purpose here..."
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-2 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                         />
                       </div>
                     )}
                   </div>
                 )}
 
+                {/* STEP 3: Description */}
                 {currentStep === 3 && (
                   <textarea 
                     rows={5}
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
-                    className="w-full bg-[#000000] text-[#FFFFFF] rounded-[4px] p-2.5 sm:p-3 text-[11px] font-medium outline-none resize-none leading-snug shadow-xs"
+                    placeholder="Describe what your project should do, target users, and key features..."
+                    className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] p-3 text-xs font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all resize-none leading-relaxed shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                   />
                 )}
 
+                {/* STEP 4: Budget */}
                 {currentStep === 4 && (
-                  <div className="space-y-1.5">
-                    {['Under $1,000', '$1,000 - $3,000', '$3,000 - $5,000', '$5,000+', 'Custom'].map(bOpt => (
-                      <button 
-                        key={bOpt} 
-                        type="button" 
-                        onClick={() => setProjectBudget(bOpt)} 
-                        className={`w-full text-center text-[11px] font-bold py-2 px-3 rounded-[4px] shadow-xs transition-all duration-200 cursor-pointer text-white ${
-                          projectBudget === bOpt ? 'bg-black ring-2 ring-orange-500 scale-[1.01]' : 'bg-black hover:bg-gray-900'
-                        }`}
-                      >
-                        {bOpt}
-                      </button>
-                    ))}
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {['Under $1,000', '$1,000 - $3,000', '$3,000 - $5,000', '$5,000+', 'Custom'].map((bOpt) => {
+                        const isSelected = projectBudget === bOpt;
+                        return (
+                          <button
+                            key={bOpt}
+                            type="button"
+                            onClick={() => setProjectBudget(bOpt)}
+                            className={`w-full flex items-center justify-between text-[11px] font-bold py-2 px-3 rounded-[6px] transition-all duration-150 cursor-pointer border ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-[#DC6B0F]/10 to-[#F2A508]/10 dark:from-[#DC6B0F]/20 dark:to-[#F2A508]/20 border-[#DC6B0F] text-[#DC6B0F] dark:text-[#F2A508] shadow-xs'
+                                : 'bg-white dark:bg-black text-gray-800 dark:text-white border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 hover:bg-gray-50/80 dark:hover:bg-black/80 shadow-2xs'
+                            }`}
+                          >
+                            <span>{bOpt}</span>
+                            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all ${
+                              isSelected ? 'border-[#DC6B0F] bg-[#DC6B0F] text-white' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-black'
+                            }`}>
+                              {isSelected && <Check size={10} strokeWidth={3} />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
                     {projectBudget === 'Custom' && (
-                      <div className="pt-1 animate-fade-in">
-                        <input 
-                          type="text" 
+                      <div className="pt-1 text-left">
+                        <input
+                          type="text"
                           value={customBudgetInput}
                           onChange={(e) => setCustomBudgetInput(e.target.value)}
-                          placeholder="e.g. $2,500 PKR / USD" 
-                          className="w-full bg-black text-white border border-gray-600/50 rounded-[4px] py-2 px-3 text-[11px] font-bold placeholder-gray-500 outline-none shadow-inner text-center"
+                          placeholder="e.g. 250000 PKR or $2,500 USD"
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-2 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                         />
                       </div>
                     )}
@@ -669,12 +699,12 @@ export default function ProjectCreationForm() {
                 </button>
 
                 {currentStep > 1 && !loading && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => {
                       setErrorMessage('');
                       setCurrentStep(prev => prev - 1);
-                    }} 
+                    }}
                     className="text-[10px] font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider cursor-pointer"
                   >
                     Back
