@@ -153,7 +153,7 @@ export default function ProjectsMonitoring() {
           <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
             {selectedProject.projectName}
           </h1>
-          <p className="text-xs font-medium text-gray-600 dark:text-gray-500">
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-200">
             Track development progress and milestone updates in real time.
           </p>
         </div>

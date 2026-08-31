@@ -135,188 +135,192 @@ export default function ChatMonitor() {
   return (
     <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] max-w-6xl mx-auto pb-6 px-2 sm:px-4 text-left select-none">
       
-      {/* Main Support / Disputes Container Card matching project theme */}
-      <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/90 border border-black/10 dark:border-white/15 rounded-[16px] shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[580px] max-h-[640px]">
+      {/* Outer Glassmorphism Wrapper for Dark Theme Matching Admin Dashboard */}
+      <div className="p-0 dark:p-3 sm:dark:p-6 rounded-[16px] bg-transparent dark:bg-white/10 border border-black/5 dark:border-white/20 dark:backdrop-blur-md w-full transition-all duration-300 overflow-hidden shadow-xs dark:shadow-md">
         
-        {/* LEFT SIDEBAR PANEL */}
-        <div className="md:col-span-4 border-r border-black/10 dark:border-white/10 flex flex-col bg-white/40 dark:bg-[#13110f]/40">
+        {/* Main Card Container */}
+        <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] border border-black/10 dark:border-transparent rounded-[16px] shadow-xl dark:shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[580px] max-h-[640px] text-black">
           
-          {/* Top Main Tabs (Support vs Disputes) */}
-          <div className="p-3 border-b border-black/10 dark:border-white/10 flex items-center gap-2">
-            <button
-              onClick={() => setActiveMainTab('support')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeMainTab === 'support'
-                  ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white shadow-xs'
-                  : 'bg-white/80 dark:bg-white/5 text-gray-800 dark:text-gray-300 hover:bg-gray-100'
-              }`}
-            >
-              <LifeBuoy size={13} /> Support
-            </button>
-
-            <button
-              onClick={() => setActiveMainTab('disputes')}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeMainTab === 'disputes'
-                  ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white shadow-xs'
-                  : 'bg-white/80 dark:bg-white/5 text-gray-800 dark:text-gray-300 hover:bg-gray-100'
-              }`}
-            >
-              Disputes
-            </button>
-          </div>
-
-          {/* Under Support: Sub-options for Client and Developer */}
-          {activeMainTab === 'support' && (
-            <div className="px-3 py-2 bg-white/30 dark:bg-white/5 border-b border-black/10 dark:border-white/10 flex items-center gap-1.5">
+          {/* LEFT SIDEBAR PANEL */}
+          <div className="md:col-span-4 border-r border-black/10 dark:border-black/10 flex flex-col bg-white/40 dark:bg-white/50">
+            
+            {/* Top Main Tabs (Support vs Disputes) */}
+            <div className="p-3 border-b border-black/10 dark:border-black/10 flex items-center gap-2">
               <button
-                onClick={() => setSupportSubTab('client')}
-                className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[11px] font-extrabold transition-all cursor-pointer ${
-                  supportSubTab === 'client'
-                    ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
-                    : 'text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white'
+                onClick={() => setActiveMainTab('support')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeMainTab === 'support'
+                    ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white shadow-xs'
+                    : 'bg-white/80 dark:bg-white/80 text-gray-800 dark:text-gray-800 hover:bg-gray-100'
                 }`}
               >
-                <UserRound size={11} /> Client
+                <LifeBuoy size={13} /> Support
               </button>
 
               <button
-                onClick={() => setSupportSubTab('developer')}
-                className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[11px] font-extrabold transition-all cursor-pointer ${
-                  supportSubTab === 'developer'
-                    ? 'bg-black text-white dark:bg-white dark:text-black shadow-xs'
-                    : 'text-gray-700 dark:text-gray-400 hover:text-black dark:hover:text-white'
+                onClick={() => setActiveMainTab('disputes')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeMainTab === 'disputes'
+                    ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white shadow-xs'
+                    : 'bg-white/80 dark:bg-white/80 text-gray-800 dark:text-gray-800 hover:bg-gray-100'
                 }`}
               >
-                <SearchCode size={11} /> Developer
+                Disputes
               </button>
             </div>
-          )}
 
-          {/* Conversation List Sidebar */}
-          <div className="flex-1 overflow-y-auto divide-y divide-black/5 dark:divide-white/5 custom-scrollbar">
-            {loading ? (
-              <div className="flex items-center justify-center py-16 text-gray-500 gap-2">
-                <Loader2 size={16} className="animate-spin text-[#DC6B0F]" />
-                <span className="text-xs font-medium">Loading threads...</span>
-              </div>
-            ) : currentSidebarList.length > 0 ? (
-              currentSidebarList.map((chat) => {
-                const isSelected = activeChat?.id === chat.id;
-                return (
-                  <div
-                    key={chat.id}
-                    onClick={() => setActiveChat(chat)}
-                    className={`p-3.5 flex items-start gap-3 cursor-pointer transition-colors ${
-                      isSelected 
-                        ? 'bg-[#FFE8CC] dark:bg-white/10 border-l-4 border-[#DC6B0F]' 
-                        : 'hover:bg-black/[0.03] dark:hover:bg-white/[0.03]'
-                    }`}
-                  >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#F2A508] to-[#BD1C22] text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                      {chat.initials}
-                    </div>
+            {/* Under Support: Sub-options for Client and Developer */}
+            {activeMainTab === 'support' && (
+              <div className="px-3 py-2 bg-white/30 dark:bg-white/40 border-b border-black/10 dark:border-black/10 flex items-center gap-1.5">
+                <button
+                  onClick={() => setSupportSubTab('client')}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[11px] font-extrabold transition-all cursor-pointer ${
+                    supportSubTab === 'client'
+                      ? 'bg-black text-white dark:bg-black dark:text-white shadow-xs'
+                      : 'text-gray-700 dark:text-gray-700 hover:text-black dark:hover:text-black'
+                  }`}
+                >
+                  <UserRound size={11} /> Client
+                </button>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-extrabold text-xs text-gray-900 dark:text-white truncate">{chat.name}</h4>
-                        <span className="text-[10px] text-gray-500 shrink-0">{chat.time}</span>
-                      </div>
-                      <p className="text-[11px] text-gray-600 dark:text-gray-400 truncate mt-0.5">{chat.subtitle}</p>
-                    </div>
-
-                    {chat.unread > 0 && (
-                      <span className="w-4 h-4 rounded-full bg-[#DC6B0F] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-                        {chat.unread}
-                      </span>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-16 text-xs text-gray-500 px-4">
-                No active {activeMainTab === 'support' ? supportSubTab : 'dispute'} threads available.
+                <button
+                  onClick={() => setSupportSubTab('developer')}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-md text-[11px] font-extrabold transition-all cursor-pointer ${
+                    supportSubTab === 'developer'
+                      ? 'bg-black text-white dark:bg-black dark:text-white shadow-xs'
+                      : 'text-gray-700 dark:text-gray-700 hover:text-black dark:hover:text-black'
+                  }`}
+                >
+                  <SearchCode size={11} /> Developer
+                </button>
               </div>
             )}
+
+            {/* Conversation List Sidebar */}
+            <div className="flex-1 overflow-y-auto divide-y divide-black/5 dark:divide-black/5 custom-scrollbar">
+              {loading ? (
+                <div className="flex items-center justify-center py-16 text-gray-500 gap-2">
+                  <Loader2 size={16} className="animate-spin text-[#DC6B0F]" />
+                  <span className="text-xs font-medium">Loading threads...</span>
+                </div>
+              ) : currentSidebarList.length > 0 ? (
+                currentSidebarList.map((chat) => {
+                  const isSelected = activeChat?.id === chat.id;
+                  return (
+                    <div
+                      key={chat.id}
+                      onClick={() => setActiveChat(chat)}
+                      className={`p-3.5 flex items-start gap-3 cursor-pointer transition-colors ${
+                        isSelected 
+                          ? 'bg-[#FFE8CC] dark:bg-[#FFE8CC] border-l-4 border-[#DC6B0F]' 
+                          : 'hover:bg-black/[0.03] dark:hover:bg-black/[0.03]'
+                      }`}
+                    >
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#F2A508] to-[#BD1C22] text-white font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                        {chat.initials}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-extrabold text-xs text-gray-900 dark:text-gray-900 truncate">{chat.name}</h4>
+                          <span className="text-[10px] text-gray-500 dark:text-gray-500 shrink-0">{chat.time}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-600 dark:text-gray-600 truncate mt-0.5">{chat.subtitle}</p>
+                      </div>
+
+                      {chat.unread > 0 && (
+                        <span className="w-4 h-4 rounded-full bg-[#DC6B0F] text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                          {chat.unread}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-16 text-xs text-gray-500 px-4">
+                  No active {activeMainTab === 'support' ? supportSubTab : 'dispute'} threads available.
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* RIGHT CHAT WINDOW PANEL */}
+          <div className="md:col-span-8 flex flex-col bg-[#FFF6E9] dark:bg-[#EFEEEA]">
+            
+            {activeChat ? (
+              <>
+                {/* Chat Header */}
+                <div className="px-5 py-3.5 border-b border-black/10 dark:border-black/10 flex items-center justify-between bg-white/60 dark:bg-white/80">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F2A508] to-[#BD1C22] text-white font-extrabold text-xs flex items-center justify-center shrink-0">
+                      {activeChat.initials}
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-xs text-gray-900 dark:text-gray-900">{activeChat.name}</h3>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-500">{activeChat.subtitle}</p>
+                    </div>
+                  </div>
+
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-100 dark:text-amber-800 border border-amber-200 dark:border-amber-200">
+                    Unresolved
+                  </span>
+                </div>
+
+                {/* Message Flow Body */}
+                <div className="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar bg-white/40 dark:bg-white/30">
+                  {activeChat.messages.map((msg, index) => {
+                    const isAdmin = msg.role === 'admin';
+                    return (
+                      <div key={index} className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}>
+                        <span className="text-[10px] font-bold text-gray-500 dark:text-gray-500 mb-1 px-1">
+                          {msg.sender}
+                        </span>
+                        <div className={`max-w-[75%] p-3.5 rounded-xl text-xs font-medium leading-relaxed shadow-xs ${
+                          isAdmin
+                            ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white rounded-tr-xs'
+                            : 'bg-white dark:bg-white border border-black/10 dark:border-black/10 text-gray-900 dark:text-gray-900 rounded-tl-xs'
+                        }`}>
+                          {msg.text}
+                        </div>
+                        <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 px-1">{msg.time}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Reply Input Bar */}
+                {activeMainTab === 'support' ? (
+                  <form onSubmit={handleSendMessage} className="p-3 bg-white/80 dark:bg-white/80 border-t border-black/10 dark:border-black/10 flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Type a reply..."
+                      className="flex-1 bg-white dark:bg-white border border-gray-300 dark:border-gray-300 rounded-lg h-10 px-3.5 text-xs text-gray-900 dark:text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#DC6B0F] font-medium"
+                    />
+                    <button
+                      type="submit"
+                      className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white flex items-center justify-center shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer shrink-0"
+                    >
+                      <Send size={15} />
+                    </button>
+                  </form>
+                ) : (
+                  <div className="p-3 bg-gray-50 dark:bg-gray-100 border-t border-black/10 dark:border-black/10 text-center text-[11px] font-bold text-gray-500 dark:text-gray-500">
+                    🔒 Monitoring only — admin cannot post in dispute threads.
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-xs text-gray-400 dark:text-gray-500 p-6 text-center">
+                Select a conversation from the sidebar to inspect messages.
+              </div>
+            )}
+
           </div>
 
         </div>
-
-        {/* RIGHT CHAT WINDOW PANEL */}
-        <div className="md:col-span-8 flex flex-col bg-[#FFF6E9] dark:bg-[#1a1815]">
-          
-          {activeChat ? (
-            <>
-              {/* Chat Header */}
-              <div className="px-5 py-3.5 border-b border-black/10 dark:border-white/10 flex items-center justify-between bg-white/60 dark:bg-[#1a1815]">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F2A508] to-[#BD1C22] text-white font-extrabold text-xs flex items-center justify-center shrink-0">
-                    {activeChat.initials}
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-xs text-gray-900 dark:text-white">{activeChat.name}</h3>
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">{activeChat.subtitle}</p>
-                  </div>
-                </div>
-
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40">
-                  Unresolved
-                </span>
-              </div>
-
-              {/* Message Flow Body */}
-              <div className="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar bg-white/40 dark:bg-[#13110f]/20">
-                {activeChat.messages.map((msg, index) => {
-                  const isAdmin = msg.role === 'admin';
-                  return (
-                    <div key={index} className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'}`}>
-                      <span className="text-[10px] font-bold text-gray-500 mb-1 px-1">
-                        {msg.sender}
-                      </span>
-                      <div className={`max-w-[75%] p-3.5 rounded-xl text-xs font-medium leading-relaxed shadow-xs ${
-                        isAdmin
-                          ? 'bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white rounded-tr-xs'
-                          : 'bg-white dark:bg-white/10 border border-black/10 dark:border-white/15 text-gray-900 dark:text-white rounded-tl-xs'
-                      }`}>
-                        {msg.text}
-                      </div>
-                      <span className="text-[9px] text-gray-400 mt-1 px-1">{msg.time}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Reply Input Bar */}
-              {activeMainTab === 'support' ? (
-                <form onSubmit={handleSendMessage} className="p-3 bg-white/80 dark:bg-[#1a1815] border-t border-black/10 dark:border-white/10 flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    placeholder="Type a reply..."
-                    className="flex-1 bg-white dark:bg-black/30 border border-gray-300 dark:border-white/15 rounded-lg h-10 px-3.5 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#DC6B0F] font-medium"
-                  />
-                  <button
-                    type="submit"
-                    className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white flex items-center justify-center shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer shrink-0"
-                  >
-                    <Send size={15} />
-                  </button>
-                </form>
-              ) : (
-                <div className="p-3 bg-gray-50 dark:bg-black/20 border-t border-black/10 dark:border-white/10 text-center text-[11px] font-bold text-gray-500">
-                  🔒 Monitoring only — admin cannot post in dispute threads.
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-xs text-gray-400 p-6 text-center">
-              Select a conversation from the sidebar to inspect messages.
-            </div>
-          )}
-
-        </div>
-
       </div>
 
     </div>
