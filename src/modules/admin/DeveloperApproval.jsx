@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
+import { useOutletContext } from 'react-router-dom';
+import { 
   UserCheck,
   Hourglass,
   XCircle,
@@ -39,7 +40,9 @@ export default function DeveloperApproval() {
   const [loading, setLoading] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
-  // 1. Fetch Developer Stats
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
+
   const loadStats = async () => {
     try {
       const res = await fetchDeveloperStatsAdmin();
@@ -55,7 +58,6 @@ export default function DeveloperApproval() {
     }
   };
 
-  // 2. Fetch Developer List (Filtered by active tab)
   const loadDevelopers = async () => {
     try {
       setLoading(true);
@@ -89,6 +91,10 @@ export default function DeveloperApproval() {
             initialBg: avatarColors[idx % avatarColors.length],
             domain: dev.your_domain || dev.domain || "Full Stack Development",
             email: dev.email_address || "developer@example.com",
+            phone: dev.phone_number || dev.phone || "+923000000000",
+            cnic: dev.cnic || "Not specified",
+            city: dev.city || "Not specified",
+            country: dev.country || "Pakistan",
             is_verified: Boolean(dev.is_verified),
             approval_status: dev.approval_status || 'pending',
             account_status: dev.account_status || 'active'
@@ -115,7 +121,6 @@ export default function DeveloperApproval() {
     loadDevelopers();
   }, [activeTab]);
 
-  // 3. Fetch Full Developer Profile on Click
   const handleViewProfile = async (devSummary) => {
     try {
       setLoadingProfile(true);
@@ -129,17 +134,6 @@ export default function DeveloperApproval() {
           ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() 
           : name.substring(0, 2).toUpperCase();
 
-        const techStackArray = Array.isArray(d.tech_stack) 
-          ? d.tech_stack 
-          : typeof d.tech_stack === 'string' 
-            ? d.tech_stack.split(',').map(s => s.trim()) 
-            : ["React.js", "Node.js"];
-
-        const links = [];
-        if (d.linkdin_url) links.push(d.linkdin_url);
-        if (d.github_url) links.push(d.github_url);
-        if (links.length === 0) links.push("https://portfolio.com");
-
         setSelectedDeveloper({
           id: d.id,
           name: name,
@@ -147,17 +141,13 @@ export default function DeveloperApproval() {
           domain: d.your_domain || d.domain || devSummary.domain || "Full Stack Development",
           email: d.email_address || "developer@example.com",
           phone: d.phone_number || d.phone || "+923000000000",
-          bio: d.bio || "Full-stack developer specializing in scalable web applications and clean code architecture.",
-          skills: {
-            web: techStackArray,
-            database: ["MySQL", "PostgreSQL"],
-            cloud: ["AWS"]
-          },
-          projectLinks: links,
+          cnic: d.cnic || devSummary.cnic || "Not specified",
+          city: d.city || devSummary.city || "Not specified",
+          country: d.country || devSummary.country || "Pakistan",
           bank: {
             name: d.bank_name || "Not linked",
             title: d.bank_account_title || name,
-            iban: d.bank_account_number_iban || "Not provided"
+            iban: d.bank_account_number_iban || d.account_number || "Not provided"
           },
           is_verified: Boolean(d.is_verified),
           approval_status: d.approval_status || devSummary.approval_status,
@@ -174,7 +164,6 @@ export default function DeveloperApproval() {
     }
   };
 
-  // 4. Handle Developer Verification Toggle
   const handleToggleVerification = async (dev) => {
     const nextStatus = !dev.is_verified;
     try {
@@ -195,7 +184,6 @@ export default function DeveloperApproval() {
     }
   };
 
-  // Handle Accept / Reject Application
   const handleApprovalAction = async (dev, approvalStatus) => {
     try {
       await updateDeveloperApprovalAdmin(dev.id, approvalStatus);
@@ -208,7 +196,6 @@ export default function DeveloperApproval() {
     }
   };
 
-  // Handle Account Status (Suspension / Unsuspend / Block)
   const handleAccountStatusChange = async (dev, accountStatus) => {
     try {
       await updateDeveloperAccountStatusAdmin(dev.id, accountStatus);
@@ -221,7 +208,6 @@ export default function DeveloperApproval() {
     }
   };
 
-  // Handle Delete Account
   const handleDeleteDeveloper = async (dev) => {
     if (!window.confirm(`Are you sure you want to delete ${dev.name}'s account?`)) return;
 
@@ -236,6 +222,19 @@ export default function DeveloperApproval() {
       alert(`Failed to delete developer.`);
     }
   };
+
+  // 🔍 Realtime dynamic filter across ID, Developer Name, Domain, and Email
+  const filteredDevelopers = developers.filter((dev) => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+
+    return (
+      String(dev.id).toLowerCase().includes(q) ||
+      (dev.name || '').toLowerCase().includes(q) ||
+      (dev.domain || '').toLowerCase().includes(q) ||
+      (dev.email || '').toLowerCase().includes(q)
+    );
+  });
 
   if (loadingProfile) {
     return (
@@ -258,7 +257,6 @@ export default function DeveloperApproval() {
           </button>
         </div>
 
-        {/* Profile Card Container */}
         <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[12px] dark:shadow-2xl transition-all">
           <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[8px] sm:rounded-[6px] p-5 sm:p-7 shadow-xs border border-amber-100/60 dark:border-transparent space-y-5 text-left transition-colors duration-300">
             
@@ -281,7 +279,7 @@ export default function DeveloperApproval() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-xs font-bold text-black block mb-1">Developer name</label>
+                <label className="text-xs font-bold text-black block mb-1">Name</label>
                 <input 
                   type="text" 
                   readOnly 
@@ -301,16 +299,6 @@ export default function DeveloperApproval() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-black block mb-1">Email</label>
-                <input 
-                  type="email" 
-                  readOnly 
-                  value={selectedDeveloper.email || ''} 
-                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
-                />
-              </div>
-
-              <div>
                 <label className="text-xs font-bold text-black block mb-1">Phone</label>
                 <input 
                   type="text" 
@@ -319,45 +307,46 @@ export default function DeveloperApproval() {
                   className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="text-xs font-bold text-black block mb-1">Bio</label>
-              <textarea 
-                readOnly 
-                rows={2} 
-                value={selectedDeveloper.bio || 'No bio provided.'} 
-                className="w-full max-w-[460px] bg-white border border-gray-300/80 rounded-md p-2 text-xs font-medium text-gray-800 leading-relaxed resize-none outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
-              />
-            </div>
-
-            <div className="space-y-3 pt-1">
-              <h3 className="text-sm font-extrabold text-[#0088cc]">Skills</h3>
               <div>
-                <label className="text-xs font-bold text-black block mb-1.5">Tech Stack</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {(selectedDeveloper.skills?.web || ["React.js", "Node.js"]).map((skill, i) => (
-                    <span key={i} className="inline-flex items-center gap-1 bg-black text-white text-[10px] font-bold px-2.5 py-1 rounded-md">
-                      {skill} <Check size={10} strokeWidth={3} />
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <hr className="border-gray-200 my-2" />
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-black block">Links</label>
-              {(selectedDeveloper.projectLinks || []).map((link, idx) => (
-                <input
-                  key={idx}
-                  type="text"
-                  readOnly
-                  value={link}
-                  className="w-full max-w-[260px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] block"
+                <label className="text-xs font-bold text-black block mb-1">City</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedDeveloper.city || 'Not specified'} 
+                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                 />
-              ))}
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-black block mb-1">Country</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedDeveloper.country || 'Pakistan'} 
+                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-black block mb-1">CNIC</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedDeveloper.cnic || 'Not specified'} 
+                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-black block mb-1">Email</label>
+                <input 
+                  type="email" 
+                  readOnly 
+                  value={selectedDeveloper.email || ''} 
+                  className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
             </div>
 
             <div className="space-y-3 pt-2">
@@ -374,7 +363,7 @@ export default function DeveloperApproval() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-black block mb-1">Account title</label>
+                  <label className="text-xs font-bold text-black block mb-1">Bank account title</label>
                   <input 
                     type="text" 
                     readOnly 
@@ -395,7 +384,6 @@ export default function DeveloperApproval() {
               </div>
             </div>
 
-            {/* Action Buttons in Details */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 w-full">
               <button
                 onClick={() => handleToggleVerification(selectedDeveloper)}
@@ -553,7 +541,7 @@ export default function DeveloperApproval() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-                {developers.map((dev) => (
+                {filteredDevelopers.map((dev) => (
                   <tr 
                     key={dev.id} 
                     className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
@@ -665,9 +653,9 @@ export default function DeveloperApproval() {
             </table>
           )}
 
-          {!loading && developers.length === 0 && (
+          {!loading && filteredDevelopers.length === 0 && (
             <div className="text-center py-8 text-xs text-gray-500 font-medium">
-              No developers found in {activeTab}.
+              {searchQuery ? `No developers matching "${searchQuery}".` : `No developers found in ${activeTab}.`}
             </div>
           )}
 

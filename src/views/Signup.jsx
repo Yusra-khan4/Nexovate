@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { registerUser } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, ArrowLeft } from 'lucide-react';
 import logoImg from '../assets/Nexovate-01.svg';
 
 const Signup = () => {
@@ -91,10 +91,14 @@ const Signup = () => {
   const labelStyles = "block text-xs font-bold text-gray-900 dark:text-[#FFFFFF] tracking-wide mb-1 transition-colors duration-300";
   const inputStyles = "w-full bg-white dark:bg-[#000000]/40 border border-gray-300 dark:border-white/10 rounded-[6px] h-9.5 px-3 text-xs text-gray-900 dark:text-[#FFFFFF] placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-[#DC6B0F] transition-colors duration-300 font-medium shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]";
 
-  const HeaderBar = () => (
+  const HeaderBar = ({ isForm = false }) => (
     <>
-      {/* Absolute Left Logo Container (Matched Height) */}
-      <div className="hidden md:flex items-center h-[56px] absolute left-8 lg:left-4 top-1/2 -translate-y-[215px] z-20 select-none">
+      {/* Absolute Left Logo Container: Uses original relative center on role screen, matches exact viewport height on signup form */}
+      <div 
+        className={`hidden md:flex items-center h-[56px] absolute left-8 lg:left-4 ${
+          isForm ? 'top-[calc(50vh-215px)]' : 'top-1/2 -translate-y-[215px]'
+        } z-20 select-none`}
+      >
         <img 
           src={logoImg} 
           alt="Nexovate Logo" 
@@ -102,8 +106,12 @@ const Signup = () => {
         />
       </div>
 
-      {/* Absolute Right Sun/Moon Theme Toggle (Matched Height) */}
-      <div className="hidden md:flex items-center h-[56px] absolute right-8 lg:right-4 top-1/2 -translate-y-[215px] z-20">
+      {/* Absolute Right Theme Toggle */}
+      <div 
+        className={`hidden md:flex items-center h-[56px] absolute right-8 lg:right-4 ${
+          isForm ? 'top-[calc(50vh-215px)]' : 'top-1/2 -translate-y-[215px]'
+        } z-20`}
+      >
         <button
           type="button"
           onClick={() => setIsDarkMode(!isDarkMode)}
@@ -157,7 +165,7 @@ const Signup = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 relative w-full bg-transparent text-gray-900 dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased overflow-x-hidden">
         
-        <HeaderBar />
+        <HeaderBar isForm={false} />
 
         {/* Adjusted spacing to pull text & cards slightly higher */}
         <div className="w-full max-w-xl text-center mb-4 z-10 space-y-1 -mt-8">
@@ -184,7 +192,7 @@ const Signup = () => {
               </p>
             </div>
             <button 
-              onClick={() => setRole('developer')} 
+              onClick={() => { setError(''); setRole('developer'); }} 
               className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold h-9.5 rounded-[6px] text-xs tracking-wider uppercase hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-sm"
             >
               Continue as Developer
@@ -205,7 +213,7 @@ const Signup = () => {
               </p>
             </div>
             <button 
-              onClick={() => setRole('client')} 
+              onClick={() => { setError(''); setRole('client'); }} 
               className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold h-9.5 rounded-[6px] text-xs tracking-wider uppercase hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-sm"
             >
               Continue as Customer
@@ -221,9 +229,22 @@ const Signup = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 relative w-full bg-transparent text-gray-900 dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased overflow-x-hidden">
 
-      <HeaderBar />
+      <HeaderBar isForm={true} />
 
       <div className="w-full max-w-[390px] sm:max-w-[420px] z-10 my-auto">
+        
+        {/* Back to Roles Button */}
+        <div className="mb-2.5 flex items-center justify-start">
+          <button
+            type="button"
+            onClick={() => { setError(''); setRole('select'); }}
+            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1.5 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
+          >
+            <ArrowLeft size={14} strokeWidth={2.2} />
+            <span>Back to roles</span>
+          </button>
+        </div>
+
         <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/70 border border-black/5 dark:border-white/10 rounded-[14px] p-6 sm:p-7 backdrop-blur-xl shadow-lg dark:shadow-2xl transition-all duration-300 space-y-4 text-center">
           
           {/* Top Title Section inside card */}
@@ -232,7 +253,7 @@ const Signup = () => {
               Create your profile
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-              Fill out your details to get started.
+              Signing up as <span className="font-bold text-[#DC6B0F] capitalize">{role === 'client' ? 'Customer' : 'Developer'}</span>
             </p>
           </div>
 

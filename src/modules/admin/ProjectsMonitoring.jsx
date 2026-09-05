@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -38,6 +38,9 @@ export default function ProjectsMonitoring() {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
 
   useEffect(() => {
     const loadMonitoringData = async () => {
@@ -117,24 +120,39 @@ export default function ProjectsMonitoring() {
   const getStatusBadge = (status, type) => {
     if (type === 'completed') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-100/90 dark:text-emerald-800 inline-block capitalize whitespace-nowrap">
+        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-100/90 dark:text-emerald-800 inline-block capitalize whitespace-nowrap">
           {status}
         </span>
       );
     }
     if (type === 'draft') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-violet-200 text-gray-700 dark:bg-violet-200/90 dark:text-gray-800 inline-block capitalize whitespace-nowrap">
+        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-violet-200 text-gray-700 dark:bg-violet-200/90 dark:text-gray-800 inline-block capitalize whitespace-nowrap">
           {status}
         </span>
       );
     }
     return (
-      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-100/90 dark:text-blue-800 inline-block capitalize whitespace-nowrap">
+      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-100/90 dark:text-blue-800 inline-block capitalize whitespace-nowrap">
         {status}
       </span>
     );
   };
+
+  // Realtime search filter across Project ID, Name, Client, Developer, and Status
+  const filteredProjects = projects.filter((item) => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+
+    return (
+      String(item.id).toLowerCase().includes(q) ||
+      (item.projectName || '').toLowerCase().includes(q) ||
+      (item.client || '').toLowerCase().includes(q) ||
+      (item.developer || '').toLowerCase().includes(q) ||
+      (item.status || '').toLowerCase().includes(q) ||
+      (item.budget || '').toLowerCase().includes(q)
+    );
+  });
 
   if (selectedProject) {
     return (
@@ -153,6 +171,9 @@ export default function ProjectsMonitoring() {
           <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
             {selectedProject.projectName}
           </h1>
+          <p className="text-[12px] font-mono font-bold text-gray-700 dark:text-gray-300">
+            Project ID: #{selectedProject.id}
+          </p>
           <p className="text-xs font-medium text-gray-600 dark:text-gray-200">
             Track development progress and milestone updates in real time.
           </p>
@@ -250,78 +271,84 @@ export default function ProjectsMonitoring() {
               <span className="text-xs font-semibold">Loading monitored projects...</span>
             </div>
           ) : (
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[760px]">
+            <div className="w-full overflow-x-hidden">
+              <table className="w-full text-left border-collapse table-fixed">
                 <thead>
-                  <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
-                    <th className="py-3.5 pl-5 pr-3">PROJECT NAME</th>
-                    <th className="py-3.5 px-3 text-center">STATUS</th>
-                    <th className="py-3.5 px-3">CLIENT</th>
-                    <th className="py-3.5 px-3">DEVELOPER</th>
-                    <th className="py-3.5 px-3">PROGRESS</th>
-                    <th className="py-3.5 px-3 text-center">MILESTONES</th>
-                    <th className="py-3.5 px-3 text-right">BUDGET</th>
-                    <th className="py-3.5 pl-3 pr-6 text-center">ACTION</th>
+                  <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[9px] tracking-wider">
+                    <th className="py-3 px-1 sm:px-2 w-[7%]">ID</th>
+                    <th className="py-3 px-2 sm:px-3 w-[20%]">PROJECT</th>
+                    <th className="py-3 px-1 sm:px-2 text-center w-[12%]">STATUS</th>
+                    <th className="py-3 px-1 sm:px-2 w-[13%] truncate">CLIENT</th>
+                    <th className="py-3 px-1 sm:px-2 w-[13%] truncate">DEV</th>
+                    <th className="py-3 px-1 sm:px-2 w-[15%]">PROGRESS</th>
+                    <th className="py-3 px-1 sm:px-2 text-center w-[9%]">MILES</th>
+                    <th className="py-3 px-1 sm:px-2 text-right w-[11%]">BUDGET</th>
+                    <th className="py-3 px-1 sm:px-2 text-center w-[10%]">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-                  {projects.map((item) => (
+                  {filteredProjects.map((item) => (
                     <tr 
                       key={item.id} 
                       className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
                     >
+                      {/* Project ID */}
+                      <td className="py-3 px-1 sm:px-2 text-[11px] font-mono font-bold text-gray-600 whitespace-nowrap">
+                        {item.id}
+                      </td>
+
                       {/* Project Name */}
-                      <td className="py-4 pl-5 pr-3">
-                        <span className="font-bold text-xs text-black tracking-tight block max-w-[140px] truncate" title={item.projectName}>
+                      <td className="py-3 px-2 sm:px-3 truncate">
+                        <span className="font-bold text-[11px] sm:text-xs text-black tracking-tight block truncate" title={item.projectName}>
                           {item.projectName}
                         </span>
                       </td>
 
                       {/* Status Badge */}
-                      <td className="py-4 px-3 text-center">
+                      <td className="py-3 px-1 sm:px-2 text-center truncate">
                         {getStatusBadge(item.status, item.statusType)}
                       </td>
 
                       {/* Client */}
-                      <td className="py-4 px-3 text-xs font-bold text-gray-800 whitespace-nowrap">
+                      <td className="py-3 px-1 sm:px-2 text-[11px] font-bold text-gray-800 truncate" title={item.client}>
                         {item.client}
                       </td>
 
                       {/* Developer */}
-                      <td className="py-4 px-3 text-xs font-bold text-gray-800 whitespace-nowrap">
+                      <td className="py-3 px-1 sm:px-2 text-[11px] font-bold text-gray-800 truncate" title={item.developer}>
                         {item.developer}
                       </td>
 
                       {/* Progress Bar & Percentage */}
-                      <td className="py-4 px-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-14 sm:w-18 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
+                      <td className="py-3 px-1 sm:px-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-10 sm:w-14 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
                             <div 
                               className={`h-full rounded-full transition-all duration-300 ${item.progressColor}`} 
                               style={{ width: `${item.progress}%` }}
                             />
                           </div>
-                          <span className="text-[10px] font-extrabold text-gray-800 min-w-[28px]">
+                          <span className="text-[9px] font-extrabold text-gray-800 shrink-0">
                             {item.progress}%
                           </span>
                         </div>
                       </td>
 
                       {/* Milestones Achieved Column */}
-                      <td className="py-4 px-3 text-center text-xs font-extrabold text-gray-700 whitespace-nowrap">
+                      <td className="py-3 px-1 sm:px-2 text-center text-[11px] font-extrabold text-gray-700 whitespace-nowrap">
                         {item.milestonesCount.completed}/{item.milestonesCount.total}
                       </td>
 
                       {/* Budget */}
-                      <td className="py-4 px-3 text-right text-xs font-bold text-black whitespace-nowrap">
+                      <td className="py-3 px-1 sm:px-2 text-right text-[11px] font-bold text-black whitespace-nowrap">
                         {item.budget}
                       </td>
 
                       {/* Gradient View Button Column */}
-                      <td className="py-4 pl-3 pr-6 text-center">
+                      <td className="py-3 px-1 sm:px-2 text-center whitespace-nowrap">
                         <button 
                           onClick={() => setSelectedProject(item)}
-                          className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-[6px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer tracking-wide inline-block"
+                          className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[9px] px-2.5 py-1 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer tracking-wide inline-block"
                         >
                           View
                         </button>
@@ -333,9 +360,9 @@ export default function ProjectsMonitoring() {
             </div>
           )}
 
-          {!loading && projects.length === 0 && (
+          {!loading && filteredProjects.length === 0 && (
             <div className="text-center py-8 text-xs text-gray-500 font-medium">
-              No projects being monitored.
+              {searchQuery ? `No monitored projects matching "${searchQuery}".` : 'No projects being monitored.'}
             </div>
           )}
 

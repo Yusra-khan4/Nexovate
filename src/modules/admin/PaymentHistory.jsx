@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { fetchAdminPaymentHistory } from '../../services/api';
 import { Loader2 } from 'lucide-react';
 
@@ -56,6 +57,9 @@ const fallbackPaymentLogs = [
 export default function PaymentHistory() {
   const [paymentLogs, setPaymentLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -148,6 +152,21 @@ export default function PaymentHistory() {
     }
   };
 
+  // Realtime dynamic filter across Project Name, Client, Developer, Status, Date, and ID
+  const filteredPaymentLogs = paymentLogs.filter((log) => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+
+    return (
+      (log.project || '').toLowerCase().includes(q) ||
+      (log.client || '').toLowerCase().includes(q) ||
+      (log.developer || '').toLowerCase().includes(q) ||
+      (log.status || '').toLowerCase().includes(q) ||
+      (log.date || '').toLowerCase().includes(q) ||
+      String(log.id).toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="flex flex-col min-h-screen py-4 sm:py-6 px-3 sm:px-4 max-w-3xl sm:max-w-4xl mx-auto w-full font-['Raleway',sans-serif] antialiased text-left select-none">
       
@@ -175,7 +194,7 @@ export default function PaymentHistory() {
               <>
                 {/* Mobile Cards View */}
                 <div className="block md:hidden p-3 space-y-2.5">
-                  {paymentLogs.map((log) => (
+                  {filteredPaymentLogs.map((log) => (
                     <div 
                       key={log.id} 
                       className="bg-[#FFF6E9] dark:bg-white p-3.5 rounded-[6px] border border-black/5 dark:border-gray-200 shadow-xs space-y-2"
@@ -233,7 +252,7 @@ export default function PaymentHistory() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-                      {paymentLogs.map((log) => (
+                      {filteredPaymentLogs.map((log) => (
                         <tr 
                           key={log.id} 
                           className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
@@ -275,9 +294,9 @@ export default function PaymentHistory() {
                   </table>
                 </div>
 
-                {paymentLogs.length === 0 && (
+                {!loading && filteredPaymentLogs.length === 0 && (
                   <div className="text-center py-8 text-xs text-gray-500 font-medium">
-                    No payment history logs found.
+                    {searchQuery ? `No logs matching "${searchQuery}".` : 'No payment history logs found.'}
                   </div>
                 )}
               </>

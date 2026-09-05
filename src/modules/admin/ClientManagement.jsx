@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { 
   ArrowLeft,
   MoreVertical,
@@ -23,6 +24,9 @@ const fallbackClientData = [
     initialBg: "bg-blue-200/80 text-blue-700 dark:bg-blue-100 dark:text-blue-800",
     email: "zaraahmed@gmail.com",
     phone: "+923311873628",
+    cnic: "42101-1234567-1",
+    city: "Karachi",
+    country: "Pakistan",
     status: "active",
     domain: "E-commerce",
     bank: {
@@ -38,6 +42,9 @@ const fallbackClientData = [
     initialBg: "bg-orange-200/80 text-orange-700 dark:bg-orange-100 dark:text-orange-800",
     email: "abdul.hanan@gmail.com",
     phone: "+923001234567",
+    cnic: "35202-9876543-2",
+    city: "Lahore",
+    country: "Pakistan",
     status: "active",
     domain: "Fintech",
     bank: {
@@ -63,6 +70,9 @@ export default function ClientManagement() {
   const [loading, setLoading] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
+
   useEffect(() => {
     const loadClients = async () => {
       try {
@@ -85,6 +95,9 @@ export default function ClientManagement() {
               initialBg: avatarColorPalette[index % avatarColorPalette.length],
               email: c.email_address || "No email provided",
               phone: c.phone || "Not specified",
+              cnic: c.cnic || "Not specified",
+              city: c.city || "Not specified",
+              country: c.country || "Pakistan",
               status: (c.account_status || 'active').toLowerCase(),
               domain: c.domain || c.your_domain || "General Business",
               bank: {
@@ -129,6 +142,9 @@ export default function ClientManagement() {
           initials: initials || "CL",
           email: c.email_address || "No email provided",
           phone: c.phone || "Not specified",
+          cnic: c.cnic || clientSummary.cnic || "Not specified",
+          city: c.city || clientSummary.city || "Not specified",
+          country: c.country || clientSummary.country || "Pakistan",
           status: (c.account_status || 'active').toLowerCase(),
           domain: c.domain || c.your_domain || clientSummary.domain || "General Business",
           bank: {
@@ -214,6 +230,20 @@ export default function ClientManagement() {
     }
   };
 
+  // 🔍 Realtime dynamic filter across Client ID, Name, Domain, and Email
+  const filteredClients = clients.filter((client) => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+
+    return (
+      String(client.id).toLowerCase().includes(q) ||
+      (client.name || '').toLowerCase().includes(q) ||
+      (client.domain || '').toLowerCase().includes(q) ||
+      (client.email || '').toLowerCase().includes(q) ||
+      (client.status || '').toLowerCase().includes(q)
+    );
+  });
+
   if (loadingProfile) {
     return (
       <div className="flex items-center justify-center p-16 text-black dark:text-white">
@@ -236,7 +266,7 @@ export default function ClientManagement() {
         </div>
 
         <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[12px] dark:shadow-2xl transition-all">
-          <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[8px] sm:rounded-[6px] p-6 sm:p-8 shadow-xs border border-amber-100/60 dark:border-transparent space-y-6 text-left transition-colors duration-300">
+          <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[8px] sm:rounded-[6px] p-6 sm:p-8 shadow-xs border border-amber-100/60 dark:border-transparent space-y-5 text-left transition-colors duration-300">
             
             <div className="flex justify-center pt-1">
               <div className="w-16 h-16 rounded-full bg-[#0d52cd] text-white font-extrabold text-xl flex items-center justify-center shadow-xs tracking-wider">
@@ -284,6 +314,39 @@ export default function ClientManagement() {
                   readOnly 
                   value={selectedClient.phone || 'Not specified'} 
                   className="w-full max-w-[220px] bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+            </div>
+
+            {/* CNIC, City & Country */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-bold text-black block mb-1">CNIC</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedClient.cnic || 'Not specified'} 
+                  className="w-full bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-black block mb-1">City</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedClient.city || 'Not specified'} 
+                  className="w-full bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-black block mb-1">Country</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  value={selectedClient.country || 'Pakistan'} 
+                  className="w-full bg-white border border-gray-300/80 rounded-md h-7 px-2.5 text-xs font-medium text-gray-800 outline-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                 />
               </div>
             </div>
@@ -386,7 +449,6 @@ export default function ClientManagement() {
       </div>
 
       <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[12px] dark:shadow-2xl transition-all">
-        {/* Removed overflow classes completely to allow absolute floating dropdowns to display natively outside card boundaries */}
         <div className="w-full bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent rounded-[8px] sm:rounded-[6px] shadow-xs transition-all duration-300">
           
           {loading ? (
@@ -406,7 +468,7 @@ export default function ClientManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-                {clients.map((client) => (
+                {filteredClients.map((client) => (
                   <tr 
                     key={client.id} 
                     className="group bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
@@ -522,9 +584,9 @@ export default function ClientManagement() {
             </table>
           )}
 
-          {!loading && clients.length === 0 && (
+          {!loading && filteredClients.length === 0 && (
             <div className="text-center py-8 text-xs text-gray-500 font-medium">
-              No clients found.
+              {searchQuery ? `No clients matching "${searchQuery}".` : 'No clients found.'}
             </div>
           )}
 

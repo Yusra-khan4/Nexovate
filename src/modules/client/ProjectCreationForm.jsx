@@ -14,7 +14,9 @@ import {
   ChevronRight,
   Loader2,
   Download,
-  Check
+  Check,
+  Search,
+  Plus
 } from 'lucide-react';
 
 const parseBudgetToNumeric = (budgetInput) => {
@@ -36,18 +38,21 @@ export default function ProjectCreationForm() {
   const [createdProjectInfo, setCreatedProjectInfo] = useState(null); 
   const [savedScopeRecord, setSavedScopeRecord] = useState(null);     
   const [generatedScope, setGeneratedScope] = useState(null);        
-  const [dashboardView, setDashboardView] = useState('main');
+  const [dashboardView, setDashboardView] = useState('main'); // 'main' | 'sample-ui' | 'start-new'
   const [currentStep, setCurrentStep] = useState(1);        
   const [projectNameInput, setProjectNameInput] = useState('Bon Appetit restaurant app');
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);  
   const [selectedPurpose, setSelectedPurpose] = useState('Restaurant web');
   const [customPurposeInput, setCustomPurposeInput] = useState('');
-  const [projectDescription, setProjectDescription] = useState(
-    ""
-  );
+  const [projectDescription, setProjectDescription] = useState("");
   const [projectBudget, setProjectBudget] = useState('$1,000 - $3,000');
   const [customBudgetInput, setCustomBudgetInput] = useState('');
+
+  // New state fields for Step 5
+  const [projectTimeline, setProjectTimeline] = useState('6-8 weeks');
+  const [customTimelineInput, setCustomTimelineInput] = useState('');
+  const [totalMilestonesInput, setTotalMilestonesInput] = useState('10');
 
   const [regenerationPrompt, setRegenerationPrompt] = useState('');
   const [activePlatform, setActivePlatform] = useState('Desktop'); 
@@ -57,6 +62,26 @@ export default function ProjectCreationForm() {
     { primary: 'bg-[#10b981]', secondary: 'bg-[#047857]', accent: 'bg-[#34d399]' }, 
     { primary: 'bg-[#8b5cf6]', secondary: 'bg-[#6d28d9]', accent: 'bg-[#a78bfa]' }, 
   ];
+
+  const totalSteps = 5;
+  const progressPercent = Math.min(100, Math.round((currentStep / totalSteps) * 100));
+
+  const handleStartFreshProject = () => {
+    setProjectNameInput('');
+    setSelectedPurpose('Restaurant web');
+    setCustomPurposeInput('');
+    setProjectDescription('');
+    setProjectBudget('$1,000 - $3,000');
+    setCustomBudgetInput('');
+    setProjectTimeline('6-8 weeks');
+    setCustomTimelineInput('');
+    setTotalMilestonesInput('10');
+    setGeneratedScope(null);
+    setSavedScopeRecord(null);
+    setCreatedProjectInfo(null);
+    setCurrentStep(1);
+    setDashboardView('main');
+  };
 
   const persistScopeToDatabase = async (qId, scopeObj) => {
     setLoadingMessage('Saving scope record...');
@@ -99,10 +124,24 @@ export default function ProjectCreationForm() {
         setErrorMessage('Please enter your custom budget amount.');
         return;
       }
+      setCurrentStep(prev => prev + 1);
+      return;
+    }
+
+    if (currentStep === 5) {
+      if (projectTimeline === 'Custom' && !customTimelineInput.trim()) {
+        setErrorMessage('Please enter your custom project timeline.');
+        return;
+      }
+      if (!totalMilestonesInput || Number(totalMilestonesInput) <= 0) {
+        setErrorMessage('Please specify a valid total milestone count.');
+        return;
+      }
 
       const purposeValue = selectedPurpose === 'Other' ? customPurposeInput : selectedPurpose;
       const rawBudget = projectBudget === 'Custom' ? customBudgetInput : projectBudget;
       const numericBudget = parseBudgetToNumeric(rawBudget);
+      const timelineValue = projectTimeline === 'Custom' ? customTimelineInput : projectTimeline;
 
       try {
         setLoading(true);
@@ -112,7 +151,9 @@ export default function ProjectCreationForm() {
           projectName: projectNameInput,
           purpose: purposeValue,
           projectOverview: projectDescription,
-          budget: numericBudget
+          budget: numericBudget,
+          timeline: timelineValue,
+          total_milestones: Number(totalMilestonesInput)
         });
 
         if (!startRes?.success || !startRes?.questionnaireId) {
@@ -135,7 +176,7 @@ export default function ProjectCreationForm() {
         setGeneratedScope(scopeRes.scope);
 
         await persistScopeToDatabase(qId, scopeRes.scope);
-        setCurrentStep(5);
+        setCurrentStep(6); // Step 6 is results / display screen
 
       } catch (err) {
         setErrorMessage(err.message || 'Error executing scope pipeline.');
@@ -175,7 +216,7 @@ export default function ProjectCreationForm() {
       await persistScopeToDatabase(createdProjectInfo.questionnaireId, res.scope);
 
       setRegenerationPrompt('');
-      setCurrentStep(5); 
+      setCurrentStep(6); 
     } catch (err) {
       setErrorMessage(err.message || 'Error regenerating scope document.');
     } finally {
@@ -222,6 +263,7 @@ export default function ProjectCreationForm() {
       setLoadingMessage('Preparing PDF download...');
       await downloadScopePdf(savedScopeRecord.id);
       setShowDownloadModal(false);
+      setDashboardView('start-new');
     } catch (err) {
       setErrorMessage(err.message || 'Error downloading PDF.');
     } finally {
@@ -230,12 +272,42 @@ export default function ProjectCreationForm() {
     }
   };
 
+  if (dashboardView === 'start-new') {
+    return (
+      <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[calc(100vh-200px)] font-['Raleway',sans-serif] select-none text-gray-900 dark:text-white transition-colors duration-300 px-4">
+        <div className="text-center space-y-2 mb-10">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-gray-950 dark:text-white">
+            Start new project
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400">
+            Answer questions to get project scope document
+          </p>
+        </div>
+
+        <div className="relative mb-12 flex items-center justify-center">
+          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-[3px] border-[#0f172a] dark:border-white flex items-center justify-center relative">
+            <Plus size={36} strokeWidth={2.8} className="text-[#0f172a] dark:text-white" />
+            <div className="absolute -bottom-4 -right-3 w-8 h-3 bg-[#0f172a] dark:bg-white rounded-full rotate-45 transform origin-left" />
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleStartFreshProject}
+          className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs tracking-wider uppercase px-8 py-3 rounded-[6px] shadow-sm hover:brightness-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+        >
+          <span>+ NEW PROJECT</span>
+        </button>
+      </div>
+    );
+  }
+
   if (dashboardView === 'sample-ui') {
     const currentTheme = colorSchemes[colorIndex];
 
     return (
-      <div className="w-full max-w-4xl sm:max-w-4xl mx-auto min-h-[calc(100vh-180px)] flex flex-col items-center justify-start pt-2 sm:pt-4 font-['Raleway',sans-serif] select-none text-gray-900 dark:text-white transition-colors duration-300 relative px-2 sm:px-4">
-        <div className="w-full text-left mb-4 sm:mb-5 space-y-0.5">
+      <div className="w-full max-w-4xl sm:max-w-4xl mx-auto flex flex-col items-center justify-start font-['Raleway',sans-serif] select-none text-gray-900 dark:text-white transition-colors duration-300 relative px-2 sm:px-4 -mt-3 sm:-mt-5">
+        <div className="w-full text-left mb-3 space-y-0.5">
           <div className="flex justify-between items-center w-full">
             <h2 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">
               Sample UI
@@ -244,19 +316,19 @@ export default function ProjectCreationForm() {
           <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium tracking-wide">
             UI samples for your project.
           </p>
-        </div>                        
+        </div>                                  
 
-        <div className="p-0 sm:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md transition-all duration-300 w-full max-w-xl mx-auto relative">
-          <div className="bg-[#FFF6E9] dark:bg-white text-black p-3.5 sm:p-5 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl flex flex-col min-h-[400px] sm:min-h-[420px] relative transition-all duration-300">
+        <div className="p-0 sm:p-5 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md transition-all duration-300 w-full max-w-xl mx-auto relative">
+          <div className="bg-[#FFF6E9] dark:bg-white text-black p-3.5 sm:p-5 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl flex flex-col min-h-[380px] sm:min-h-[400px] relative transition-all duration-300">
             <div className="text-center mb-1.5">
               <h3 className="text-xs font-bold text-gray-900 capitalize tracking-wide">{projectNameInput || "Bon appetit"}</h3>
             </div>
 
-            <div className="text-center mb-3">
+            <div className="text-center mb-2.5">
               <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Sample UI</span>
             </div>
 
-            <div className="flex items-center justify-center gap-6 sm:gap-12 border-b border-gray-300/60 pb-2 mb-4 max-w-xs mx-auto w-full">
+            <div className="flex items-center justify-center gap-6 sm:gap-12 border-b border-gray-300/60 pb-2 mb-3 max-w-xs mx-auto w-full">
               {['Desktop', 'Mobile'].map((platform) => (
                 <button
                   key={platform}
@@ -281,7 +353,7 @@ export default function ProjectCreationForm() {
                 <ChevronLeft size={14} strokeWidth={2.5} />
               </button>
 
-              <div className="flex-1 max-h-[260px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar space-y-4 flex flex-col items-center">
+              <div className="flex-1 max-h-[250px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar space-y-4 flex flex-col items-center">
                 {activePlatform === 'Desktop' ? (
                   <>
                     <div className="w-full bg-black rounded-[4px] p-2 sm:p-2.5 flex gap-2 h-24 shrink-0 relative shadow-xs">
@@ -325,13 +397,20 @@ export default function ProjectCreationForm() {
                   </>
                 )}
 
-                <div className="pt-1 pb-0.5 w-full flex justify-center shrink-0">
+                <div className="pt-1 pb-0.5 w-full flex flex-col items-center gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowDownloadModal(true)}
                     className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white text-[11px] font-extrabold px-6 sm:px-8 py-2 rounded-[4px] transition-all cursor-pointer shadow-xs hover:brightness-105 active:scale-[0.98]"
                   >
                     Select
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDashboardView('main')}
+                    className="text-[10px] font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider cursor-pointer"
+                  >
+                    Back
                   </button>
                 </div>
               </div>
@@ -349,7 +428,7 @@ export default function ProjectCreationForm() {
               </button>
             </div>
 
-            <div className="mt-3 text-center text-[9px] font-bold text-gray-400 select-none uppercase tracking-wide">
+            <div className="mt-2.5 text-center text-[9px] font-bold text-gray-400 select-none uppercase tracking-wide">
               Theme Variant {colorIndex + 1} of {colorSchemes.length}
             </div>
           </div>
@@ -398,8 +477,8 @@ export default function ProjectCreationForm() {
   }
 
   return (
-    <div className="w-full max-w-4xl sm:max-w-4xl mx-auto min-h-[calc(100vh-180px)] flex flex-col items-center justify-start pt-2 sm:pt-4 font-['Raleway',sans-serif] select-none text-white transition-colors duration-300 relative px-2 sm:px-4">
-      <div className="w-full text-left mb-4 sm:mb-6 space-y-0.5">
+    <div className="w-full max-w-4xl sm:max-w-4xl mx-auto flex flex-col items-center justify-start font-['Raleway',sans-serif] select-none text-white transition-colors duration-300 relative px-2 sm:px-4 -mt-3 sm:-mt-5">
+      <div className="w-full text-left mb-2 sm:mb-3 space-y-0.5">
         <h2 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">
           Submit a new project idea
         </h2>
@@ -407,16 +486,56 @@ export default function ProjectCreationForm() {
           Five quick steps - then your project report will be generated.
         </p>
       </div>
-      {currentStep < 5 && (
-        <div className="mb-3 sm:mb-4 flex justify-center">
-          <div className="w-8 sm:w-9 h-8 sm:h-9 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] rounded-full flex items-center justify-center text-white font-extrabold text-xs shadow-xs">
-            {currentStep}
+
+      {currentStep < 6 && (
+        <div className="mb-2 sm:mb-3 flex justify-center">
+          {/* Progress Ring with Inner Step Number */}
+          <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+              <defs>
+                <linearGradient id="stepProgressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#F2A508" />
+                  <stop offset="50%" stopColor="#DC6B0F" />
+                  <stop offset="100%" stopColor="#BD1C22" />
+                </linearGradient>
+              </defs>
+
+              {/* Background Inactive Ring Track */}
+              <circle
+                cx="18"
+                cy="18"
+                r="15.9155"
+                className="text-gray-300/80 dark:text-white/20"
+                strokeWidth="2.5"
+                stroke="currentColor"
+                fill="none"
+              />
+
+              {/* Foreground Animated Gradient Progress Arc */}
+              <circle
+                cx="18"
+                cy="18"
+                r="15.9155"
+                stroke="url(#stepProgressGrad)"
+                strokeDasharray={`${progressPercent}, 100`}
+                strokeDashoffset="0"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+                fill="none"
+                className="transition-all duration-500 ease-out"
+              />
+            </svg>
+
+            {/* Inner Numeric Step Indicator */}
+            <div className="absolute w-7 h-7 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] rounded-full flex items-center justify-center text-white font-extrabold text-[11px] shadow-xs">
+              {currentStep}
+            </div>
           </div>
         </div>
       )}
 
-      <div className="p-0 sm:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md transition-all duration-300 mt-1 sm:mt-2 w-full max-w-[380px] mx-auto">
-        <div className="bg-[#FFF6E9] dark:bg-white text-black p-4 sm:p-6 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl flex flex-col min-h-[300px] sm:min-h-[320px] justify-between transition-colors duration-300">
+      <div className="p-0 sm:p-5 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md transition-all duration-300 w-full max-w-[380px] mx-auto">
+        <div className="bg-[#FFF6E9] dark:bg-white text-black p-4 sm:p-5 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl flex flex-col min-h-[290px] sm:min-h-[305px] justify-between transition-colors duration-300">
 
           {/* Error Banner Notification */}
           {errorMessage && (
@@ -425,9 +544,9 @@ export default function ProjectCreationForm() {
             </div>
           )}
 
-          {currentStep === 5 && (
+          {currentStep === 6 && (
             <div className="flex-1 flex flex-col justify-between">
-              <div className="text-center border-b border-gray-200/80 pb-3 mb-3 sm:mb-4">
+              <div className="text-center border-b border-gray-200/80 pb-2.5 mb-2 sm:mb-3">
                 <h3 className="text-xs font-bold text-gray-900 uppercase tracking-tight max-w-[240px] mx-auto leading-tight">
                   Project Requirements Processed
                 </h3>
@@ -464,7 +583,7 @@ export default function ProjectCreationForm() {
                 )}
               </div>
 
-              <div className="mt-4 sm:mt-6 space-y-2 shrink-0 flex flex-col items-center">
+              <div className="mt-4 sm:mt-5 space-y-2 shrink-0 flex flex-col items-center">
                 <div className="flex items-center gap-2 w-full justify-center">
                   <button
                     type="button"
@@ -479,7 +598,7 @@ export default function ProjectCreationForm() {
                     disabled={loading}
                     onClick={() => {
                       setErrorMessage('');
-                      setCurrentStep(6);
+                      setCurrentStep(7);
                     }}
                     className="flex-1 max-w-[120px] bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] py-1.5 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
                   >
@@ -506,10 +625,10 @@ export default function ProjectCreationForm() {
             </div>
           )}
 
-          {/* STEP 6: REGENERATION TEXTAREA */}
-          {currentStep === 6 && (
+          {/* STEP 7: REGENERATION TEXTAREA */}
+          {currentStep === 7 && (
             <div className="flex-1 flex flex-col justify-between">
-              <div className="text-left border-b border-gray-200 pb-2.5 mb-3 sm:mb-4">
+              <div className="text-left border-b border-gray-200 pb-2 mb-2.5 sm:mb-3">
                 <h3 className="text-xs sm:text-sm font-bold text-gray-900 tracking-tight max-w-[240px] leading-tight">
                   Add your requirements to regenerate
                 </h3>
@@ -526,7 +645,7 @@ export default function ProjectCreationForm() {
                 />
               </div>
 
-              <div className="mt-4 sm:mt-5 space-y-2 shrink-0 flex flex-col items-center">
+              <div className="mt-3.5 sm:mt-4 space-y-2 shrink-0 flex flex-col items-center">
                 <button
                   type="button"
                   disabled={loading}
@@ -547,25 +666,26 @@ export default function ProjectCreationForm() {
                     type="button"
                     onClick={() => {
                       setErrorMessage('');
-                      setCurrentStep(5);
+                      setCurrentStep(6);
                     }}
-                    className="text-[9px] font-bold tracking-wider text-gray-400 hover:text-gray-600 uppercase cursor-pointer"
+                    className="text-[10px] font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider cursor-pointer"
                   >
-                    Cancel
+                    Back
                   </button>
                 )}
               </div>
             </div>
           )}
 
-          {/* STEPS 1 to 4: MAIN FORM INPUTS */}
-          {currentStep < 5 && (
+          {/* STEPS 1 to 5: MAIN FORM INPUTS */}
+          {currentStep < 6 && (
             <>
-              <h3 className="text-xs font-bold text-gray-900 tracking-tight border-b border-gray-200/80 pb-2 text-left mb-3 sm:mb-4 leading-snug">
+              <h3 className="text-xs font-bold text-gray-900 tracking-tight border-b border-gray-200/80 pb-2 text-left mb-2.5 sm:mb-3 leading-snug">
                 {currentStep === 1 && "What is the name of your project?"}
                 {currentStep === 2 && "What is the primary purpose of your project?"}
                 {currentStep === 3 && "Describe your project"}
                 {currentStep === 4 && "What is your estimated budget?"}
+                {currentStep === 5 && "What is your project timeline & milestones?"}
               </h3>
 
               <div className="w-full flex-1 flex flex-col justify-start space-y-2">
@@ -577,7 +697,7 @@ export default function ProjectCreationForm() {
                       value={projectNameInput}
                       onChange={(e) => setProjectNameInput(e.target.value)}
                       placeholder="e.g. Bon Appetit Restaurant App"
-                      className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-2.5 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                      className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-2 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                     />
                     <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
                       Give your project a clear, descriptive title.
@@ -596,7 +716,7 @@ export default function ProjectCreationForm() {
                             key={opt}
                             type="button"
                             onClick={() => setSelectedPurpose(opt)}
-                            className={`w-full flex items-center justify-between text-[11px] font-bold py-2 px-3 rounded-[6px] transition-all duration-150 cursor-pointer border ${
+                            className={`w-full flex items-center justify-between text-[11px] font-bold py-1.5 px-3 rounded-[6px] transition-all duration-150 cursor-pointer border ${
                               isSelected
                                 ? 'bg-gradient-to-r from-[#DC6B0F]/10 to-[#F2A508]/10 dark:from-[#DC6B0F]/20 dark:to-[#F2A508]/20 border-[#DC6B0F] text-[#DC6B0F] dark:text-[#F2A508] shadow-xs'
                                 : 'bg-white dark:bg-black text-gray-800 dark:text-white border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 hover:bg-gray-50/80 dark:hover:bg-black/80 shadow-2xs'
@@ -620,7 +740,7 @@ export default function ProjectCreationForm() {
                           value={customPurposeInput}
                           onChange={(e) => setCustomPurposeInput(e.target.value)}
                           placeholder="Type your custom purpose here..."
-                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-2 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                         />
                       </div>
                     )}
@@ -630,11 +750,11 @@ export default function ProjectCreationForm() {
                 {/* STEP 3: Description */}
                 {currentStep === 3 && (
                   <textarea 
-                    rows={5}
+                    rows={4}
                     value={projectDescription}
                     onChange={(e) => setProjectDescription(e.target.value)}
                     placeholder="Describe what your project should do, target users, and key features..."
-                    className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] p-3 text-xs font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all resize-none leading-relaxed shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                    className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] p-2.5 text-xs font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all resize-none leading-relaxed shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                   />
                 )}
 
@@ -649,7 +769,7 @@ export default function ProjectCreationForm() {
                             key={bOpt}
                             type="button"
                             onClick={() => setProjectBudget(bOpt)}
-                            className={`w-full flex items-center justify-between text-[11px] font-bold py-2 px-3 rounded-[6px] transition-all duration-150 cursor-pointer border ${
+                            className={`w-full flex items-center justify-between text-[11px] font-bold py-1.5 px-3 rounded-[6px] transition-all duration-150 cursor-pointer border ${
                               isSelected
                                 ? 'bg-gradient-to-r from-[#DC6B0F]/10 to-[#F2A508]/10 dark:from-[#DC6B0F]/20 dark:to-[#F2A508]/20 border-[#DC6B0F] text-[#DC6B0F] dark:text-[#F2A508] shadow-xs'
                                 : 'bg-white dark:bg-black text-gray-800 dark:text-white border-gray-300 dark:border-white/20 hover:border-gray-400 dark:hover:border-white/40 hover:bg-gray-50/80 dark:hover:bg-black/80 shadow-2xs'
@@ -673,15 +793,70 @@ export default function ProjectCreationForm() {
                           value={customBudgetInput}
                           onChange={(e) => setCustomBudgetInput(e.target.value)}
                           placeholder="e.g. 250000 PKR or $2,500 USD"
-                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-2 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                         />
                       </div>
                     )}
                   </div>
                 )}
+
+                {/* STEP 5: Timeline & Total Milestones */}
+                {currentStep === 5 && (
+                  <div className="space-y-3 text-left">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+                        Select Timeline
+                      </label>
+                      <div className="grid grid-cols-2 gap-1.5 mb-2">
+                        {['2-4 weeks', '4-6 weeks', '6-8 weeks', 'Custom'].map((tOpt) => {
+                          const isSelected = projectTimeline === tOpt;
+                          return (
+                            <button
+                              key={tOpt}
+                              type="button"
+                              onClick={() => setProjectTimeline(tOpt)}
+                              className={`w-full text-center text-[11px] font-bold py-1.5 px-2 rounded-[6px] transition-all duration-150 cursor-pointer border ${
+                                isSelected
+                                  ? 'bg-gradient-to-r from-[#DC6B0F]/10 to-[#F2A508]/10 border-[#DC6B0F] text-[#DC6B0F] dark:text-[#F2A508] shadow-xs'
+                                  : 'bg-white dark:bg-black text-gray-800 dark:text-white border-gray-300 dark:border-white/20'
+                              }`}
+                            >
+                              {tOpt}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {projectTimeline === 'Custom' && (
+                        <input
+                          type="text"
+                          value={customTimelineInput}
+                          onChange={(e) => setCustomTimelineInput(e.target.value)}
+                          placeholder="e.g. 12 weeks"
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold outline-none focus:border-[#DC6B0F]"
+                        />
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
+                        Total Project Milestones
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={totalMilestonesInput}
+                        onChange={(e) => setTotalMilestonesInput(e.target.value)}
+                        placeholder="e.g. 10"
+                        className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold outline-none focus:border-[#DC6B0F]"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="mt-4 flex flex-col items-center gap-2 w-full shrink-0">
+              <div className="mt-3.5 flex flex-col items-center gap-1.5 w-full shrink-0">
                 <button
                   type="button"
                   disabled={loading}
@@ -694,7 +869,7 @@ export default function ProjectCreationForm() {
                       <span>{loadingMessage || 'Processing...'}</span>
                     </>
                   ) : (
-                    currentStep === 4 ? 'Generate scope document' : 'Next'
+                    currentStep === 5 ? 'Generate scope document' : 'Next'
                   )}
                 </button>
 

@@ -1,21 +1,31 @@
 import React, { useState, useRef } from 'react';
 import { useProfile } from '../../context/ProfileContext'; 
-import { UserRound, Edit3, Camera, Plus, Trash2, Check } from 'lucide-react';
+import { UserRound, Edit3, Camera, Plus, Trash2, Check, FileText, Upload } from 'lucide-react';
+// import { updateUserProfile } from '../../services/api';
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef(null);
+  const certInputRef = useRef(null);
   
   const { profile, setProfile, loading, errorMessage, setErrorMessage } = useProfile();
   const [avatarFile, setAvatarFile] = useState(null);
+  const [certificateFile, setCertificateFile] = useState(null);
 
   const skillCategories = {
     "Web Development": ["React.js", "Vue.js", "Next.js", "HTML", "CSS", "Tailwind", "Node.js", "Angular"],
-    "Mobile Development": ["Reaxt native", "Flutter", "Swift", "Kotlin"],
+    "Mobile Development": ["React Native", "Flutter", "Swift", "Kotlin"],
     "Backend": ["Django", "ASP.net", "Spring Boot"],
     "Database": ["MongoDB", "Firebase", "MySQL", "PostgreSQL"],
     "Cloud": ["Google cloud", "Azure", "AWS"]
   };
+
+  const experienceOptions = [
+    "0 - 1 years",
+    "1 - 3 years",
+    "3 - 5 years",
+    "5+ years"
+  ];
 
   const currentSkills = profile?.Tech_stack 
     ? profile.Tech_stack.split(',').map(s => s.trim()).filter(Boolean) 
@@ -61,8 +71,20 @@ export default function ProfilePage() {
     }
   };
 
+  const handleCertificateChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCertificateFile(file);
+      setProfile({ ...profile, certificate_name: file.name });
+    }
+  };
+
   const triggerFileInput = () => {
     fileInputRef.current.click();
+  };
+
+  const triggerCertInput = () => {
+    certInputRef.current.click();
   };
 
   const handleUploadSubmit = async (e) => {
@@ -75,28 +97,36 @@ export default function ProfilePage() {
         your_domain: profile.your_domain,
         email_address: profile.email_address,
         phone_number: profile.phone_number,
-        bio: profile.bio,
+        cnic: profile.cnic,
+        city: profile.city,
+        country: profile.country,
+        experience_years: profile.experience_years,
         Tech_stack: profile.Tech_stack,
         project_links: profile.project_links,
         bank_name: profile.bank_name,
         bank_account_title: profile.bank_account_title,
-        bank_account_iban: profile.bank_account_iban
+        bank_account_iban: profile.bank_account_iban,
+        certificate_name: profile.certificate_name
       };
 
       const updatedData = await updateUserProfile(profileData);
-      const dev = updatedData.developer;
+      const dev = updatedData.developer || updatedData;
       
       setProfile({
-        full_Name: dev.full_name,
-        your_domain: dev.your_domain,
+        full_Name: dev.full_name || profile.full_Name,
+        your_domain: dev.your_domain || profile.your_domain,
         email_address: dev.email_address || profile.email_address,
-        phone_number: dev.phone_number || '',
-        bio: dev.bio || '',
-        Tech_stack: dev.tech_stack,
-        project_links: dev.project_links || [''],
-        bank_name: dev.bank_name || '',
-        bank_account_title: dev.bank_account_title || '',
-        bank_account_iban: dev.bank_account_iban || '',
+        phone_number: dev.phone_number || profile.phone_number,
+        cnic: dev.cnic || profile.cnic || '',
+        city: dev.city || profile.city || '',
+        country: dev.country || profile.country || '',
+        experience_years: dev.experience_years || profile.experience_years || '',
+        Tech_stack: dev.tech_stack || profile.Tech_stack,
+        project_links: dev.project_links || profile.project_links || [''],
+        bank_name: dev.bank_name || profile.bank_name || '',
+        bank_account_title: dev.bank_account_title || profile.bank_account_title || '',
+        bank_account_iban: dev.bank_account_iban || profile.bank_account_iban || '',
+        certificate_name: dev.certificate_name || profile.certificate_name || '',
         avatar: profile.avatar,
       });
 
@@ -140,6 +170,7 @@ export default function ProfilePage() {
             
             <form onSubmit={handleUploadSubmit} className="space-y-4 sm:space-y-5">
               <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" className="hidden" />
+              <input type="file" ref={certInputRef} onChange={handleCertificateChange} accept=".pdf,.doc,.docx,.jpg,.png" className="hidden" />
 
               {/* AVATAR UPLOAD ELEMENT HEADER */}
               <div className="flex flex-col items-center mb-1 sm:mb-2">
@@ -188,9 +219,39 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+                {/* CNIC */}
                 <div>
-                  <label className={labelStyles}>Bio</label>
-                  <textarea name="bio" rows={2} value={profile.bio || ''} onChange={handleChange} className={`${inputStyles} resize-none leading-snug`} disabled={!isEditing} placeholder="Tell us about your development experience and specialized domain focus..." />
+                  <label className={labelStyles}>CNIC</label>
+                  <input type="text" name="cnic" value={profile.cnic || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. 42101-1234567-1" />
+                </div>
+
+                {/* CITY & COUNTRY */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                  <div>
+                    <label className={labelStyles}>City</label>
+                    <input type="text" name="city" value={profile.city || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. Karachi" />
+                  </div>
+                  <div>
+                    <label className={labelStyles}>Country</label>
+                    <input type="text" name="country" value={profile.country || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. Pakistan" />
+                  </div>
+                </div>
+
+                {/* EXPERIENCE DROPDOWN */}
+                <div>
+                  <label className={labelStyles}>Experience (Years)</label>
+                  <select 
+                    name="experience_years" 
+                    value={profile.experience_years || ''} 
+                    onChange={handleChange} 
+                    className={inputStyles} 
+                    disabled={!isEditing}
+                  >
+                    <option value="">Select experience level</option>
+                    {experienceOptions.map(exp => (
+                      <option key={exp} value={exp}>{exp}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -264,6 +325,24 @@ export default function ProfilePage() {
                     <Plus size={12} strokeWidth={2.2} /> Add more
                   </button>
                 )}
+              </div>
+
+              {/* CERTIFICATE ATTACHMENT SECTION */}
+              <div className="text-left space-y-1.5 pt-1 dark:border-t dark:border-gray-300/70">
+                <label className={labelStyles}>Attach Certificate</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={!isEditing}
+                    onClick={triggerCertInput}
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-gray-900 dark:text-gray-900 bg-white dark:bg-white border border-gray-300 dark:border-gray-300 rounded-[4px] py-1.5 px-3 hover:bg-gray-50 transition-all cursor-pointer shadow-xs disabled:opacity-80"
+                  >
+                    <Upload size={12} /> Upload File
+                  </button>
+                  <span className="text-[11px] text-gray-600 dark:text-gray-700 truncate font-medium">
+                    {profile.certificate_name || certificateFile?.name || "No file chosen"}
+                  </span>
+                </div>
               </div>
 
               {/* BANK ACCOUNT ARCHITECTURE SECTION */}

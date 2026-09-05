@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -57,6 +57,9 @@ export default function ProjectApproval() {
   
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
 
   useEffect(() => {
     const loadProjectsList = async () => {
@@ -182,6 +185,19 @@ export default function ProjectApproval() {
     setShowRequestModal(false);
     setRequestNotes('');
   };
+
+  // Realtime dynamic filter across Project ID, Title, Submitted By, and Budget
+  const filteredProjects = projectsList.filter((project) => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+
+    return (
+      String(project.id).toLowerCase().includes(q) ||
+      (project.title || '').toLowerCase().includes(q) ||
+      (project.submittedBy || '').toLowerCase().includes(q) ||
+      (project.budget || '').toLowerCase().includes(q)
+    );
+  });
 
   if (loadingDetails) {
     return (
@@ -388,7 +404,7 @@ export default function ProjectApproval() {
                 <span className="text-xs font-semibold">Loading projects...</span>
               </div>
             ) : (
-              projectsList.map((project) => (
+              filteredProjects.map((project) => (
                 <div 
                   key={project.id} 
                   className="px-6 sm:px-4 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
@@ -417,9 +433,9 @@ export default function ProjectApproval() {
               ))
             )}
 
-            {!loadingList && projectsList.length === 0 && (
+            {!loadingList && filteredProjects.length === 0 && (
               <div className="text-center py-6 text-xs text-gray-500 font-medium">
-                No projects awaiting approval.
+                {searchQuery ? `No projects matching "${searchQuery}".` : 'No projects awaiting approval.'}
               </div>
             )}
           </div>

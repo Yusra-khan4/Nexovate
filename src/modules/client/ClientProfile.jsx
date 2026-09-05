@@ -21,6 +21,10 @@ export default function ClientProfile() {
     fullName: storedUser.full_name || storedUser.name || 'Bilal ahmed',
     emailAddress: storedUser.email_address || storedUser.email || 'bilalahmed@gmail.com',
     phoneNumber: storedUser.phone || '+923311673628',
+    cnic: storedUser.cnic || '',
+    domain: storedUser.domain || storedUser.industry || '',
+    city: storedUser.city || '',
+    country: storedUser.country || 'Pakistan',
     bankAccountTitle: storedUser.account_title || '',
     bankName: storedUser.bank_name || '',
     bankAccountNumber: storedUser.account_number || ''
@@ -53,6 +57,10 @@ export default function ClientProfile() {
         full_name: profileData.fullName,
         email_address: profileData.emailAddress,
         phone: profileData.phoneNumber,
+        cnic: profileData.cnic,
+        domain: profileData.domain,
+        city: profileData.city,
+        country: profileData.country,
         account_title: profileData.bankAccountTitle,
         bank_name: profileData.bankName,
         account_number: profileData.bankAccountNumber,
@@ -76,7 +84,7 @@ export default function ClientProfile() {
       {/* HEADER */}
       <div className="mb-6 sm:mb-8 space-y-1">
         <h1 className="text-lg sm:text-xl font-bold tracking-tight text-gray-900 dark:text-white">My Profile</h1>
-        <p className="text-[11px] sm:text-sm text-gray-500 dark:text-gray-200 font-medium">Manage your personal payment information.</p>    
+        <p className="text-[11px] sm:text-sm text-gray-500 dark:text-gray-200 font-medium">Manage your personal and business details.</p>    
       </div>
 
       {/* CARD CONTAINER */}
@@ -135,6 +143,54 @@ export default function ClientProfile() {
                   value={profileData.phoneNumber}
                   onChange={(e) => setProfileData({ ...profileData, phoneNumber: e.target.value })}
                   required 
+                />
+              </div>
+            </div>
+
+            {/* CNIC & DOMAIN / INDUSTRY */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+              <div>
+                <label className={labelStyles}>CNIC (National ID)</label>
+                <input 
+                  type="text" 
+                  className={inputStyles} 
+                  placeholder="e.g. 42101-1234567-1"
+                  value={profileData.cnic}
+                  onChange={(e) => setProfileData({ ...profileData, cnic: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Business Domain / Industry</label>
+                <input 
+                  type="text" 
+                  className={inputStyles} 
+                  placeholder="e.g. E-commerce, Healthcare, EdTech"
+                  value={profileData.domain}
+                  onChange={(e) => setProfileData({ ...profileData, domain: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* CITY & COUNTRY */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+              <div>
+                <label className={labelStyles}>City</label>
+                <input 
+                  type="text" 
+                  className={inputStyles} 
+                  placeholder="e.g. Karachi"
+                  value={profileData.city}
+                  onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className={labelStyles}>Country</label>
+                <input 
+                  type="text" 
+                  className={inputStyles} 
+                  placeholder="e.g. Pakistan"
+                  value={profileData.country}
+                  onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
                 />
               </div>
             </div>

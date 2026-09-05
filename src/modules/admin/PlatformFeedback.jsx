@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { Loader2, Star, Trash2 } from 'lucide-react';
 
 const fallbackFeedbackData = [
@@ -25,6 +26,9 @@ const fallbackFeedbackData = [
 export default function PlatformFeedback() {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
 
   const loadFeedback = async () => {
     try {
@@ -75,6 +79,26 @@ export default function PlatformFeedback() {
     return stars;
   };
 
+  // Realtime dynamic filter across ID, User Name, Role, and Feedback Text
+  const filteredFeedbacks = feedbacks.filter((item) => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+
+    const fid = String(item.id || item.feedback_id || '').toLowerCase();
+    const userId = String(item.user_id || item.clientId || item.developerId || '').toLowerCase();
+    const userName = (item.user_name || item.name || '').toLowerCase();
+    const userRole = (item.user_role || item.role || '').toLowerCase();
+    const msgText = (item.feedback_text || item.message || item.comment || '').toLowerCase();
+
+    return (
+      fid.includes(q) ||
+      userId.includes(q) ||
+      userName.includes(q) ||
+      userRole.includes(q) ||
+      msgText.includes(q)
+    );
+  });
+
   return (
     <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl sm:max-w-4xl mx-auto pb-8 px-3 sm:px-4 text-left select-none">
       
@@ -110,7 +134,7 @@ export default function PlatformFeedback() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-                  {feedbacks.map((item) => {
+                  {filteredFeedbacks.map((item) => {
                     const fid = item.id || item.feedback_id;
                     const userId = item.user_id || item.clientId || item.developerId || '-';
                     const userName = item.user_name || item.name || "Anonymous User";
@@ -124,7 +148,7 @@ export default function PlatformFeedback() {
                         className="bg-[#FFF6E9] dark:bg-[#EFEEEA] hover:bg-[#FAF3E0]/70 dark:hover:bg-black/[0.02] transition-colors duration-150"
                       >
                         <td className="py-4 px-4 text-xs font-mono font-bold text-gray-600 dark:text-gray-700 whitespace-nowrap">
-                          #{userId}
+                          {userId}
                         </td>
 
                         <td className="py-4 px-4">
@@ -166,9 +190,9 @@ export default function PlatformFeedback() {
             </div>
           )}
 
-          {!loading && feedbacks.length === 0 && (
+          {!loading && filteredFeedbacks.length === 0 && (
             <div className="text-center py-8 text-xs text-gray-500 font-medium">
-              No platform feedback submitted yet.
+              {searchQuery ? `No feedback matching "${searchQuery}".` : 'No platform feedback submitted yet.'}
             </div>
           )}
 

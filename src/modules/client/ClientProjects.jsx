@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Calendar, 
   Zap, 
   Lock,
-  Loader2
+  Loader2,
+  Check,
+  X,
+  ExternalLink,
+  FileText
 } from 'lucide-react';
 import { 
   fetchClientProjectsList, 
@@ -19,6 +24,8 @@ const fallbackProjects = [
     status: "in progress",
     statusType: "progress",
     dev: "Bilal ahmed",
+    assignedDevEmail: "bilal@example.com",
+    hasAssignedDev: true,
     progress: 40,
     progressColor: "bg-blue-600",
     budget: "PKR 50,000",
@@ -39,11 +46,68 @@ const fallbackProjects = [
       { id: 9, title: "QA & bug fixes", status: "pending", detail: "Pending", index: "9/10" },
       { id: 10, title: "Final delivery & deployment", status: "pending", detail: "Pending", index: "10/10" }
     ]
+  },
+  {
+    id: 57,
+    title: "Food Delivery Logistics",
+    status: "Pending Review",
+    statusType: "purple",
+    dev: "Not assigned yet",
+    hasAssignedDev: false,
+    progress: 0,
+    progressColor: "bg-gray-300",
+    budget: "PKR 85,000",
+    numericBudget: 85000,
+    timeline: "4-6 weeks",
+    timelineText: "4-6 weeks",
+    paymentStatus: "PENDING",
+    milestonesCount: { completed: 0, total: 10 }
+  }
+];
+
+const fallbackRequests = [
+  {
+    id: 1,
+    developerId: 101,
+    developerName: "Hamza Tariq",
+    developerEmail: "hamza.dev@gmail.com",
+    domain: "Full Stack Web & Mobile",
+    experience: "4 years",
+    techStack: ["React", "Node.js", "PostgreSQL", "Tailwind CSS"],
+    portfolioUrl: "https://github.com",
+    linkedinUrl: "https://linkedin.com/in/hamzatariq",
+    projectLinks: ["https://github.com/hamzatariq/logistics-app"],
+    certificateName: "React_Advanced_Certificate.pdf",
+    projectId: 57,
+    projectName: "Food Delivery Logistics",
+    appliedDate: "Sep 2, 2026",
+    pitch: "I have built 3 similar real-time tracking logistics apps with geolocation and order dashboards."
+  },
+  {
+    id: 2,
+    developerId: 102,
+    developerName: "Usman Raza",
+    developerEmail: "usman.raza@tech.com",
+    domain: "Frontend Specialist",
+    experience: "3 years",
+    techStack: ["React Native", "Next.js", "TypeScript"],
+    portfolioUrl: "https://portfolio.me",
+    linkedinUrl: "https://linkedin.com/in/usmanraza",
+    projectLinks: ["https://github.com/usmanraza/pos-app"],
+    certificateName: "Fullstack_Nanodegree.pdf",
+    projectId: 56,
+    projectName: "Bon Appetit restaurant app",
+    appliedDate: "Sep 3, 2026",
+    pitch: "Expert in responsive web and mobile restaurant POS ordering flows."
   }
 ];
 
 export default function ClientProjects() {
   const [projects, setProjects] = useState([]);
+  const [requests, setRequests] = useState(fallbackRequests);
+  const [activeTab, setActiveTab] = useState('running');
+  const [selectedDevProfile, setSelectedDevProfile] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -55,6 +119,8 @@ export default function ClientProjects() {
   const [bankName, setBankName] = useState('Meezan bank');
   const [accountNumber, setAccountNumber] = useState('4821 9876 3584 4821');
 
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
+
   const loadProjects = async () => {
     try {
       setLoading(true);
@@ -64,6 +130,7 @@ export default function ClientProjects() {
         const mapped = res.projects.map((p) => {
           const progress = Number(p.progress_percentage) || 0;
           const rawStatus = (p.status || 'draft').toLowerCase();
+          const hasDev = Boolean(p.assigned_developer_name && p.assigned_developer_name !== 'Not assigned yet');
           
           let statusType = 'progress';
           let displayStatus = rawStatus.replace(/_/g, ' ');
@@ -74,7 +141,7 @@ export default function ClientProjects() {
           } else if (rawStatus === 'draft') {
             statusType = 'purple';
             displayStatus = 'Draft';
-          } else if (p.assigned_developer_name) {
+          } else if (hasDev) {
             displayStatus = 'In Progress';
           }
 
@@ -95,6 +162,7 @@ export default function ClientProjects() {
             statusType: statusType,
             dev: p.assigned_developer_name || 'Not assigned yet',
             assignedDevEmail: p.assigned_developer_email,
+            hasAssignedDev: hasDev,
             progress: progress,
             progressColor: color,
             budget: budgetStr,
@@ -102,7 +170,8 @@ export default function ClientProjects() {
             timeline: p.timeline || 'Not specified',
             timelineText: p.timeline || 'Not specified',
             paymentStatus: progress >= 100 ? 'RELEASED' : 'IN ESCROW',
-            milestoneNote: p.milestone_note || ''
+            milestoneNote: p.milestone_note || '',
+            milestonesCount: { completed: Math.round((progress / 100) * 10), total: 10 }
           };
         });
 
@@ -196,20 +265,20 @@ export default function ClientProjects() {
   const getStatusBadge = (status, type) => {
     if (type === 'completed') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-100/90 dark:text-emerald-800 inline-block capitalize">
+        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-100/90 dark:text-emerald-800 inline-block capitalize whitespace-nowrap">
           {status}
         </span>
       );
     }
     if (type === 'purple') {
       return (
-        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-100/90 dark:text-purple-800 inline-block capitalize">
+        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-100/90 dark:text-purple-800 inline-block capitalize whitespace-nowrap">
           {status}
         </span>
       );
     }
     return (
-      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-100/90 dark:text-blue-800 inline-block capitalize">
+      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-100/90 dark:text-blue-800 inline-block capitalize whitespace-nowrap">
         {status}
       </span>
     );
@@ -239,9 +308,70 @@ export default function ClientProjects() {
     }
   };
 
+  const handleAcceptRequest = (req) => {
+    alert(`You accepted ${req.developerName} for project "${req.projectName}"!`);
+    setRequests(prev => prev.filter(r => r.id !== req.id));
+    setSelectedDevProfile(null);
+    setProjects(prev =>
+      prev.map(p =>
+        p.id === req.projectId
+          ? {
+              ...p,
+              dev: req.developerName,
+              hasAssignedDev: true,
+              status: "In Progress",
+              statusType: "progress"
+            }
+          : p
+      )
+    );
+  };
+
+  const handleRejectRequest = (req) => {
+    if (!window.confirm(`Decline proposal from ${req.developerName}?`)) return;
+    setRequests(prev => prev.filter(r => r.id !== req.id));
+    setSelectedDevProfile(null);
+    alert(`Proposal from ${req.developerName} declined.`);
+  };
+
+  const q = (searchQuery || '').trim().toLowerCase();
+
+  const runningProjects = projects.filter(p => {
+    const isRunning = p.hasAssignedDev || p.statusType === 'progress';
+    if (!isRunning) return false;
+    if (!q) return true;
+    return (
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.dev || '').toLowerCase().includes(q) ||
+      (p.status || '').toLowerCase().includes(q) ||
+      String(p.id).includes(q)
+    );
+  });
+
+  const pendingProjects = projects.filter(p => {
+    const isPending = !p.hasAssignedDev && p.statusType !== 'progress';
+    if (!isPending) return false;
+    if (!q) return true;
+    return (
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.status || '').toLowerCase().includes(q) ||
+      String(p.id).includes(q)
+    );
+  });
+
+  const filteredRequests = requests.filter(r => {
+    if (!q) return true;
+    return (
+      (r.developerName || '').toLowerCase().includes(q) ||
+      (r.projectName || '').toLowerCase().includes(q) ||
+      (r.domain || '').toLowerCase().includes(q) ||
+      String(r.projectId).includes(q)
+    );
+  });
+
   if (loadingDetails) {
     return (
-      <div className="flex items-center justify-center p-16 text-black dark:text-white">
+      <div className="flex items-center justify-center p-16 text-black dark:text-white font-['Raleway',sans-serif]">
         <Loader2 className="w-6 h-6 animate-spin text-[#DC6B0F] mr-2" />
         <span className="text-xs font-semibold">Loading project milestone progress...</span>
       </div>
@@ -252,12 +382,12 @@ export default function ClientProjects() {
     return (
       <div className="w-full text-black font-['Raleway',sans-serif] space-y-4 max-w-3xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
         <div className="flex items-center justify-between">
-          {/* <button
+          <button
             onClick={() => setShowSubmitPayment(false)}
             className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
           >
             <ArrowLeft size={14} /> Back to details
-          </button> */}
+          </button>
         </div>
 
         <div className="text-left mb-6 space-y-1">
@@ -270,10 +400,8 @@ export default function ClientProjects() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          
           <div className="w-full dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all">
             <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[12px] p-5 sm:p-6 shadow-xl border border-amber-100/60 dark:border-transparent space-y-4 text-left">
-              
               <div className="space-y-1">
                 <label className="block text-xs font-extrabold text-black">
                   Bank account title
@@ -309,13 +437,11 @@ export default function ClientProjects() {
                   className="w-full bg-white border border-gray-300 rounded-md h-9 px-3 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#DC6B0F]"
                 />
               </div>
-
             </div>
           </div>
 
           <div className="w-full dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all">
             <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[12px] p-5 sm:p-6 shadow-xl border border-amber-100/60 dark:border-transparent space-y-4 text-left">
-              
               <div className="border-b border-gray-200/80 pb-2 max-w-[150px]">
                 <h2 className="text-xs font-extrabold uppercase tracking-wider text-black">
                   ORDER SUMMARY
@@ -365,20 +491,142 @@ export default function ClientProjects() {
               <div className="bg-blue-100/80 border border-blue-200 text-blue-700 p-3 rounded-lg text-[10px] font-semibold text-center leading-relaxed">
                 Your payment is held securely by Nexovate and only released to the developer after you confirm project completion.
               </div>
-
             </div>
           </div>
-
         </div>
-
       </div>
     );
   }
 
+  if (selectedDevProfile) {
+    return (
+      <div className="w-full font-['Raleway',sans-serif] space-y-4 max-w-xl sm:max-w-2xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setSelectedDevProfile(null)}
+            className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:text-black dark:hover:text-white transition-all cursor-pointer bg-white/50 dark:bg-white/10 px-3 py-1 rounded-lg border border-black/5 dark:border-white/15 backdrop-blur-md shadow-xs"
+          >
+            <ArrowLeft size={14} /> Back to Requests
+          </button>
+        </div>
+
+        <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[12px] dark:shadow-2xl transition-all">
+          <div className="bg-[#FFF6E9] dark:bg-white text-black rounded-[8px] sm:rounded-[6px] p-6 sm:p-7 shadow-xs border border-amber-100/60 dark:border-transparent space-y-5 text-left transition-colors duration-300">
+            <div className="flex items-center gap-3.5 border-b border-gray-200/80 pb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white flex items-center justify-center font-extrabold text-sm shadow-xs">
+                {selectedDevProfile.developerName.charAt(0)}
+              </div>
+              <div>
+                <h2 className="text-base font-black text-gray-900">{selectedDevProfile.developerName}</h2>
+                <p className="text-xs text-gray-500 font-bold">{selectedDevProfile.domain} · {selectedDevProfile.experience}</p>
+                <p className="text-[11px] text-[#DC6B0F] font-extrabold mt-0.5">Applied for: {selectedDevProfile.projectName}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold text-gray-900">Developer Pitch / Proposal</h3>
+              <div className="p-3 bg-white/70 dark:bg-gray-50 rounded-md border border-gray-200/80 text-xs font-medium text-gray-800 leading-relaxed">
+                "{selectedDevProfile.pitch}"
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold text-gray-900">Tech Stack & Skills</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedDevProfile.techStack.map((tech, i) => (
+                  <span key={i} className="text-[10px] font-bold px-2.5 py-1 bg-black text-white rounded-md">
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* LinkedIn Profile */}
+            <div className="space-y-1">
+              <h3 className="text-xs font-bold text-gray-900">LinkedIn Profile</h3>
+              <a 
+                href={selectedDevProfile.linkedinUrl || "https://linkedin.com"} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline"
+              >
+                <span>{selectedDevProfile.linkedinUrl || "https://linkedin.com/in/developer"}</span>
+                <ExternalLink size={12} />
+              </a>
+            </div>
+
+            {/* Project Links */}
+            <div className="space-y-1.5">
+              <h3 className="text-xs font-bold text-gray-900">Project Links</h3>
+              {selectedDevProfile.projectLinks && selectedDevProfile.projectLinks.length > 0 ? (
+                selectedDevProfile.projectLinks.map((link, idx) => (
+                  <div key={idx} className="flex items-center gap-1.5">
+                    <a 
+                      href={link} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline truncate"
+                    >
+                      <span className="truncate">{link}</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  </div>
+                ))
+              ) : (
+                <a 
+                  href={selectedDevProfile.portfolioUrl} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline"
+                >
+                  <span>{selectedDevProfile.portfolioUrl}</span>
+                  <ExternalLink size={12} />
+                </a>
+              )}
+            </div>
+
+            {/* Attached Certificate */}
+            <div className="space-y-1.5">
+              <h3 className="text-xs font-bold text-gray-900">Attached Certificate / Credential</h3>
+              {selectedDevProfile.certificateName ? (
+                <div className="inline-flex items-center gap-1.5 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-xs font-bold text-gray-800 shadow-2xs">
+                  <FileText size={14} className="text-[#DC6B0F]" />
+                  <span>{selectedDevProfile.certificateName}</span>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 font-medium">No certificate attached.</p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200/80">
+              <button
+                type="button"
+                onClick={() => handleRejectRequest(selectedDevProfile)}
+                className="px-5 h-9 rounded-md bg-[#FEE2E2] text-[#991B1B] font-extrabold text-xs hover:bg-[#FCA5A5] transition-all cursor-pointer flex items-center gap-1"
+              >
+                <X size={14} strokeWidth={2.5} />
+                <span>Decline</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleAcceptRequest(selectedDevProfile)}
+                className="px-5 h-9 rounded-md bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+              >
+                <Check size={14} strokeWidth={2.5} />
+                <span>Accept Developer</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // View Project Details / Milestones View
   if (selectedProjectDetails) {
     return (
       <div className="w-full text-black font-['Raleway',sans-serif] space-y-4 max-w-2xl sm:max-w-3xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
-        
         <div className="flex items-center justify-between">
           <button
             onClick={() => {
@@ -401,9 +649,11 @@ export default function ClientProjects() {
         </div>
 
         <div className="text-left space-y-1">
-          <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
-            {selectedProjectDetails.title}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
+              {selectedProjectDetails.title}
+            </h1>
+          </div>
           <p className="text-xs font-medium text-gray-600 dark:text-gray-200">
             Track development progress and milestone updates in real time.
           </p>
@@ -454,7 +704,6 @@ export default function ClientProjects() {
         </div>
 
         <div className="w-full bg-[#FFF6E9] dark:bg-white text-black rounded-[12px] p-6 sm:p-8 shadow-xl border border-amber-100/60 dark:border-transparent space-y-6 text-left transition-colors duration-300">
-          
           <h2 className="text-lg font-black text-black tracking-tight border-b border-gray-200/80 pb-3">
             Project Milestones
           </h2>
@@ -516,15 +765,13 @@ export default function ClientProjects() {
               </div>
             ))}
           </div>
-
         </div>
-
       </div>
     );
   }
 
   return (
-    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none">
+    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-4xl mx-auto pb-8 px-3 sm:px-4 text-left select-none">
       
       <div className="text-left space-y-1">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-black dark:text-white">
@@ -535,8 +782,51 @@ export default function ClientProjects() {
         </p>
       </div>
 
+      {/* Styled Tabs */}
+      <div className="flex items-center">
+        <div className="inline-flex p-1.5 sm:p-2 rounded-xl bg-[#FFF6E9] dark:bg-white/10 backdrop-blur-md border border-amber-100/60 dark:border-white/15 gap-1.5 shadow-xs">
+          <button
+            onClick={() => setActiveTab('running')}
+            className={`px-4 sm:px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'running'
+                ? 'bg-white text-black shadow-xs font-black'
+                : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white'
+            }`}
+          >
+            Running Projects
+          </button>
+
+          <button
+            onClick={() => setActiveTab('pending')}
+            className={`px-4 sm:px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'pending'
+                ? 'bg-white text-black shadow-xs font-black'
+                : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white'
+            }`}
+          >
+            Pending
+          </button>
+
+          <button
+            onClick={() => setActiveTab('requests')}
+            className={`px-4 sm:px-5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer relative ${
+              activeTab === 'requests'
+                ? 'bg-white text-black shadow-xs font-black'
+                : 'text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white'
+            }`}
+          >
+            <span>Developer Requests</span>
+            {requests.length > 0 && (
+              <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[9px] bg-[#DC6B0F] text-white font-extrabold">
+                {requests.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Table Card Container */}
       <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all">
-        
         <div className="w-full bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent rounded-[8px] sm:rounded-[6px] shadow-xs transition-all duration-300 overflow-hidden">
           
           {loading ? (
@@ -544,43 +834,50 @@ export default function ClientProjects() {
               <Loader2 size={18} className="animate-spin text-[#DC6B0F]" />
               <span className="text-xs font-semibold">Loading projects...</span>
             </div>
-          ) : (
+          ) : activeTab === 'running' ? (
+            /* TAB 1: RUNNING PROJECTS */
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[620px]">
+              <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
                   <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
                     <th className="py-3.5 px-5">PROJECT NAME</th>
-                    <th className="py-3.5 px-4 text-center">STATUS</th>
-                    <th className="py-3.5 px-4">ASSIGNED DEV</th>
-                    <th className="py-3.5 px-4">PROGRESS</th>
-                    <th className="py-3.5 px-4">BUDGET</th>
-                    <th className="py-3.5 px-5 text-right">TIMELINE</th>
+                    <th className="py-3.5 px-3 text-center">STATUS</th>
+                    <th className="py-3.5 px-3">ASSIGNED DEV</th>
+                    <th className="py-3.5 px-3">PROGRESS</th>
+                    <th className="py-3.5 px-3 text-center">MILESTONES</th>
+                    <th className="py-3.5 px-3">BUDGET</th>
+                    <th className="py-3.5 px-3 text-right">TIMELINE</th>
+                    <th className="py-3.5 px-5 text-center">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-                  {projects.map((project) => (
+                  {runningProjects.map((project) => (
                     <tr 
                       key={project.id} 
-                      onClick={() => handleSelectProject(project)}
-                      className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150 cursor-pointer"
+                      className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
                     >
-                      <td className="py-4 px-5">
-                        <span className="font-extrabold text-xs text-black hover:text-blue-600 transition-colors tracking-tight block">
-                          {project.title}
-                        </span>
+                      <td className="py-4 px-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-[13px] font-mono font-extrabold text-gray-700 dark:text-gray-700 shrink-0">
+                            {project.id}
+                          </span>
+                          <span className="font-extrabold text-xs text-black tracking-tight block">
+                            {project.title}
+                          </span>
+                        </div>
                       </td>
 
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-4 px-3 text-center">
                         {getStatusBadge(project.status, project.statusType)}
                       </td>
 
-                      <td className="py-4 px-4 text-xs font-bold text-gray-800">
+                      <td className="py-4 px-3 text-xs font-bold text-gray-800">
                         {project.dev}
                       </td>
 
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-20 sm:w-24 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
+                          <div className="w-16 sm:w-20 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
                             <div 
                               className={`h-full rounded-full transition-all duration-300 ${project.progressColor}`} 
                               style={{ width: `${project.progress}%` }}
@@ -592,23 +889,183 @@ export default function ClientProjects() {
                         </div>
                       </td>
 
-                      <td className="py-4 px-4 text-xs font-bold text-black whitespace-nowrap">
+                      <td className="py-4 px-3 text-center text-xs font-extrabold text-gray-700 whitespace-nowrap">
+                        {project.milestonesCount?.completed ?? 0}/{project.milestonesCount?.total ?? 10}
+                      </td>
+
+                      <td className="py-4 px-3 text-xs font-bold text-black whitespace-nowrap">
                         {project.budget}
                       </td>
 
-                      <td className="py-4 px-5 text-right text-xs font-bold text-gray-700 whitespace-nowrap">
+                      <td className="py-4 px-3 text-right text-xs font-bold text-gray-700 whitespace-nowrap">
                         {project.timeline}
+                      </td>
+
+                      <td className="py-4 px-5 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectProject(project)}
+                          className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-[4px] shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                        >
+                          View
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          )}
 
-          {!loading && projects.length === 0 && (
-            <div className="text-center py-8 text-xs text-gray-500 font-medium">
-              No projects found.
+              {runningProjects.length === 0 && (
+                <div className="text-center py-8 text-xs text-gray-500 font-medium">
+                  {searchQuery ? `No running projects matching "${searchQuery}".` : 'No running projects found.'}
+                </div>
+              )}
+            </div>
+          ) : activeTab === 'pending' ? (
+            /* TAB 2: PENDING PROJECTS */
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[620px]">
+                <thead>
+                  <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
+                    <th className="py-3.5 px-5">PROJECT NAME</th>
+                    <th className="py-3.5 px-4 text-center">STATUS</th>
+                    <th className="py-3.5 px-4">BUDGET</th>
+                    <th className="py-3.5 px-4">TIMELINE</th>
+                    <th className="py-3.5 px-5 text-right">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
+                  {pendingProjects.map((project) => (
+                    <tr 
+                      key={project.id}
+                      className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
+                    >
+                      <td className="py-4 px-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-mono font-extrabold text-gray-700 dark:text-gray-700 shrink-0">
+                            {project.id}
+                          </span>
+                          <span className="font-extrabold text-xs text-black tracking-tight block">
+                            {project.title}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-4 text-center">
+                        {getStatusBadge(project.status, project.statusType)}
+                      </td>
+
+                      <td className="py-4 px-4 text-xs font-bold text-black whitespace-nowrap">
+                        {project.budget}
+                      </td>
+
+                      <td className="py-4 px-4 text-xs font-bold text-gray-700 whitespace-nowrap">
+                        {project.timeline}
+                      </td>
+
+                      <td className="py-4 px-5 text-right">
+                        <button
+                          onClick={() => handleSelectProject(project)}
+                          className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3 py-1.5 rounded-[4px] shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {pendingProjects.length === 0 && (
+                <div className="text-center py-8 text-xs text-gray-500 font-medium">
+                  {searchQuery ? `No pending projects matching "${searchQuery}".` : 'No pending projects awaiting developer assignment.'}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* TAB 3: DEVELOPER REQUESTS */
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
+                    <th className="py-3.5 px-5">DEVELOPER</th>
+                    <th className="py-3.5 px-4">PROJECT</th>
+                    <th className="py-3.5 px-4">DOMAIN</th>
+                    <th className="py-3.5 px-4">APPLIED ON</th>
+                    <th className="py-3.5 px-5 text-right">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
+                  {filteredRequests.map((req) => (
+                    <tr 
+                      key={req.id} 
+                      className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
+                    >
+                      <td className="py-4 px-5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F2A508] to-[#BD1C22] text-white flex items-center justify-center font-extrabold text-xs shrink-0 shadow-xs">
+                            {req.developerName.charAt(0)}
+                          </div>
+                          <div>
+                            <span className="font-extrabold text-xs text-black block">{req.developerName}</span>
+                            <span className="text-[10px] text-gray-500 block">{req.developerEmail}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-4 text-xs font-extrabold text-gray-900">
+                        <div className="flex items-center gap-1.5">
+                          {/* <span className="text-[10px] font-mono font-extrabold text-gray-400 shrink-0">#{req.projectId}</span> */}
+                          <span>{req.projectName}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-4 text-xs font-bold text-gray-700">
+                        {req.domain}
+                      </td>
+
+                      <td className="py-4 px-4 text-[11px] font-medium text-gray-500">
+                        {req.appliedDate}
+                      </td>
+
+                      <td className="py-4 px-5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDevProfile(req)}
+                            className="bg-white border border-gray-300 text-gray-800 font-extrabold text-[10px] px-3 py-1.5 rounded-[4px] shadow-xs hover:bg-gray-50 transition-all cursor-pointer"
+                          >
+                            View Profile
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAcceptRequest(req)}
+                            className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3 py-1.5 rounded-[4px] shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+                          >
+                            Accept
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRejectRequest(req)}
+                            className="bg-red-100 text-red-700 font-extrabold text-[10px] px-2.5 py-1.5 rounded-[4px] hover:bg-red-200 transition-all cursor-pointer"
+                            title="Decline Request"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {filteredRequests.length === 0 && (
+                <div className="text-center py-8 text-xs text-gray-500 font-medium">
+                  {searchQuery ? `No requests matching "${searchQuery}".` : 'No developer proposals received yet.'}
+                </div>
+              )}
             </div>
           )}
 

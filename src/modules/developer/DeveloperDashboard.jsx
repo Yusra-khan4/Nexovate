@@ -8,7 +8,8 @@ import {
   Plane, 
   Utensils, 
   ArrowLeft,
-  Loader2
+  Loader2,
+  Check
 } from "lucide-react";
 
 import Messages from "../shared/MessagesDashboard"; 
@@ -39,13 +40,16 @@ export default function DeveloperDashboard() {
                 const progressNum = parseInt(p.progress_percentage ?? p.progress) || 0;
                 const rawStatus = (p.status || p.project_status || "in progress").toLowerCase();
                 const displayPriority = rawStatus === "completed" || progressNum >= 100 ? "Completed" : "In Progress";
+                const completedMiles = Math.round((progressNum / 100) * 10);
 
                 return {
                   id: p.id || p.project_id,
                   title: p.name || p.project_name || p.title || "Project",
                   description: p.overview || p.description || p.purpose || "Active development project",
                   priority: displayPriority,
-                  progress: `${progressNum}%`
+                  progress: `${progressNum}%`,
+                  milestonesText: `${completedMiles}/10`,
+                  statusType: rawStatus === "completed" || progressNum >= 100 ? "completed" : progressNum < 40 ? "orange-progress" : "progress"
                 };
               })
             : [];
@@ -79,20 +83,30 @@ export default function DeveloperDashboard() {
     const val = parseInt(progressStr) || 0;
     if (val >= 100) return "bg-emerald-600"; 
     if (val <= 0) return "bg-gray-300";
-    if (val < 40) return "bg-[#BD1C22]";      
-    if (val > 50) return "bg-[#2563eb]";      
-    return "bg-[#DC6B0F]"; 
+    if (val < 40) return "bg-orange-500";      
+    return "bg-blue-600"; 
   };
 
-  const getPriorityBadgeStyles = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case "in progress":
-        return "bg-[#dbeafe] text-[#2563eb]";
-      case "completed":
-        return "bg-[#dcfce7] text-[#16a34a]";
-      default:
-        return "bg-gray-100 text-gray-700";
+  const getStatusBadge = (status, type) => {
+    if (type === 'completed') {
+      return (
+        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-100/90 dark:text-emerald-800 inline-block capitalize whitespace-nowrap">
+          {status}
+        </span>
+      );
     }
+    if (type === 'orange-progress') {
+      return (
+        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-100/90 dark:text-orange-800 inline-block capitalize whitespace-nowrap">
+          {status}
+        </span>
+      );
+    }
+    return (
+      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-100/90 dark:text-blue-800 inline-block capitalize whitespace-nowrap">
+        {status}
+      </span>
+    );
   };
 
   if (loading) {
@@ -150,9 +164,9 @@ export default function DeveloperDashboard() {
           {/* Lower Section Container */}
           <div className="flex flex-col gap-4 w-full items-start">
             
-            {/* Box 1: My Projects */}
+            {/* Box 1: My Projects (Matching DeveloperMyProject card design, showing at least 2 projects) */}
             <div className="p-0 dark:p-3 sm:dark:p-6 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/20 dark:backdrop-blur-md w-full transition-all duration-300 overflow-hidden">
-              <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] text-black rounded-[8px] sm:rounded-[6px] overflow-hidden pb-3.5 transition-colors duration-300 border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl">
+              <div className="bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent rounded-[8px] sm:rounded-[6px] shadow-xs transition-all duration-300 overflow-hidden">
                 <div className="bg-white/40 dark:bg-white/80 px-3.5 py-2.5 flex justify-between items-center border-b border-black/5 dark:border-gray-200/60">
                   <h3 className="text-xs font-bold text-black tracking-tight flex items-center gap-1.5">
                     My projects
@@ -165,30 +179,57 @@ export default function DeveloperDashboard() {
                   </button>
                 </div>
 
-                <div className="p-3 sm:p-4 space-y-3.5 text-left">
-                  {displayProjects.map((project) => (
-                    <div key={project.id} className="space-y-2 border-b border-black/5 dark:border-gray-200/40 last:border-0 last:pb-0 pb-3">
-                      <div className="flex justify-between items-center gap-2">
-                        <h4 className="text-xs font-bold text-black tracking-tight truncate">{project.title}</h4>
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide select-none shrink-0 ${getPriorityBadgeStyles(project.priority)}`}>
-                          {project.priority}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2.5 w-full">
-                        <div className="flex-1 bg-gray-300/60 dark:bg-gray-200 h-1 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-500 ${getProgressColor(project.progress)}`}
-                            style={{ width: `${parseInt(project.progress) || 0}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] text-gray-900 font-bold min-w-[28px] text-right shrink-0">{parseInt(project.progress) || 0}%</span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="w-full overflow-x-hidden">
+                  <table className="w-full text-left border-collapse table-fixed">
+                    <thead>
+                      <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[9px] tracking-wider">
+                        <th className="py-3 px-2 sm:px-3 w-[15%]">ID</th>
+                        <th className="py-3 px-3 sm:px-4 w-[35%]">PROJECT NAME</th>
+                        <th className="py-3 px-2 sm:px-3 text-center w-[22%]">STATUS</th>
+                        <th className="py-3 px-2 sm:px-3 text-center w-[14%]">MILES</th>
+                        <th className="py-3 px-2 sm:px-3 text-center w-[14%]">ACTION</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
+                      {displayProjects.slice(0, 2).map((project) => (
+                        <tr 
+                          key={project.id} 
+                          className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
+                        >
+                          <td className="py-3 px-2 sm:px-3 font-mono font-bold text-[11px] text-gray-600 whitespace-nowrap">
+                            {project.id}
+                          </td>
+
+                          <td className="py-3 px-3 sm:px-4 truncate">
+                            <span className="font-bold text-[11px] sm:text-xs text-black tracking-tight block truncate" title={project.title}>
+                              {project.title}
+                            </span>
+                          </td>
+
+                          <td className="py-3 px-2 sm:px-3 text-center truncate">
+                            {getStatusBadge(project.priority, project.statusType)}
+                          </td>
+
+                          <td className="py-3 px-2 sm:px-3 text-center text-[11px] font-extrabold text-gray-700 whitespace-nowrap">
+                            {project.milestonesText}
+                          </td>
+
+                          <td className="py-3 px-2 sm:px-3 text-center whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => navigate('/developer/my projects')}
+                              className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[9px] px-2.5 py-1 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer tracking-wide inline-block"
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
 
                   {displayProjects.length === 0 && (
-                    <div className="text-center py-6 text-xs text-gray-500 font-medium">
+                    <div className="text-center py-8 text-xs text-gray-500 font-medium">
                       No active projects assigned yet.
                     </div>
                   )}

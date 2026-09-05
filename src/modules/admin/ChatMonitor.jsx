@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { Loader2, Send, LifeBuoy, SearchCode, UserRound } from 'lucide-react';
 import { fetchAllChats } from '../../services/api';
 
@@ -6,6 +7,8 @@ const fallbackClientSupportChats = [
   {
     id: 1,
     name: "Zara Ahmed",
+    role: "client",
+    project: "Bon appetit",
     subtitle: "Brand · onboarding question",
     time: "9:42 AM",
     unread: 2,
@@ -18,6 +21,8 @@ const fallbackClientSupportChats = [
   {
     id: 2,
     name: "Rabia Ali",
+    role: "client",
+    project: "TN-HRMS",
     subtitle: "Payment · escrow dispute inquiry",
     time: "Yesterday",
     unread: 0,
@@ -32,6 +37,8 @@ const fallbackDeveloperSupportChats = [
   {
     id: 101,
     name: "Bilal Ahmed",
+    role: "developer",
+    project: "Bon appetit",
     subtitle: "Developer · profile approval",
     time: "11:05 AM",
     unread: 1,
@@ -43,6 +50,8 @@ const fallbackDeveloperSupportChats = [
   {
     id: 102,
     name: "Zain Khan",
+    role: "developer",
+    project: "Nexus desktop",
     subtitle: "Tech Stack · project matching",
     time: "Tue",
     unread: 0,
@@ -65,6 +74,9 @@ export default function ChatMonitor() {
   const [replyText, setReplyText] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -79,21 +91,45 @@ export default function ChatMonitor() {
     loadData();
   }, []);
 
+  // Filter threads by Name, Role, Project, or Subtitle/Message details
+  const filterList = (list) => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return list;
+
+    return list.filter((chat) => (
+      (chat.name || '').toLowerCase().includes(q) ||
+      (chat.role || '').toLowerCase().includes(q) ||
+      (chat.project || '').toLowerCase().includes(q) ||
+      (chat.subtitle || '').toLowerCase().includes(q)
+    ));
+  };
+
+  const filteredClientChats = filterList(clientChats);
+  const filteredDeveloperChats = filterList(developerChats);
+  const filteredDisputeChats = filterList(disputeChats);
+
+  const currentSidebarList = activeMainTab === 'support' 
+    ? (supportSubTab === 'client' ? filteredClientChats : filteredDeveloperChats) 
+    : filteredDisputeChats;
+
   useEffect(() => {
     if (activeMainTab === 'support') {
-      if (supportSubTab === 'client' && clientChats.length > 0) {
-        setActiveChat(clientChats[0]);
-      } else if (supportSubTab === 'developer' && developerChats.length > 0) {
-        setActiveChat(developerChats[0]);
+      const activeList = supportSubTab === 'client' ? filteredClientChats : filteredDeveloperChats;
+      if (activeList.length > 0) {
+        const stillSelected = activeList.find(c => c.id === activeChat?.id);
+        setActiveChat(stillSelected || activeList[0]);
+      } else {
+        setActiveChat(null);
       }
     } else {
-      if (disputeChats.length > 0) {
-        setActiveChat(disputeChats[0]);
+      if (filteredDisputeChats.length > 0) {
+        const stillSelected = filteredDisputeChats.find(c => c.id === activeChat?.id);
+        setActiveChat(stillSelected || filteredDisputeChats[0]);
       } else {
         setActiveChat(null);
       }
     }
-  }, [activeMainTab, supportSubTab]);
+  }, [activeMainTab, supportSubTab, searchQuery]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -127,10 +163,6 @@ export default function ChatMonitor() {
 
     setReplyText('');
   };
-
-  const currentSidebarList = activeMainTab === 'support' 
-    ? (supportSubTab === 'client' ? clientChats : developerChats) 
-    : disputeChats;
 
   return (
     <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] max-w-6xl mx-auto pb-6 px-2 sm:px-4 text-left select-none">
@@ -225,7 +257,14 @@ export default function ChatMonitor() {
                           <h4 className="font-extrabold text-xs text-gray-900 dark:text-gray-900 truncate">{chat.name}</h4>
                           <span className="text-[10px] text-gray-500 dark:text-gray-500 shrink-0">{chat.time}</span>
                         </div>
-                        <p className="text-[11px] text-gray-600 dark:text-gray-600 truncate mt-0.5">{chat.subtitle}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {chat.project && (
+                            <span className="text-[10px] font-bold text-[#DC6B0F] truncate shrink-0">
+                              {chat.project} ·
+                            </span>
+                          )}
+                          <p className="text-[11px] text-gray-600 dark:text-gray-600 truncate">{chat.subtitle}</p>
+                        </div>
                       </div>
 
                       {chat.unread > 0 && (
@@ -238,7 +277,9 @@ export default function ChatMonitor() {
                 })
               ) : (
                 <div className="text-center py-16 text-xs text-gray-500 px-4">
-                  No active {activeMainTab === 'support' ? supportSubTab : 'dispute'} threads available.
+                  {searchQuery 
+                    ? `No conversations matching "${searchQuery}".` 
+                    : `No active ${activeMainTab === 'support' ? supportSubTab : 'dispute'} threads available.`}
                 </div>
               )}
             </div>
@@ -257,7 +298,19 @@ export default function ChatMonitor() {
                       {activeChat.initials}
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-xs text-gray-900 dark:text-gray-900">{activeChat.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-extrabold text-xs text-gray-900 dark:text-gray-900">{activeChat.name}</h3>
+                        {activeChat.role && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-black/5 capitalize">
+                            {activeChat.role}
+                          </span>
+                        )}
+                        {activeChat.project && (
+                          <span className="text-[10px] font-bold text-gray-500">
+                            ({activeChat.project})
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-gray-500 dark:text-gray-500">{activeChat.subtitle}</p>
                     </div>
                   </div>
@@ -314,7 +367,7 @@ export default function ChatMonitor() {
               </>
             ) : (
               <div className="flex-1 flex items-center justify-center text-xs text-gray-400 dark:text-gray-500 p-6 text-center">
-                Select a conversation from the sidebar to inspect messages.
+                {searchQuery ? "No conversation found matching your search." : "Select a conversation from the sidebar to inspect messages."}
               </div>
             )}
 

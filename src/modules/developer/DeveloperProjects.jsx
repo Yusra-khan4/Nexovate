@@ -11,7 +11,8 @@ const fallbackProjectsData = [
     description: "Web ordering platform with live table availability and a staff order screen for a mid-size restaurant.",
     budget: "PKR 45,000",
     numericBudget: 45000,
-    timeline: "3 - 6 months"
+    timeline: "3 - 6 months",
+    totalMilestones: 10
   },
   {
     id: 22,
@@ -21,7 +22,8 @@ const fallbackProjectsData = [
     description: "Redesign of a flight + hotel booking engine with multi-currency pricing and a partner API integration.",
     budget: "PKR 70,000",
     numericBudget: 70000,
-    timeline: "3 - 6 months"
+    timeline: "3 - 6 months",
+    totalMilestones: 10
   }
 ];
 
@@ -61,9 +63,10 @@ export default function DeveloperProjects() {
             client: p.client_name || (p.client_id ? `Client #${p.client_id}` : 'Client'),
             postedTime: `Posted ${postedDate}`,
             description: p.projectoverview || p.overview || p.description || "No overview provided.",
-            budget: rawBudget > 0 ? `PKR ${rawBudget.toLocaleString()}` : "Open for bidding",
-            numericBudget: rawBudget > 0 ? rawBudget : '',
-            timeline: p.timeline || "3 - 6 months"
+            budget: rawBudget > 0 ? `PKR ${rawBudget.toLocaleString()}` : "PKR 50,000",
+            numericBudget: rawBudget > 0 ? rawBudget : 50000,
+            timeline: p.timeline || "3 - 6 months",
+            totalMilestones: 10
           };
         });
         setProjects(mapped);
@@ -181,7 +184,10 @@ export default function DeveloperProjects() {
               <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] rounded-[8px] sm:rounded-[6px] p-3 sm:p-4 text-black flex-1 flex flex-col justify-between border border-black/5 dark:border-transparent shadow-xs dark:shadow-none transition-all duration-300">
                 
                 <div className="text-left space-y-1">
-                  <h3 className="text-xs sm:text-sm font-bold tracking-tight leading-snug text-black">{project.title}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-gray-500 shrink-0">{project.id}</span>
+                    <h3 className="text-xs sm:text-sm font-bold tracking-tight leading-snug text-black">{project.title}</h3>
+                  </div>
                   <p className="text-[9px] text-gray-600 font-bold">
                     Client: {project.client} · <span className="font-medium text-gray-500">{project.postedTime}</span>
                   </p>
@@ -192,7 +198,7 @@ export default function DeveloperProjects() {
                 </div>
 
                 <div className="mt-3.5 sm:mt-4 pt-2.5 sm:pt-3 border-t border-black/10 dark:border-black/5">
-                  <div className="flex gap-6 sm:gap-8 mb-3 sm:mb-3.5 text-left">
+                  <div className="grid grid-cols-3 gap-2 mb-3 sm:mb-3.5 text-left">
                     <div>
                       <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Budget</span>
                       <span className="text-xs font-bold text-black mt-0.5 block">{project.budget}</span>
@@ -200,6 +206,10 @@ export default function DeveloperProjects() {
                     <div>
                       <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Timeline</span>
                       <span className="text-xs font-bold text-black mt-0.5 block">{project.timeline}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Milestones</span>
+                      <span className="text-xs font-bold text-black mt-0.5 block">{project.totalMilestones || 10} Milestones</span>
                     </div>
                   </div>
 

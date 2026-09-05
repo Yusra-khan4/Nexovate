@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { fetchAdminPayments, releaseEscrowFunds } from '../../services/api';
 import { Loader2, ArrowLeft } from 'lucide-react';
 
@@ -59,10 +60,13 @@ const fallbackPaymentData = [
 
 export default function PaymentManagement() {
   const [payments, setPayments] = useState([]);
-  const [selectedPayment, setSelectedPayment] = useState(null); // For modal/view form
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingList, setLoadingList] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
 
   const loadPayments = async () => {
     try {
@@ -77,23 +81,23 @@ export default function PaymentManagement() {
 
           let statusLabel = 'Pending payment';
           let statusType = 'pending';
-          let hasAction = false;
+          let isReadyToRelease = false;
           let subtext = 'Awaiting client payment';
 
           if (rawStatus === 'verified' || rawStatus === 'held') {
             statusLabel = 'Ready to release';
             statusType = 'ready';
-            hasAction = true;
+            isReadyToRelease = true;
             subtext = null;
           } else if (rawStatus === 'released') {
             statusLabel = 'Released';
             statusType = 'released';
-            hasAction = false;
+            isReadyToRelease = false;
             subtext = `Commission: PKR ${commissionAmount.toLocaleString()}`;
           } else if (rawStatus === 'received') {
             statusLabel = 'Received';
             statusType = 'received';
-            hasAction = false;
+            isReadyToRelease = false;
             subtext = 'Awaiting completion';
           }
 
@@ -108,17 +112,23 @@ export default function PaymentManagement() {
             status: statusLabel,
             statusType: statusType,
             subtext: subtext,
-            hasAction: hasAction
+            isReadyToRelease: isReadyToRelease
           };
         });
 
         setPayments(mapped);
       } else {
-        setPayments(fallbackPaymentData);
+        setPayments(fallbackPaymentData.map(item => ({
+          ...item,
+          isReadyToRelease: item.statusType === 'ready'
+        })));
       }
     } catch (err) {
       console.warn("Could not load admin payments, using fallback data:", err);
-      setPayments(fallbackPaymentData);
+      setPayments(fallbackPaymentData.map(item => ({
+        ...item,
+        isReadyToRelease: item.statusType === 'ready'
+      })));
     } finally {
       setLoadingList(false);
     }
@@ -153,7 +163,7 @@ export default function PaymentManagement() {
                 status: "Released",
                 statusType: "released",
                 subtext: `Commission: PKR ${commissionAmount.toLocaleString()}`,
-                hasAction: false,
+                isReadyToRelease: false,
               }
             : item
         )
@@ -202,10 +212,25 @@ export default function PaymentManagement() {
     }
   };
 
-  // If a payment is selected, render the detailed payment release form view
+  // Realtime dynamic filter across Project Name, Client, Developer, and Status
+  const filteredPayments = payments.filter((item) => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return true;
+
+    return (
+      (item.project || '').toLowerCase().includes(q) ||
+      (item.client || '').toLowerCase().includes(q) ||
+      (item.developer || '').toLowerCase().includes(q) ||
+      (item.status || '').toLowerCase().includes(q) ||
+      String(item.id || item.paymentId).toLowerCase().includes(q)
+    );
+  });
+
+  // If a payment is selected, render the detailed view/form
   if (selectedPayment) {
     const commission = Math.round(selectedPayment.numericAmount * 0.12);
     const netPayout = selectedPayment.numericAmount - commission;
+    const isReleased = selectedPayment.statusType === 'released';
 
     return (
       <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 max-w-2xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
@@ -222,10 +247,12 @@ export default function PaymentManagement() {
           
           <div className="border-b border-gray-200/80 pb-3 space-y-1">
             <h2 className="text-lg sm:text-xl font-black text-black tracking-tight">
-              Payment Release Form
+              {isReleased ? "Payment Details & Breakdown" : "Payment Release Form"}
             </h2>
             <p className="text-xs text-gray-600 font-medium">
-              Review project escrow funds and disburse payout to the assigned developer.
+              {isReleased 
+                ? "Viewing transaction breakdown for released escrow funds." 
+                : "Review project escrow funds and disburse payout to the assigned developer."}
             </p>
           </div>
 
@@ -296,27 +323,28 @@ export default function PaymentManagement() {
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200/80">
             <button
-              disabled={loading}
               onClick={() => setSelectedPayment(null)}
-              className="px-5 h-9 rounded-md bg-white border border-gray-300 text-gray-700 font-extrabold text-xs hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
+              className="px-5 h-9 rounded-md bg-white border border-gray-300 text-gray-700 font-extrabold text-xs hover:bg-gray-50 transition-all cursor-pointer"
             >
-              Cancel
+              Back
             </button>
 
-            <button
-              disabled={loading}
-              onClick={handleConfirmRelease}
-              className="px-6 h-9 rounded-md bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={13} className="animate-spin" />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                'Release Payment'
-              )}
-            </button>
+            {!isReleased && (
+              <button
+                disabled={loading}
+                onClick={handleConfirmRelease}
+                className="px-6 h-9 rounded-md bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  'Release Payment'
+                )}
+              </button>
+            )}
           </div>
 
         </div>
@@ -359,7 +387,7 @@ export default function PaymentManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-                  {payments.map((item) => (
+                  {filteredPayments.map((item) => (
                     <tr 
                       key={item.id} 
                       className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
@@ -389,18 +417,12 @@ export default function PaymentManagement() {
                       </td>
 
                       <td className="py-4 px-5 text-right whitespace-nowrap">
-                        {item.hasAction ? (
-                          <button
-                            onClick={() => handleOpenReleaseView(item)}
-                            className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-[5px] shadow-2xs hover:brightness-105 active:scale-95 transition-all cursor-pointer tracking-wider"
-                          >
-                            View
-                          </button>
-                        ) : (
-                          <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-600 inline-block max-w-[130px] truncate">
-                            {item.subtext}
-                          </span>
-                        )}
+                        <button
+                          onClick={() => handleOpenReleaseView(item)}
+                          className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] px-3.5 py-1.5 rounded-[5px] shadow-2xs hover:brightness-105 active:scale-95 transition-all cursor-pointer tracking-wider"
+                        >
+                          View
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -409,9 +431,9 @@ export default function PaymentManagement() {
             </div>
           )}
 
-          {!loadingList && payments.length === 0 && (
+          {!loadingList && filteredPayments.length === 0 && (
             <div className="text-center py-8 text-xs text-gray-500 font-medium">
-              No payments found.
+              {searchQuery ? `No payments matching "${searchQuery}".` : 'No payments found.'}
             </div>
           )}
 

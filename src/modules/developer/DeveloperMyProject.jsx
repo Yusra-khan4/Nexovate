@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { 
   fetchDeveloperMyProjects, 
@@ -54,6 +55,9 @@ export default function DeveloperMyProject() {
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectid] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Consume search query from DashboardLayout outlet context
+  const { searchQuery } = useOutletContext() || { searchQuery: '' };
 
   // Helper: Calculate progress percentage
   const calculateProgress = (milestones) => {
@@ -186,6 +190,18 @@ export default function DeveloperMyProject() {
     }
   };
 
+  // Realtime search filter across Project ID, Project Name, and Customer Name
+  const q = (searchQuery || '').trim().toLowerCase();
+  const filteredProjects = projects.filter((project) => {
+    if (!q) return true;
+    return (
+      String(project.id).toLowerCase().includes(q) ||
+      (project.projectName || '').toLowerCase().includes(q) ||
+      (project.customer || '').toLowerCase().includes(q) ||
+      (project.status || '').toLowerCase().includes(q)
+    );
+  });
+
   if (selectedProject) {
     const progressPct = calculateProgress(selectedProject.milestones);
     const completedCount = selectedProject.milestones.filter(m => m.completed).length;
@@ -205,9 +221,12 @@ export default function DeveloperMyProject() {
 
         {/* Page Title */}
         <div className="text-left space-y-1">
-          <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
-            {selectedProject.projectName}
-          </h1>
+          <div className="flex items-center gap-2">
+            {/* <span className="text-xs sm:text-sm font-mono font-extrabold text-gray-500">{selectedProject.id}</span> */}
+            <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
+              {selectedProject.projectName}
+            </h1>
+          </div>
         </div>
 
         <div className="w-full bg-[#FFF6E9] dark:bg-white text-black rounded-[12px] p-6 sm:p-8 shadow-xl border border-amber-100/60 dark:border-transparent space-y-6 text-left transition-colors duration-300">
@@ -298,7 +317,7 @@ export default function DeveloperMyProject() {
   }
 
   return (
-    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-3xl mx-auto pb-8 px-3 sm:px-4 text-left select-none">
+    <div className="w-full text-black dark:text-white font-['Raleway',sans-serif] space-y-4 sm:space-y-5 max-w-4xl mx-auto pb-8 px-3 sm:px-4 text-left select-none">
       
       <div className="text-left space-y-1">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-black dark:text-white">
@@ -319,73 +338,91 @@ export default function DeveloperMyProject() {
               <span className="text-xs font-semibold">Loading assigned projects...</span>
             </div>
           ) : (
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[620px]">
+            <div className="w-full overflow-x-hidden">
+              <table className="w-full text-left border-collapse table-fixed">
                 <thead>
-                  <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[10px] tracking-wider">
-                    <th className="py-3.5 px-5">PROJECT NAME</th>
-                    <th className="py-3.5 px-4 text-center">STATUS</th>
-                    <th className="py-3.5 px-4">CUSTOMER</th>
-                    <th className="py-3.5 px-4">PROGRESS</th>
-                    <th className="py-3.5 px-4">BUDGET</th>
-                    <th className="py-3.5 px-5 text-right">TIMELINE</th>
+                  <tr className="bg-white/40 dark:bg-[#A2A6B0] text-gray-700 dark:text-black uppercase font-['Raleway',sans-serif] font-extrabold text-[9px] tracking-wider">
+                    <th className="py-3 px-1 sm:px-2 w-[8%]">ID</th>
+                    <th className="py-3 px-2 sm:px-3 w-[22%]">PROJECT NAME</th>
+                    <th className="py-3 px-1 sm:px-2 text-center w-[12%]">STATUS</th>
+                    <th className="py-3 px-1 sm:px-2 w-[14%] truncate">CUSTOMER</th>
+                    <th className="py-3 px-1 sm:px-2 w-[15%]">PROGRESS</th>
+                    <th className="py-3 px-1 sm:px-2 text-center w-[9%]">MILESTONES</th>
+                    <th className="py-3 px-1 sm:px-2 text-right w-[11%]" title="Budget">BUDGET</th>
+                    <th className="py-3 px-1 sm:px-2 text-center w-[9%]">ACTION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-200">
-                  {projects.map((project) => {
+                  {filteredProjects.map((project) => {
                     const progressPct = calculateProgress(project.milestones);
+                    const completedCount = project.milestones.filter(m => m.completed).length;
+                    const totalCount = project.milestones.length;
+
                     return (
                       <tr 
                         key={project.id} 
-                        onClick={() => setSelectedProjectid(project.id)}
-                        className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150 cursor-pointer"
+                        className="bg-[#FFF6E9] dark:bg-white hover:bg-[#FAF3E0]/70 dark:hover:bg-gray-50/80 transition-colors duration-150"
                       >
-                        <td className="py-4 px-5">
-                          <span className="font-bold text-xs text-black hover:text-blue-600 transition-colors tracking-tight block">
+                        <td className="py-3 px-1 sm:px-2 font-mono font-bold text-[11px] text-gray-600 whitespace-nowrap">
+                          {project.id}
+                        </td>
+
+                        <td className="py-3 px-2 sm:px-3 truncate">
+                          <span className="font-bold text-[11px] sm:text-xs text-black tracking-tight block truncate" title={project.projectName}>
                             {project.projectName}
                           </span>
                         </td>
 
-                        <td className="py-4 px-4 text-center">
+                        <td className="py-3 px-1 sm:px-2 text-center truncate">
                           {getStatusBadge(project.status, project.statusType)}
                         </td>
 
-                        <td className="py-4 px-4 text-xs font-bold text-gray-800">
+                        <td className="py-3 px-1 sm:px-2 text-[11px] font-bold text-gray-800 truncate" title={project.customer}>
                           {project.customer}
                         </td>
 
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-20 sm:w-24 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
+                        <td className="py-3 px-1 sm:px-2">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-10 sm:w-14 bg-gray-200 rounded-full h-1.5 overflow-hidden shrink-0">
                               <div 
                                 className={`h-full rounded-full transition-all duration-300 ${getProgressBarColor(progressPct)}`} 
                                 style={{ width: `${progressPct}%` }}
                               />
                             </div>
-                            <span className="text-[10px] font-extrabold text-gray-800 min-w-[28px]">
+                            <span className="text-[9px] font-extrabold text-gray-800 shrink-0">
                               {progressPct}%
                             </span>
                           </div>
                         </td>
 
-                        <td className="py-4 px-4 text-xs font-bold text-black whitespace-nowrap">
+                        <td className="py-3 px-1 sm:px-2 text-center text-[11px] font-extrabold text-gray-700 whitespace-nowrap">
+                          {completedCount}/{totalCount}
+                        </td>
+
+                        <td className="py-3 px-1 sm:px-2 text-right text-[11px] font-bold text-black whitespace-nowrap truncate">
                           {project.budget}
                         </td>
 
-                        <td className="py-4 px-5 text-right text-xs font-bold text-gray-700 whitespace-nowrap">
-                          {project.timeline}
+                        <td className="py-3 px-1 sm:px-2 text-center whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedProjectid(project.id)}
+                            className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[9px] px-2.5 py-1 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer tracking-wide inline-block"
+                          >
+                            View
+                          </button>
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
-            </div>
-          )}
 
-          {!loading && projects.length === 0 && (
-            <div className="text-center py-8 text-xs text-gray-500 font-medium">
-              No projects found.
+              {filteredProjects.length === 0 && (
+                <div className="text-center py-8 text-xs text-gray-500 font-medium">
+                  {searchQuery ? `No projects matching "${searchQuery}".` : 'No projects found.'}
+                </div>
+              )}
             </div>
           )}
 

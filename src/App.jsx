@@ -25,6 +25,8 @@ import ProjectsMonitoring from './modules/admin/ProjectsMonitoring';
 import PaymentManagement from './modules/admin/PaymentManagement';
 import PlatformSetting from './modules/admin/PlatformSetting';
 import PlatformFeedback from './modules/admin/PlatformFeedback';
+import ScopeDocument from './modules/client/ScopeDocument';
+
 
 
 
@@ -72,6 +74,8 @@ function App() {
             <Route path="developers" element={<ClientDevelopers />} />
             <Route path="profile" element={<ClientProfile />} />
             <Route path="saved-projects" element={<ClientSavedProjects />} />
+                        <Route path="scope-documents" element={<ScopeDocument />} />
+
           </Route>
         </Route>
 

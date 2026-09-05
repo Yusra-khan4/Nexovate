@@ -9,6 +9,7 @@ import { Menu, X } from 'lucide-react';
 export default function DashboardLayout({ userName, userRole, onLogout }) {
   const [currentView, setCurrentView] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -33,6 +34,8 @@ export default function DashboardLayout({ userName, userRole, onLogout }) {
       setCurrentView('dashboard');
     }
 
+    // Reset search query on page transition
+    setSearchQuery('');
     setIsMobileOpen(false);
   }, [location]);
 
@@ -93,10 +96,15 @@ export default function DashboardLayout({ userName, userRole, onLogout }) {
         </div>
 
         <main className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar relative z-10 flex flex-col">
-          <Navbar isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+          <Navbar 
+            isDarkMode={isDarkMode} 
+            setIsDarkMode={setIsDarkMode} 
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
 
           <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
-            <Outlet /> 
+            <Outlet context={{ searchQuery }} /> 
           </div>
         </main>
 

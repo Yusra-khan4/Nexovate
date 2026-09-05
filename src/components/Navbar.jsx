@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, Search, Sun, Moon } from 'lucide-react';
 
-export default function Navbar({ isDarkMode, setIsDarkMode }) {
+export default function Navbar({ isDarkMode, setIsDarkMode, searchQuery, setSearchQuery }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -37,13 +37,19 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
           
           <input 
             type="text" 
-            placeholder="Search projects, tasks, or clients..." 
+            value={searchQuery || ''}
+            onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
+            placeholder="Search by ID, name, or domain..." 
             className="bg-transparent text-[#2c2825] text-[11px] font-semibold placeholder-[#7a746e] outline-none w-full min-w-0 pr-1.5"
           />
 
           <div className="h-4 w-[1px] bg-black/10 mx-1 sm:mx-1.5 shrink-0 hidden xs:block" />
 
-          <button className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[11px] px-3.5 sm:px-4 py-1 rounded-[6px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] hover:brightness-110 active:scale-[0.98] transition-all shrink-0 cursor-pointer tracking-wide border border-white/10">
+          <button 
+            type="button"
+            onClick={() => setSearchQuery && setSearchQuery(searchQuery)}
+            className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[11px] px-3.5 sm:px-4 py-1 rounded-[6px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] hover:brightness-110 active:scale-[0.98] transition-all shrink-0 cursor-pointer tracking-wide border border-white/10"
+          >
             Search
           </button>
         </div>
@@ -51,7 +57,6 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
         {/* 🟢 CONTROLS WRAPPER (Theme Switch + Bell Notification) */}
         <div className="order-1 sm:order-2 flex items-center gap-2.5 sm:gap-3 ml-auto sm:ml-0">
           
-          {/* 🎯 STANDARDIZED SUN/MOON THEME TOGGLE (Matched to Login/Signup) */}
           <button
             type="button"
             onClick={() => setIsDarkMode(!isDarkMode)}
@@ -86,12 +91,10 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
 
             {showNotifications && (
               <div className="absolute right-0 top-10 w-[260px] sm:w-[310px] bg-[#FFF6E9] dark:bg-[#FFFFFF]/95 border border-black/5 dark:border-white/10 rounded-[6px] p-3 shadow-lg dark:shadow-xl z-50 text-left transition-all duration-300 animate-fade-in flex gap-2.5">
-                
                 <div className="flex-1 space-y-2.5 max-h-[240px] overflow-y-auto pr-1.5 custom-scrollbar">
                   <h3 className="text-xs font-bold text-gray-900 dark:text-gray-900 tracking-tight mb-1 select-none">
                     Notifications
                   </h3>
-                  
                   {notificationsList.map((notification) => (
                     <div 
                       key={notification.id} 
@@ -106,11 +109,9 @@ export default function Navbar({ isDarkMode, setIsDarkMode }) {
                     </div>
                   ))}
                 </div>
-
                 <div className="w-1 bg-black/10 dark:bg-white/10 rounded-full relative overflow-hidden shrink-0 hidden sm:flex flex-col items-center shadow-inner">
                   <div className="w-full h-1/3 bg-gray-800 dark:bg-gray-400 rounded-full absolute top-1.5 shadow-xs" />
                 </div>
-
               </div>
             )}
           </div>

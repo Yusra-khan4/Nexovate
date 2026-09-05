@@ -13,7 +13,8 @@ import {
   CreditCard,
   Receipt,
   Settings,
-  MessageSquare
+  MessageSquare,
+  FileText
 } from 'lucide-react';
 
 import logoImg from '../assets/NEXOVATE_WHITE_BG.png';
@@ -29,6 +30,7 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
     client: [
       { id: 'dashboard', name: 'Dashboard', icon: <LayoutGrid size={14} strokeWidth={2.2} />, path: '/client/dashboard' },
       { id: 'projects', name: 'My projects', icon: <GitMerge size={14} strokeWidth={2.2} />, path: '/client/projects' },
+      { id: 'scope-documents', name: 'Scope Documents', icon: <FileText size={14} strokeWidth={2.2} />, path: '/client/scope-documents' },
       { id: 'profile', name: 'Profile', icon: <UserRound size={14} strokeWidth={2.2} />, path: '/client/profile' },
       { id: 'messages', name: 'Messages', icon: <MessageSquareCode size={14} strokeWidth={2.2} />, path: '/client/messages' },
     ],
@@ -50,7 +52,6 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
       { id: 'chat-monitor', name: 'Chat Monitor', icon: <MessageSquareCode size={14} strokeWidth={2.2} />, path: '/admin/chat-monitor' },
       { id: 'platform-setting', name: 'Platform Settings', icon: <Settings size={14} strokeWidth={2.2} />, path: '/admin/platform-setting' },
       { id: 'platform-feedback', name: 'Platform Feedback', icon: <MessageSquare size={14} strokeWidth={2.2} />, path: '/admin/platform-feedback' },
-
     ]
   };
 
@@ -78,12 +79,10 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
     navigate('/login');
   };
 
-  // Helper function to calculate strict active status
   const checkIsActive = (item) => {
     const currentPath = decodeURIComponent(location.pathname).toLowerCase().replace(/-/g, ' ');
     const itemPath = decodeURIComponent(item.path).toLowerCase().replace(/-/g, ' ');
 
-    // 1. Root / Dashboard route checks
     if (item.id === 'dashboard') {
       return (
         currentPath === `/${roleKey}` ||
@@ -92,7 +91,6 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
       );
     }
 
-    // 2. Strict path matching for all other routes
     return currentPath === itemPath;
   };
 
