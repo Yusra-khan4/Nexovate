@@ -66,11 +66,18 @@ const Signup = () => {
       if (response.success) {
         if (response.token) {
           localStorage.setItem('token', response.token);
+          localStorage.setItem('role', role); // <-- Explicitly store role
           if (response.user) {
             localStorage.setItem('user', JSON.stringify(response.user));
             const id = response.user.id || response.user._id;
             if (id) {
-              localStorage.setItem(role === 'client' ? 'clientId' : 'developerId', id);
+              localStorage.removeItem('clientId');
+              localStorage.removeItem('developerId');
+              if (role === 'client') {
+                localStorage.setItem('clientId', id);
+              } else {
+                localStorage.setItem('developerId', id);
+              }
             }
           }
           navigate(`/${role}/dashboard`);
@@ -93,7 +100,6 @@ const Signup = () => {
 
   const HeaderBar = ({ isForm = false }) => (
     <>
-      {/* Absolute Left Logo Container: Uses original relative center on role screen, matches exact viewport height on signup form */}
       <div 
         className={`hidden md:flex items-center h-[56px] absolute left-8 lg:left-4 ${
           isForm ? 'top-[calc(50vh-215px)]' : 'top-1/2 -translate-y-[215px]'
@@ -106,7 +112,6 @@ const Signup = () => {
         />
       </div>
 
-      {/* Absolute Right Theme Toggle */}
       <div 
         className={`hidden md:flex items-center h-[56px] absolute right-8 lg:right-4 ${
           isForm ? 'top-[calc(50vh-215px)]' : 'top-1/2 -translate-y-[215px]'
@@ -132,7 +137,6 @@ const Signup = () => {
         </button>
       </div>
 
-      {/* Mobile Top Navbar (Visible only on small screens) */}
       <div className="flex md:hidden w-full items-center justify-between px-2 mb-4 z-20">
         <img 
           src={logoImg} 
@@ -160,14 +164,12 @@ const Signup = () => {
     </>
   );
 
-  // ---------------- ROLE SELECTION SCREEN ----------------
   if (role === 'select') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 relative w-full bg-transparent text-gray-900 dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased overflow-x-hidden">
         
         <HeaderBar isForm={false} />
 
-        {/* Adjusted spacing to pull text & cards slightly higher */}
         <div className="w-full max-w-xl text-center mb-4 z-10 space-y-1 -mt-8">
           <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-[#FFFFFF] tracking-tight transition-colors">
             Choose your path
@@ -178,7 +180,6 @@ const Signup = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-4 w-full max-w-2xl px-2 items-stretch z-10 -mt-2">
-          {/* Developer Card */}
           <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/70 border border-black/5 dark:border-white/10 p-6 rounded-[14px] backdrop-blur-xl shadow-lg dark:shadow-2xl flex flex-col items-center justify-between text-center transition-all duration-300">
             <div className="w-10 h-10 bg-gradient-to-br from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] rounded-[8px] flex items-center justify-center shadow-xs mb-3 mt-1 shrink-0">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -199,7 +200,6 @@ const Signup = () => {
             </button>
           </div>
 
-          {/* Client Card */}
           <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/70 border border-black/5 dark:border-white/10 p-6 rounded-[14px] backdrop-blur-xl shadow-lg dark:shadow-2xl flex flex-col items-center justify-between text-center transition-all duration-300">
             <div className="w-10 h-10 bg-gradient-to-br from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] rounded-[8px] flex items-center justify-center shadow-xs mb-3 mt-1 shrink-0">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -225,7 +225,6 @@ const Signup = () => {
     );
   }
 
-  // ---------------- REGISTRATION FORM SCREEN ----------------
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8 relative w-full bg-transparent text-gray-900 dark:text-white transition-colors duration-300 font-['Raleway',sans-serif] antialiased overflow-x-hidden">
 
@@ -233,7 +232,6 @@ const Signup = () => {
 
       <div className="w-full max-w-[390px] sm:max-w-[420px] z-10 my-auto">
         
-        {/* Back to Roles Button */}
         <div className="mb-2.5 flex items-center justify-start">
           <button
             type="button"
@@ -247,7 +245,6 @@ const Signup = () => {
 
         <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/70 border border-black/5 dark:border-white/10 rounded-[14px] p-6 sm:p-7 backdrop-blur-xl shadow-lg dark:shadow-2xl transition-all duration-300 space-y-4 text-center">
           
-          {/* Top Title Section inside card */}
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-[#FFFFFF] tracking-tight transition-colors">
               Create your profile
@@ -265,7 +262,6 @@ const Signup = () => {
 
           <form onSubmit={handleRegister} className="space-y-3 text-left">
 
-            {/* Google OAuth Button */}
             <button 
               type="button" 
               className="w-full bg-white dark:bg-[#000000]/30 hover:bg-gray-50 dark:hover:bg-[#000000]/50 border border-gray-300 dark:border-white/10 text-gray-800 dark:text-gray-200 rounded-[6px] h-9.5 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
@@ -279,14 +275,12 @@ const Signup = () => {
               Continue with Google
             </button>
 
-            {/* Divider */}
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-black/10 dark:border-white/10"></div>
               <span className="flex-shrink mx-3 text-[10px] text-gray-500 font-extrabold tracking-widest">OR</span>
               <div className="flex-grow border-t border-black/10 dark:border-white/10"></div>
             </div>
 
-            {/* Full Name */}
             <div>
               <label className={labelStyles}>Full Name</label>
               <input 
@@ -299,7 +293,6 @@ const Signup = () => {
               />
             </div>
 
-            {/* Email Address */}
             <div>
               <label className={labelStyles}>Email Address</label>
               <input 
@@ -312,7 +305,6 @@ const Signup = () => {
               />
             </div>
 
-            {/* Password */}
             <div>
               <label className={labelStyles}>Password</label>
               <div className="relative">
@@ -350,7 +342,6 @@ const Signup = () => {
               />
             </div>
 
-            {/* Developer-Specific Inputs */}
             {role === 'developer' && (
               <>
                 <div>
@@ -403,7 +394,6 @@ const Signup = () => {
               </>
             )}
 
-            {/* Terms Checkbox */}
             <div className="flex items-start gap-2 pt-1">
               <input 
                 type="checkbox" 
@@ -416,7 +406,6 @@ const Signup = () => {
               </label>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -428,7 +417,6 @@ const Signup = () => {
             </button>
           </form>
 
-          {/* Footer Link inside card */}
           <div className="pt-3 border-t border-black/5 dark:border-white/5 mt-3">
             <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-semibold tracking-wide">
               Already have an account? <Link to="/login" className="text-gray-900 dark:text-[#F2A508] hover:underline font-bold ml-1">Log In</Link>

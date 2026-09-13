@@ -1,16 +1,67 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useProfile } from '../../context/ProfileContext'; 
-import { UserRound, Edit3, Camera, Plus, Trash2, Check, FileText, Upload } from 'lucide-react';
-// import { updateUserProfile } from '../../services/api';
+import { Camera, Plus, Trash2, Check, Upload, Loader2 } from 'lucide-react';
+import { updateDeveloper } from '../../services/api';
 
 export default function ProfilePage() {
-  const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef(null);
   const certInputRef = useRef(null);
   
-  const { profile, setProfile, loading, errorMessage, setErrorMessage } = useProfile();
+  const { profile, setProfile, loading } = useProfile();
+  
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+
+  const [profileData, setProfileData] = useState({
+    full_name: profile?.full_name || profile?.full_Name || storedUser.full_name || storedUser.full_Name || '',
+    your_domain: profile?.your_domain || storedUser.your_domain || '',
+    email_address: profile?.email_address || storedUser.email_address || storedUser.email || '',
+    phone_number: profile?.phone_number || storedUser.phone_number || '',
+    cnic: profile?.cnic || storedUser.cnic || '',
+    city: profile?.city || storedUser.city || '',
+    country: profile?.country || storedUser.country || 'Pakistan',
+    experience_years: profile?.experience_years || storedUser.experience_years || '',
+    tech_stack: profile?.tech_stack || profile?.Tech_stack || storedUser.tech_stack || storedUser.Tech_stack || '',
+    project_links: profile?.project_links || storedUser.project_links || [''],
+    bank_name: profile?.bank_name || storedUser.bank_name || '',
+    bank_account_title: profile?.bank_account_title || storedUser.bank_account_title || '',
+    bank_account_iban: profile?.bank_account_iban || storedUser.bank_account_iban || '',
+    certificate_name: profile?.certificate_name || storedUser.certificate_name || '',
+    avatar: profile?.avatar || storedUser.avatar || null,
+  });
+
   const [avatarFile, setAvatarFile] = useState(null);
   const [certificateFile, setCertificateFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+
+  useEffect(() => {
+    if (profile && Object.keys(profile).length > 0) {
+      setProfileData(prev => ({
+        ...prev,
+        full_name: profile.full_name || profile.full_Name || prev.full_name,
+        your_domain: profile.your_domain || prev.your_domain,
+        email_address: profile.email_address || prev.email_address,
+        phone_number: profile.phone_number || prev.phone_number,
+        cnic: profile.cnic || prev.cnic,
+        city: profile.city || prev.city,
+        country: profile.country || prev.country,
+        experience_years: profile.experience_years || prev.experience_years,
+        tech_stack: profile.tech_stack || profile.Tech_stack || prev.tech_stack,
+        project_links: profile.project_links || prev.project_links,
+        bank_name: profile.bank_name || prev.bank_name,
+        bank_account_title: profile.bank_account_title || prev.bank_account_title,
+        bank_account_iban: profile.bank_account_iban || prev.bank_account_iban,
+        certificate_name: profile.certificate_name || prev.certificate_name,
+        avatar: profile.avatar || prev.avatar,
+      }));
+    }
+  }, [profile]);
 
   const skillCategories = {
     "Web Development": ["React.js", "Vue.js", "Next.js", "HTML", "CSS", "Tailwind", "Node.js", "Angular"],
@@ -27,47 +78,52 @@ export default function ProfilePage() {
     "5+ years"
   ];
 
-  const currentSkills = profile?.Tech_stack 
-    ? profile.Tech_stack.split(',').map(s => s.trim()).filter(Boolean) 
+  const currentSkills = profileData.tech_stack 
+    ? profileData.tech_stack.split(',').map(s => s.trim()).filter(Boolean) 
     : [];
 
-  const projectLinks = profile?.project_links || [''];
+  const projectLinks = profileData.project_links || [''];
 
   const handleChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setProfileData(prev => ({
+      ...prev,
+      [name]: value,
+      ...(name === 'full_name' ? { full_Name: value } : {}),
+    }));
   };
 
   const handleToggleSkill = (skill) => {
-    if (!isEditing) return;
     let updatedSkills;
     if (currentSkills.includes(skill)) {
       updatedSkills = currentSkills.filter(s => s !== skill);
     } else {
       updatedSkills = [...currentSkills, skill];
     }
-    setProfile({ ...profile, Tech_stack: updatedSkills.join(', ') });
+    const joined = updatedSkills.join(', ');
+    setProfileData(prev => ({ ...prev, tech_stack: joined, Tech_stack: joined }));
   };
 
   const handleLinkChange = (index, value) => {
     const updatedLinks = [...projectLinks];
     updatedLinks[index] = value;
-    setProfile({ ...profile, project_links: updatedLinks });
+    setProfileData(prev => ({ ...prev, project_links: updatedLinks }));
   };
 
   const addProjectLinkField = () => {
-    setProfile({ ...profile, project_links: [...projectLinks, ''] });
+    setProfileData(prev => ({ ...prev, project_links: [...projectLinks, ''] }));
   };
 
   const removeProjectLinkField = (index) => {
     const updatedLinks = projectLinks.filter((_, i) => i !== index);
-    setProfile({ ...profile, project_links: updatedLinks.length ? updatedLinks : [''] });
+    setProfileData(prev => ({ ...prev, project_links: updatedLinks.length ? updatedLinks : [''] }));
   };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setAvatarFile(file);
-      setProfile({ ...profile, avatar: URL.createObjectURL(file) });
+      setProfileData(prev => ({ ...prev, avatar: URL.createObjectURL(file) }));
     }
   };
 
@@ -75,7 +131,7 @@ export default function ProfilePage() {
     const file = e.target.files[0];
     if (file) {
       setCertificateFile(file);
-      setProfile({ ...profile, certificate_name: file.name });
+      setProfileData(prev => ({ ...prev, certificate_name: file.name }));
     }
   };
 
@@ -89,50 +145,28 @@ export default function ProfilePage() {
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
+    setStatusMessage({ type: '', text: '' });
+    setSaving(true);
     
     try {
-      const profileData = {
-        full_Name: profile.full_Name,
-        your_domain: profile.your_domain,
-        email_address: profile.email_address,
-        phone_number: profile.phone_number,
-        cnic: profile.cnic,
-        city: profile.city,
-        country: profile.country,
-        experience_years: profile.experience_years,
-        Tech_stack: profile.Tech_stack,
-        project_links: profile.project_links,
-        bank_name: profile.bank_name,
-        bank_account_title: profile.bank_account_title,
-        bank_account_iban: profile.bank_account_iban,
-        certificate_name: profile.certificate_name
+      const devId = localStorage.getItem('developerId') || storedUser.id || storedUser._id;
+      const updatedData = await updateDeveloper(devId, profileData);
+      const dev = updatedData.data || updatedData.developer || updatedData;
+      
+      const merged = {
+        ...profileData,
+        ...dev,
       };
 
-      const updatedData = await updateUserProfile(profileData);
-      const dev = updatedData.developer || updatedData;
-      
-      setProfile({
-        full_Name: dev.full_name || profile.full_Name,
-        your_domain: dev.your_domain || profile.your_domain,
-        email_address: dev.email_address || profile.email_address,
-        phone_number: dev.phone_number || profile.phone_number,
-        cnic: dev.cnic || profile.cnic || '',
-        city: dev.city || profile.city || '',
-        country: dev.country || profile.country || '',
-        experience_years: dev.experience_years || profile.experience_years || '',
-        Tech_stack: dev.tech_stack || profile.Tech_stack,
-        project_links: dev.project_links || profile.project_links || [''],
-        bank_name: dev.bank_name || profile.bank_name || '',
-        bank_account_title: dev.bank_account_title || profile.bank_account_title || '',
-        bank_account_iban: dev.bank_account_iban || profile.bank_account_iban || '',
-        certificate_name: dev.certificate_name || profile.certificate_name || '',
-        avatar: profile.avatar,
-      });
+      setProfileData(merged);
+      setProfile(merged);
+      localStorage.setItem('user', JSON.stringify({ ...storedUser, ...merged }));
 
-      setIsEditing(false);
+      setStatusMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (err) {
-      setErrorMessage(err.message || 'Failed to save profile parameters.');
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to save profile parameters.' });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -145,107 +179,99 @@ export default function ProfilePage() {
   }
 
   const labelStyles = "block text-[11px] font-bold text-gray-900 dark:text-black tracking-wide mb-1 transition-colors duration-300";
-  const inputStyles = "w-full bg-white dark:bg-white border border-gray-300 dark:border-gray-300 rounded-[4px] py-1.5 px-3 text-[11px] text-gray-900 dark:text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#DC6B0F] dark:focus:border-[#0284c7] transition-colors duration-300 font-medium shadow-xs disabled:opacity-90";
+  const inputStyles = "w-full bg-white dark:bg-white border border-gray-300 dark:border-gray-300 rounded-[4px] py-1.5 px-3 text-[11px] text-gray-900 dark:text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#DC6B0F] dark:focus:border-[#0284c7] transition-colors duration-300 font-medium shadow-xs";
 
   return (
     <div className="flex flex-col min-h-screen py-4 sm:py-6 px-3 sm:px-4 max-w-2xl sm:max-w-3xl mx-auto w-full font-['Raleway',sans-serif] antialiased">
-      
-      {/* HEADER SECTION */}
       <div className="w-full mb-4 sm:mb-5 text-left space-y-0.5">
         <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[#FFFFFF] tracking-tight">Your Profile</h1>
         <p className="text-gray-600 dark:text-gray-200 text-[11px] font-medium">Configure metrics and infrastructure profile specifications.</p>
       </div>
 
       <div className="w-full flex justify-center items-start flex-1">
-        
-        {/* OUTER GLASSMORPHIC BORDER WRAPPER */}
         <div className="w-full dark:p-6 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-xl transition-all">
-          
-          {/* MAIN PROFILE CARD */}
           <div className="w-full bg-[#FFF6E9] dark:bg-[#EFEEEA] border border-black/5 dark:border-transparent p-3.5 sm:p-5 rounded-[8px] sm:rounded-[6px] shadow-xs dark:shadow-none transition-all duration-300">
             
-            {errorMessage && (
-              <div className="mb-4 p-2.5 bg-red-100 dark:bg-red-100 border border-red-500/20 text-red-700 dark:text-red-700 text-[11px] font-semibold rounded-[4px]">{errorMessage}</div>
+            {statusMessage.text && (
+              <div className={`mb-4 p-2.5 rounded-md text-xs font-semibold ${
+                statusMessage.type === 'error'
+                  ? 'bg-red-100 text-red-700 border border-red-200'
+                  : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+              }`}>
+                {statusMessage.text}
+              </div>
             )}
             
             <form onSubmit={handleUploadSubmit} className="space-y-4 sm:space-y-5">
               <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" className="hidden" />
               <input type="file" ref={certInputRef} onChange={handleCertificateChange} accept=".pdf,.doc,.docx,.jpg,.png" className="hidden" />
 
-              {/* AVATAR UPLOAD ELEMENT HEADER */}
               <div className="flex flex-col items-center mb-1 sm:mb-2">
-                <button type="button" onClick={isEditing ? triggerFileInput : undefined} className={`focus:outline-none flex flex-col items-center ${isEditing ? 'cursor-pointer group' : 'cursor-default'}`}>
+                <button type="button" onClick={triggerFileInput} className="focus:outline-none flex flex-col items-center cursor-pointer group">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-[#DC6B0F] dark:border-transparent shadow-xs relative mb-1 dark:bg-[#1D61E7] flex items-center justify-center">
-                    {profile.avatar ? (
-                      <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    {profileData?.avatar ? (
+                      <img src={profileData.avatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-[#F2A508] to-[#BD1C22] dark:bg-none dark:bg-[#1D61E7] flex items-center justify-center text-white font-extrabold text-sm sm:text-base">
-                        {profile.full_Name ? profile.full_Name.split(' ').map(n => n[0]).join('').toUpperCase() : "HK"}
+                        {profileData?.full_name ? profileData.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : "HK"}
                       </div>
                     )}
-                    {isEditing && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera size={13} className="text-white" />
-                      </div>
-                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera size={13} className="text-white" />
+                    </div>
                   </div>
                   <span className="text-[10px] text-gray-600 dark:text-black font-bold tracking-wide">
-                    {isEditing ? 'Edit' : 'Edit'}
+                    Change Photo
                   </span>
                 </button>
               </div>
 
-              {/* CORE BASE PROFILE INPUT FIELDS */}
               <div className="w-full space-y-2.5 sm:space-y-3 text-left">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
                   <div>
                     <label className={labelStyles}>Your name</label>
-                    <input type="text" name="full_Name" value={profile.full_Name || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. Bilal ahmed" required />
+                    <input type="text" name="full_name" value={profileData?.full_name || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. Bilal ahmed" required />
                   </div>
                   <div>
                     <label className={labelStyles}>Domain</label>
-                    <input type="text" name="your_domain" value={profile.your_domain || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. Full stack development" required />
+                    <input type="text" name="your_domain" value={profileData?.your_domain || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. Full stack development" required />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
                   <div>
                     <label className={labelStyles}>Email</label>
-                    <input type="email" name="email_address" value={profile.email_address || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. bilalahmed@gmail.com" required />
+                    <input type="email" name="email_address" value={profileData?.email_address || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. bilalahmed@gmail.com" required />
                   </div>
                   <div>
                     <label className={labelStyles}>Phone</label>
-                    <input type="text" name="phone_number" value={profile.phone_number || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. +923311673628" />
+                    <input type="text" name="phone_number" value={profileData?.phone_number || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. +923311673628" />
                   </div>
                 </div>
 
-                {/* CNIC */}
                 <div>
                   <label className={labelStyles}>CNIC</label>
-                  <input type="text" name="cnic" value={profile.cnic || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. 42101-1234567-1" />
+                  <input type="text" name="cnic" value={profileData?.cnic || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. 42101-1234567-1" />
                 </div>
 
-                {/* CITY & COUNTRY */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
                   <div>
                     <label className={labelStyles}>City</label>
-                    <input type="text" name="city" value={profile.city || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. Karachi" />
+                    <input type="text" name="city" value={profileData?.city || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. Karachi" />
                   </div>
                   <div>
                     <label className={labelStyles}>Country</label>
-                    <input type="text" name="country" value={profile.country || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. Pakistan" />
+                    <input type="text" name="country" value={profileData?.country || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. Pakistan" />
                   </div>
                 </div>
 
-                {/* EXPERIENCE DROPDOWN */}
                 <div>
                   <label className={labelStyles}>Experience (Years)</label>
                   <select 
                     name="experience_years" 
-                    value={profile.experience_years || ''} 
+                    value={profileData?.experience_years || ''} 
                     onChange={handleChange} 
-                    className={inputStyles} 
-                    disabled={!isEditing}
+                    className={inputStyles}
                   >
                     <option value="">Select experience level</option>
                     {experienceOptions.map(exp => (
@@ -255,7 +281,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* DYNAMIC SELECTABLE SKILLS SECTION CATEGORY WRAPPERS */}
               <div className="text-left space-y-3 sm:space-y-3.5 pt-1">
                 <h3 className="text-xs sm:text-sm font-bold tracking-tight text-[#DC6B0F] dark:text-[#0B7EB5]">Skills</h3>
                 
@@ -270,12 +295,11 @@ export default function ProfilePage() {
                             key={skill}
                             type="button"
                             onClick={() => handleToggleSkill(skill)}
-                            disabled={!isEditing}
-                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 border select-none ${
+                            className={`px-2 py-0.5 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 border select-none cursor-pointer active:scale-95 ${
                               isSelected 
                                 ? 'bg-black text-white dark:bg-[#111111] dark:text-white border-transparent shadow-xs' 
                                 : 'bg-white text-gray-800 dark:bg-white dark:text-gray-900 border-gray-300 dark:border-gray-200 hover:border-gray-400'
-                            } ${isEditing ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
+                            }`}
                           >
                             <span>{skill}</span>
                             {isSelected && <Check size={10} strokeWidth={3} className="text-white" />}
@@ -290,7 +314,6 @@ export default function ProfilePage() {
                 ))}
               </div>
 
-              {/* PROJECT LINKS ELEMENT COLLECTION BUILDER */}
               <div className="text-left space-y-2 pt-1 dark:border-t dark:border-gray-300/70">
                 <label className={labelStyles}>Project links</label>
                 <div className="space-y-1.5">
@@ -302,94 +325,74 @@ export default function ProfilePage() {
                         onChange={(e) => handleLinkChange(index, e.target.value)}
                         placeholder="https://github.com/your-build-url"
                         className={inputStyles}
-                        disabled={!isEditing}
                       />
-                      {isEditing && (
-                        <button
-                          type="button"
-                          onClick={() => removeProjectLinkField(index)}
-                          className="p-1.5 bg-red-100 dark:bg-red-100 text-red-600 dark:text-red-600 rounded-[4px] hover:brightness-95 transition-all cursor-pointer shadow-xs shrink-0"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeProjectLinkField(index)}
+                        className="p-1.5 bg-red-100 dark:bg-red-100 text-red-600 dark:text-red-600 rounded-[4px] hover:brightness-95 transition-all cursor-pointer shadow-xs shrink-0"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   ))}
                 </div>
-                {isEditing && (
-                  <button
-                    type="button"
-                    onClick={addProjectLinkField}
-                    className="mt-1 flex items-center gap-1 text-[11px] font-bold text-gray-900 dark:text-gray-900 bg-white/60 dark:bg-white border border-black/10 dark:border-gray-300 rounded-[4px] py-1 px-2.5 hover:bg-white transition-all cursor-pointer shadow-xs"
-                  >
-                    <Plus size={12} strokeWidth={2.2} /> Add more
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={addProjectLinkField}
+                  className="mt-1 flex items-center gap-1 text-[11px] font-bold text-gray-900 dark:text-gray-900 bg-white/60 dark:bg-white border border-black/10 dark:border-gray-300 rounded-[4px] py-1 px-2.5 hover:bg-white transition-all cursor-pointer shadow-xs"
+                >
+                  <Plus size={12} strokeWidth={2.2} /> Add more
+                </button>
               </div>
 
-              {/* CERTIFICATE ATTACHMENT SECTION */}
               <div className="text-left space-y-1.5 pt-1 dark:border-t dark:border-gray-300/70">
                 <label className={labelStyles}>Attach Certificate</label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    disabled={!isEditing}
                     onClick={triggerCertInput}
-                    className="flex items-center gap-1.5 text-[11px] font-bold text-gray-900 dark:text-gray-900 bg-white dark:bg-white border border-gray-300 dark:border-gray-300 rounded-[4px] py-1.5 px-3 hover:bg-gray-50 transition-all cursor-pointer shadow-xs disabled:opacity-80"
+                    className="flex items-center gap-1.5 text-[11px] font-bold text-gray-900 dark:text-gray-900 bg-white dark:bg-white border border-gray-300 dark:border-gray-300 rounded-[4px] py-1.5 px-3 hover:bg-gray-50 transition-all cursor-pointer shadow-xs"
                   >
                     <Upload size={12} /> Upload File
                   </button>
                   <span className="text-[11px] text-gray-600 dark:text-gray-700 truncate font-medium">
-                    {profile.certificate_name || certificateFile?.name || "No file chosen"}
+                    {profileData?.certificate_name || certificateFile?.name || "No file chosen"}
                   </span>
                 </div>
               </div>
 
-              {/* BANK ACCOUNT ARCHITECTURE SECTION */}
               <div className="text-left space-y-2.5 sm:space-y-3 pt-1 border-t border-black/5 dark:border-gray-300/70">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
                   <div>
                     <label className={labelStyles}>Bank name</label>
-                    <input type="text" name="bank_name" value={profile.bank_name || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. Meezan Bank" />
+                    <input type="text" name="bank_name" value={profileData?.bank_name || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. Meezan Bank" />
                   </div>
                   <div>
                     <label className={labelStyles}>Bank account title</label>
-                    <input type="text" name="bank_account_title" value={profile.bank_account_title || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. Account Holder Name" />
+                    <input type="text" name="bank_account_title" value={profileData?.bank_account_title || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. Account Holder Name" />
                   </div>
                 </div>
                 <div>
                   <label className={labelStyles}>Bank account number / IBAN</label>
-                  <input type="text" name="bank_account_iban" value={profile.bank_account_iban || ''} onChange={handleChange} className={inputStyles} disabled={!isEditing} placeholder="e.g. PK44MEZN..." />
+                  <input type="text" name="bank_account_iban" value={profileData?.bank_account_iban || ''} onChange={handleChange} className={inputStyles} placeholder="e.g. PK44MEZN..." />
                 </div>
               </div>
 
-              {/* SUBMIT CONTROLLER ACTIONS */}
-              <div className="w-full flex flex-col sm:flex-row justify-start gap-2 pt-2 dark:border-t dark:border-gray-300/70">
-                {isEditing ? (
-                  <>
-                    <button 
-                      type="submit" 
-                      className="w-full sm:w-auto bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] font-extrabold text-[11px] py-1.5 px-4 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all uppercase cursor-pointer text-center"
-                    >
-                      Save changes
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => setIsEditing(false)} 
-                      className="w-full sm:w-auto bg-white dark:bg-white text-black dark:text-black font-bold text-[11px] py-1.5 px-3 rounded-[4px] border border-black/10 dark:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-100 active:scale-[0.98] transition-all cursor-pointer text-center"
-                    >
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <button 
-                    type="button"
-                    onClick={() => setIsEditing(true)} 
-                    className="w-full sm:w-auto bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] dark:bg-gradient-to-r dark:from-[#F2A508] dark:via-[#DC6B0F] dark:to-[#BD1C22] text-white dark:text-white font-extrabold text-[11px] px-4 py-1.5 rounded-[4px] shadow-xs border border-black/10 dark:border-transparent flex items-center justify-center gap-1.5 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer"
-                  >
-                    <Edit3 size={12} /> Edit Profile Info
-                  </button>
-                )}
+              <div className="w-full flex justify-start gap-2 pt-2 dark:border-t dark:border-gray-300/70">
+                <button 
+                  type="submit" 
+                  disabled={saving}
+                  className="w-full sm:w-auto bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-[#FFFFFF] font-extrabold text-[11px] py-2 px-6 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all uppercase cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    'Save changes'
+                  )}
+                </button>
               </div>
             </form>
 

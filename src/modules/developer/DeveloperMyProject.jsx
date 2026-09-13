@@ -56,10 +56,8 @@ export default function DeveloperMyProject() {
   const [selectedProjectId, setSelectedProjectid] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Consume search query from DashboardLayout outlet context
   const { searchQuery } = useOutletContext() || { searchQuery: '' };
 
-  // Helper: Calculate progress percentage
   const calculateProgress = (milestones) => {
     if (!milestones || milestones.length === 0) return 0;
     const completed = milestones.filter(m => m.completed).length;
@@ -160,7 +158,6 @@ export default function DeveloperMyProject() {
     const newStatus = newProgress === 100 ? "completed" : "in_progress";
     const newStatusType = newProgress === 100 ? "completed" : newProgress < 40 ? "orange-progress" : "progress";
 
-    // 1. Optimistic UI update
     setProjects(prevProjects =>
       prevProjects.map(project => {
         if (project.id !== projectId) return project;
@@ -173,7 +170,6 @@ export default function DeveloperMyProject() {
       })
     );
 
-    // 2. Sync to Backend PUT /api/developers/:id/progress
     try {
       const completedTitles = updatedMilestones
         .filter(m => m.completed)
@@ -190,7 +186,6 @@ export default function DeveloperMyProject() {
     }
   };
 
-  // Realtime search filter across Project ID, Project Name, and Customer Name
   const q = (searchQuery || '').trim().toLowerCase();
   const filteredProjects = projects.filter((project) => {
     if (!q) return true;
@@ -219,10 +214,8 @@ export default function DeveloperMyProject() {
           </button>
         </div>
 
-        {/* Page Title */}
         <div className="text-left space-y-1">
           <div className="flex items-center gap-2">
-            {/* <span className="text-xs sm:text-sm font-mono font-extrabold text-gray-500">{selectedProject.id}</span> */}
             <h1 className="text-xl sm:text-2xl font-black text-black dark:text-white tracking-tight">
               {selectedProject.projectName}
             </h1>
@@ -260,7 +253,6 @@ export default function DeveloperMyProject() {
               </span>
             </div>
 
-            {/* Summary Text */}
             <div className="space-y-0.5 text-left">
               <h3 className="text-sm font-extrabold text-black">
                 {completedCount} of {totalCount} milestones completed
@@ -308,6 +300,32 @@ export default function DeveloperMyProject() {
                 </span>
               </div>
             ))}
+          </div>
+
+          <div className="pt-4 border-t border-gray-200/80 flex justify-end">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const completedTitles = selectedProject.milestones
+                    .filter(m => m.completed)
+                    .map(m => m.title)
+                    .join(", ");
+
+                  await updateDeveloperProjectProgress(selectedProject.id, {
+                    progress_percentage: progressPct,
+                    status: progressPct === 100 ? "completed" : "in_progress",
+                    milestone_note: completedTitles || "Milestone progress submitted."
+                  });
+                  alert("Milestone progress submitted successfully!");
+                } catch (err) {
+                  alert(err.message || "Failed to submit milestone progress.");
+                }
+              }}
+              className="bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs px-5 py-2 rounded-md shadow-xs hover:brightness-105 active:scale-95 transition-all cursor-pointer"
+            >
+              Submit Milestones
+            </button>
           </div>
 
         </div>

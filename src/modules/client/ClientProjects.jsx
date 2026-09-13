@@ -105,7 +105,7 @@ const fallbackRequests = [
 export default function ClientProjects() {
   const [projects, setProjects] = useState([]);
   const [requests, setRequests] = useState(fallbackRequests);
-  const [activeTab, setActiveTab] = useState('running');
+  const [activeTab, setActiveTab] = useState('pending');
   const [selectedDevProfile, setSelectedDevProfile] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -132,16 +132,17 @@ export default function ClientProjects() {
           const rawStatus = (p.status || 'draft').toLowerCase();
           const hasDev = Boolean(p.assigned_developer_name && p.assigned_developer_name !== 'Not assigned yet');
           
-          let statusType = 'progress';
-          let displayStatus = rawStatus.replace(/_/g, ' ');
+          let statusType = 'purple';
+          let displayStatus = rawStatus.replace(/_/g, ' ') || 'Pending Review';
 
           if (rawStatus === 'completed' || progress >= 100) {
             statusType = 'completed';
             displayStatus = 'Completed';
-          } else if (rawStatus === 'draft') {
+          } else if (rawStatus === 'draft' || rawStatus === 'pending' || !hasDev) {
             statusType = 'purple';
-            displayStatus = 'Draft';
+            displayStatus = rawStatus === 'draft' ? 'Draft' : 'Pending Review';
           } else if (hasDev) {
+            statusType = 'progress';
             displayStatus = 'In Progress';
           }
 
@@ -337,7 +338,7 @@ export default function ClientProjects() {
   const q = (searchQuery || '').trim().toLowerCase();
 
   const runningProjects = projects.filter(p => {
-    const isRunning = p.hasAssignedDev || p.statusType === 'progress';
+    const isRunning = p.hasAssignedDev && p.statusType === 'progress';
     if (!isRunning) return false;
     if (!q) return true;
     return (
@@ -349,7 +350,7 @@ export default function ClientProjects() {
   });
 
   const pendingProjects = projects.filter(p => {
-    const isPending = !p.hasAssignedDev && p.statusType !== 'progress';
+    const isPending = !p.hasAssignedDev || p.statusType === 'purple';
     if (!isPending) return false;
     if (!q) return true;
     return (
@@ -541,7 +542,6 @@ export default function ClientProjects() {
               </div>
             </div>
 
-            {/* LinkedIn Profile */}
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-gray-900">LinkedIn Profile</h3>
               <a 
@@ -555,7 +555,6 @@ export default function ClientProjects() {
               </a>
             </div>
 
-            {/* Project Links */}
             <div className="space-y-1.5">
               <h3 className="text-xs font-bold text-gray-900">Project Links</h3>
               {selectedDevProfile.projectLinks && selectedDevProfile.projectLinks.length > 0 ? (
@@ -585,7 +584,6 @@ export default function ClientProjects() {
               )}
             </div>
 
-            {/* Attached Certificate */}
             <div className="space-y-1.5">
               <h3 className="text-xs font-bold text-gray-900">Attached Certificate / Credential</h3>
               {selectedDevProfile.certificateName ? (
@@ -623,7 +621,6 @@ export default function ClientProjects() {
     );
   }
 
-  // View Project Details / Milestones View
   if (selectedProjectDetails) {
     return (
       <div className="w-full text-black font-['Raleway',sans-serif] space-y-4 max-w-2xl sm:max-w-3xl mx-auto pb-12 px-3 sm:px-4 text-left select-none">
@@ -782,7 +779,6 @@ export default function ClientProjects() {
         </p>
       </div>
 
-      {/* Styled Tabs */}
       <div className="flex items-center">
         <div className="inline-flex p-1.5 sm:p-2 rounded-xl bg-[#FFF6E9] dark:bg-white/10 backdrop-blur-md border border-amber-100/60 dark:border-white/15 gap-1.5 shadow-xs">
           <button
@@ -825,7 +821,6 @@ export default function ClientProjects() {
         </div>
       </div>
 
-      {/* Table Card Container */}
       <div className="w-full dark:p-3 sm:dark:p-6 dark:bg-white/10 dark:backdrop-blur-2xl dark:border dark:border-white/15 dark:rounded-[10px] dark:shadow-2xl transition-all">
         <div className="w-full bg-[#FFF6E9] dark:bg-white border border-amber-100/60 dark:border-transparent rounded-[8px] sm:rounded-[6px] shadow-xs transition-all duration-300 overflow-hidden">
           
@@ -835,7 +830,6 @@ export default function ClientProjects() {
               <span className="text-xs font-semibold">Loading projects...</span>
             </div>
           ) : activeTab === 'running' ? (
-            /* TAB 1: RUNNING PROJECTS */
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
@@ -922,7 +916,6 @@ export default function ClientProjects() {
               )}
             </div>
           ) : activeTab === 'pending' ? (
-            /* TAB 2: PENDING PROJECTS */
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse min-w-[620px]">
                 <thead>
@@ -983,7 +976,6 @@ export default function ClientProjects() {
               )}
             </div>
           ) : (
-            /* TAB 3: DEVELOPER REQUESTS */
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
@@ -1015,7 +1007,6 @@ export default function ClientProjects() {
 
                       <td className="py-4 px-4 text-xs font-extrabold text-gray-900">
                         <div className="flex items-center gap-1.5">
-                          {/* <span className="text-[10px] font-mono font-extrabold text-gray-400 shrink-0">#{req.projectId}</span> */}
                           <span>{req.projectName}</span>
                         </div>
                       </td>

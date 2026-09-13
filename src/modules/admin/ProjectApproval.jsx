@@ -3,7 +3,9 @@ import { useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { 
   ArrowLeft, 
   CheckCircle2, 
-  Loader2 
+  Loader2,
+  ChevronLeft,
+  ChevronRight 
 } from 'lucide-react';
 import { fetchAdminProjectDetails, fetchAdminDashboard } from '../../services/api';
 
@@ -55,6 +57,10 @@ export default function ProjectApproval() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestNotes, setRequestNotes] = useState('');
   
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -69,7 +75,7 @@ export default function ProjectApproval() {
 
         if (res?.dashboard && Array.isArray(res.dashboard.projectsAwaitingApproval)) {
           const mapped = res.dashboard.projectsAwaitingApproval.map((p) => {
-            const clientName = p.client_name || p.submittedBy || (p.purpose ? `Client (${p.purpose})` : "Client");
+            const clientName = p.client_name || p.username || p.customer_name || p.submittedBy || "Client";
             const rawBudget = parseFloat(p.budget) || 0;
 
             return {
@@ -102,7 +108,7 @@ export default function ProjectApproval() {
 
       if (res?.success && res.project) {
         const p = res.project;
-        const clientName = p.client_name || projectSummary.submittedBy || "Client";
+        const clientName = p.client_name || p.username || p.customer_name || projectSummary.submittedBy || "Client";
         const parts = clientName.trim().split(' ');
         const initials = parts.length > 1 
           ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() 
@@ -115,7 +121,7 @@ export default function ProjectApproval() {
           title: p.name || p.projectname || projectSummary.title,
           subTitle: p.purpose || "Custom Web & Mobile Solution",
           submittedBy: clientName,
-          email: p.client_email || "client@nexovate.com",
+          email: p.client_email || p.email || p.user_email || "client@nexovate.com",
           initials: initials || "CL",
           budget: rawBudget > 0 ? `PKR ${rawBudget.toLocaleString()}` : "PKR 0",
           category: p.purpose || "Full Stack Application",
@@ -134,8 +140,8 @@ export default function ProjectApproval() {
         setSelectedProject({
           ...projectSummary,
           subTitle: "Full Stack Application",
-          email: "client@nexovate.com",
-          initials: "CL",
+          email: projectSummary.email || "client@nexovate.com",
+          initials: projectSummary.initials || "CL",
           category: "Web Application",
           timeline: "3-4 weeks",
           targetAudience: "Target users specified in project scope.",
@@ -148,8 +154,8 @@ export default function ProjectApproval() {
       setSelectedProject({
         ...projectSummary,
         subTitle: "Full Stack Application",
-        email: "client@nexovate.com",
-        initials: "CL",
+        email: projectSummary.email || "client@nexovate.com",
+        initials: projectSummary.initials || "CL",
         category: "Web Application",
         timeline: "3-4 weeks",
         targetAudience: "Target users specified in project scope.",
@@ -169,6 +175,9 @@ export default function ProjectApproval() {
   }, [location.state]);
 
   const handleAction = (status) => {
+    if (selectedProject) {
+      setProjectsList((prev) => prev.filter((p) => p.id !== selectedProject.id));
+    }
     alert(`Project ${status}!`);
     setSelectedProject(null);
     setShowRequestModal(false);
@@ -179,6 +188,9 @@ export default function ProjectApproval() {
     if (!requestNotes.trim()) {
       alert("Please enter details for the requested changes.");
       return;
+    }
+    if (selectedProject) {
+      setProjectsList((prev) => prev.filter((p) => p.id !== selectedProject.id));
     }
     alert(`Change request sent to ${selectedProject.submittedBy}: "${requestNotes}"`);
     setSelectedProject(null);
@@ -198,6 +210,16 @@ export default function ProjectApproval() {
       (project.budget || '').toLowerCase().includes(q)
     );
   });
+
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProjects = filteredProjects.slice(startIndex, startIndex + itemsPerPage);
 
   if (loadingDetails) {
     return (
@@ -404,7 +426,7 @@ export default function ProjectApproval() {
                 <span className="text-xs font-semibold">Loading projects...</span>
               </div>
             ) : (
-              filteredProjects.map((project) => (
+              paginatedProjects.map((project) => (
                 <div 
                   key={project.id} 
                   className="px-6 sm:px-4 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
@@ -433,12 +455,47 @@ export default function ProjectApproval() {
               ))
             )}
 
-            {!loadingList && filteredProjects.length === 0 && (
+            {!loadingList && paginatedProjects.length === 0 && (
               <div className="text-center py-6 text-xs text-gray-500 font-medium">
-                {searchQuery ? `No projects matching "${searchQuery}".` : 'No projects awaiting approval.'}
+                {searchQuery ? `No projects matching "${searchQuery}"` : 'No projects awaiting approval.'}
               </div>
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {!loadingList && filteredProjects.length > itemsPerPage && (
+            <div className="bg-[#FFFaf3]/50 dark:bg-[#A2A6B0]/70 px-4 py-3 flex items-center justify-between border-t border-black/5 dark:border-gray-200/60">
+              <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-800">
+                Showing {startIndex + 1}–{Math.min(startIndex + itemsPerPage, filteredProjects.length)} of {filteredProjects.length}
+              </span>
+              
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className="p-1.5 rounded-md bg-white dark:bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-2xs"
+                  title="Previous Page"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+
+                <span className="text-xs font-bold text-black dark:text-black px-2">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  className="p-1.5 rounded-md bg-white dark:bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer shadow-2xs"
+                  title="Next Page"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

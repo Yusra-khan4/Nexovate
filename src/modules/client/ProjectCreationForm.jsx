@@ -16,7 +16,8 @@ import {
   Download,
   Check,
   Search,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 const parseBudgetToNumeric = (budgetInput) => {
@@ -38,9 +39,9 @@ export default function ProjectCreationForm() {
   const [createdProjectInfo, setCreatedProjectInfo] = useState(null); 
   const [savedScopeRecord, setSavedScopeRecord] = useState(null);     
   const [generatedScope, setGeneratedScope] = useState(null);        
-  const [dashboardView, setDashboardView] = useState('main'); // 'main' | 'sample-ui' | 'start-new'
+  const [dashboardView, setDashboardView] = useState('main');
   const [currentStep, setCurrentStep] = useState(1);        
-  const [projectNameInput, setProjectNameInput] = useState('Bon Appetit restaurant app');
+  const [projectNameInput, setProjectNameInput] = useState('');
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showDownloadModal, setShowDownloadModal] = useState(false);  
   const [selectedPurpose, setSelectedPurpose] = useState('Restaurant web');
@@ -49,10 +50,13 @@ export default function ProjectCreationForm() {
   const [projectBudget, setProjectBudget] = useState('$1,000 - $3,000');
   const [customBudgetInput, setCustomBudgetInput] = useState('');
 
-  // New state fields for Step 5
   const [projectTimeline, setProjectTimeline] = useState('6-8 weeks');
   const [customTimelineInput, setCustomTimelineInput] = useState('');
-  const [totalMilestonesInput, setTotalMilestonesInput] = useState('10');
+
+  const [milestonesList, setMilestonesList] = useState([
+    { title: 'Requirements & Project Setup', description: 'Initial architecture and database design' },
+    { title: 'Core Features & Authentication', description: 'User login, profiles, and basic dashboard' }
+  ]);
 
   const [regenerationPrompt, setRegenerationPrompt] = useState('');
   const [activePlatform, setActivePlatform] = useState('Desktop'); 
@@ -63,7 +67,7 @@ export default function ProjectCreationForm() {
     { primary: 'bg-[#8b5cf6]', secondary: 'bg-[#6d28d9]', accent: 'bg-[#a78bfa]' }, 
   ];
 
-  const totalSteps = 5;
+  const totalSteps = 6;
   const progressPercent = Math.min(100, Math.round((currentStep / totalSteps) * 100));
 
   const handleStartFreshProject = () => {
@@ -75,12 +79,26 @@ export default function ProjectCreationForm() {
     setCustomBudgetInput('');
     setProjectTimeline('6-8 weeks');
     setCustomTimelineInput('');
-    setTotalMilestonesInput('10');
+    setMilestonesList([
+      { title: 'Requirements & Project Setup', description: 'Initial architecture and database design' }
+    ]);
     setGeneratedScope(null);
     setSavedScopeRecord(null);
     setCreatedProjectInfo(null);
     setCurrentStep(1);
     setDashboardView('main');
+  };
+
+  const handleAddMilestone = () => {
+    setMilestonesList(prev => [...prev, { title: '', description: '' }]);
+  };
+
+  const handleRemoveMilestone = (index) => {
+    setMilestonesList(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleMilestoneChange = (index, field, value) => {
+    setMilestonesList(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
   };
 
   const persistScopeToDatabase = async (qId, scopeObj) => {
@@ -133,8 +151,13 @@ export default function ProjectCreationForm() {
         setErrorMessage('Please enter your custom project timeline.');
         return;
       }
-      if (!totalMilestonesInput || Number(totalMilestonesInput) <= 0) {
-        setErrorMessage('Please specify a valid total milestone count.');
+      setCurrentStep(prev => prev + 1);
+      return;
+    }
+
+    if (currentStep === 6) {
+      if (milestonesList.length === 0 || milestonesList.some(m => !m.title.trim())) {
+        setErrorMessage('Please add at least one valid milestone title.');
         return;
       }
 
@@ -153,7 +176,8 @@ export default function ProjectCreationForm() {
           projectOverview: projectDescription,
           budget: numericBudget,
           timeline: timelineValue,
-          total_milestones: Number(totalMilestonesInput)
+          milestones: milestonesList,
+          total_milestones: milestonesList.length
         });
 
         if (!startRes?.success || !startRes?.questionnaireId) {
@@ -176,7 +200,7 @@ export default function ProjectCreationForm() {
         setGeneratedScope(scopeRes.scope);
 
         await persistScopeToDatabase(qId, scopeRes.scope);
-        setCurrentStep(6); // Step 6 is results / display screen
+        setCurrentStep(7);
 
       } catch (err) {
         setErrorMessage(err.message || 'Error executing scope pipeline.');
@@ -216,7 +240,7 @@ export default function ProjectCreationForm() {
       await persistScopeToDatabase(createdProjectInfo.questionnaireId, res.scope);
 
       setRegenerationPrompt('');
-      setCurrentStep(6); 
+      setCurrentStep(7); 
     } catch (err) {
       setErrorMessage(err.message || 'Error regenerating scope document.');
     } finally {
@@ -263,7 +287,7 @@ export default function ProjectCreationForm() {
       setLoadingMessage('Preparing PDF download...');
       await downloadScopePdf(savedScopeRecord.id);
       setShowDownloadModal(false);
-      setDashboardView('start-new');
+      navigate('/client/projects');
     } catch (err) {
       setErrorMessage(err.message || 'Error downloading PDF.');
     } finally {
@@ -434,7 +458,6 @@ export default function ProjectCreationForm() {
           </div>
         </div>
 
-        {/* DOWNLOAD PDF MODAL */}
         {showDownloadModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs animate-fade-in">
             <div className="absolute inset-0 cursor-pointer" onClick={() => setShowDownloadModal(false)} />
@@ -483,13 +506,12 @@ export default function ProjectCreationForm() {
           Submit a new project idea
         </h2>
         <p className="text-[11px] dark:text-gray-200 text-gray-600 font-medium tracking-wide">
-          Five quick steps - then your project report will be generated.
+          Six quick steps - then your project report will be generated.
         </p>
       </div>
 
-      {currentStep < 6 && (
+      {currentStep < 7 && (
         <div className="mb-2 sm:mb-3 flex justify-center">
-          {/* Progress Ring with Inner Step Number */}
           <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
               <defs>
@@ -500,7 +522,6 @@ export default function ProjectCreationForm() {
                 </linearGradient>
               </defs>
 
-              {/* Background Inactive Ring Track */}
               <circle
                 cx="18"
                 cy="18"
@@ -511,7 +532,6 @@ export default function ProjectCreationForm() {
                 fill="none"
               />
 
-              {/* Foreground Animated Gradient Progress Arc */}
               <circle
                 cx="18"
                 cy="18"
@@ -526,7 +546,6 @@ export default function ProjectCreationForm() {
               />
             </svg>
 
-            {/* Inner Numeric Step Indicator */}
             <div className="absolute w-7 h-7 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] rounded-full flex items-center justify-center text-white font-extrabold text-[11px] shadow-xs">
               {currentStep}
             </div>
@@ -534,62 +553,72 @@ export default function ProjectCreationForm() {
         </div>
       )}
 
-      <div className="p-0 sm:p-5 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md transition-all duration-300 w-full max-w-[380px] mx-auto">
-        <div className="bg-[#FFF6E9] dark:bg-white text-black p-4 sm:p-5 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl flex flex-col min-h-[290px] sm:min-h-[305px] justify-between transition-colors duration-300">
+      <div className={`p-0 sm:p-5 rounded-[12px] bg-transparent dark:bg-white/10 border border-transparent dark:border-white/10 dark:backdrop-blur-md transition-all duration-300 w-full mx-auto ${
+        currentStep === 3 || currentStep === 6 ? 'max-w-[560px]' : currentStep === 7 || currentStep === 8 ? 'max-w-[540px]' : 'max-w-[420px]'
+      }`}>
+        <div className={`bg-[#FFF6E9] dark:bg-white text-black p-5 sm:p-6 rounded-[8px] sm:rounded-[6px] border border-black/5 dark:border-transparent shadow-xs dark:shadow-xl flex flex-col justify-between transition-colors duration-300 ${
+          currentStep === 3 ? 'min-h-[220px] sm:min-h-[250px]' : currentStep === 6 ? 'min-h-[410px] sm:min-h-[450px]' : currentStep === 7 ? 'min-h-[380px] sm:min-h-[410px]' : 'min-h-[270px] sm:min-h-[300px]'
+        }`}>
 
-          {/* Error Banner Notification */}
           {errorMessage && (
             <div className="mb-3 p-2 bg-red-100 border border-red-300 text-red-700 text-[10px] rounded-[4px] font-bold text-center">
               {errorMessage}
             </div>
           )}
 
-          {currentStep === 6 && (
-            <div className="flex-1 flex flex-col justify-between">
-              <div className="text-center border-b border-gray-200/80 pb-2.5 mb-2 sm:mb-3">
-                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-tight max-w-[240px] mx-auto leading-tight">
+          {currentStep === 7 && (
+            <div className="flex-1 flex flex-col justify-between space-y-4">
+              <div className="text-center border-b border-gray-200/80 pb-2.5">
+                <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider">
                   Project Requirements Processed
                 </h3>
-                <p className="text-[10px] text-gray-500 font-medium mt-0.5">
+                <p className="text-[11px] text-gray-500 font-semibold mt-0.5">
                   {projectNameInput || 'Custom Application'}
                 </p>
               </div>
 
-              <div className="space-y-3 my-auto">
-                <h4 className="text-xs font-bold tracking-wide text-center bg-gradient-to-r from-[#F2A508] to-[#BD1C22] bg-clip-text text-transparent">
-                  Recommended TechStack & Scope
-                </h4>
+              <div className="space-y-2 text-left">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-gray-700 dark:text-gray-800">
+                    Recommended Tech Stack
+                  </h4>
+                  <span className="text-[10px] font-semibold text-gray-400">AI Architecture</span>
+                </div>
 
-                {generatedScope?.executiveSummary ? (
-                  <div className="max-h-28 overflow-y-auto p-2.5 bg-gray-50 rounded text-left text-[10px] text-gray-700 leading-snug font-sans custom-scrollbar border border-gray-200/60 shadow-inner">
-                    <p className="font-bold text-gray-900 mb-0.5">Executive Summary:</p>
-                    {generatedScope.executiveSummary}
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-gray-100 border border-gray-200/90 dark:border-gray-200 shadow-2xs">
+                    <span className="block text-[9px] font-extrabold uppercase tracking-wider text-gray-400">Frontend</span>
+                    <span className="text-xs font-bold text-gray-900 mt-0.5 block">React.js / Next.js</span>
                   </div>
-                ) : (
-                  <div className="space-y-2 max-w-[200px] mx-auto font-sans text-[11px]">
-                    <div className="flex justify-start gap-1 font-bold text-gray-900">
-                      <span>Frontend :</span>
-                      <span className="text-gray-500 font-medium">React.js</span>
-                    </div>
-                    <div className="flex justify-start gap-1 font-bold text-gray-900">
-                      <span>Backend :</span>
-                      <span className="text-gray-500 font-medium">Django</span>
-                    </div>
-                    <div className="flex justify-start gap-1 font-bold text-gray-900">
-                      <span>Database :</span>
-                      <span className="text-gray-500 font-medium">MongoDB</span>
-                    </div>
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-gray-100 border border-gray-200/90 dark:border-gray-200 shadow-2xs">
+                    <span className="block text-[9px] font-extrabold uppercase tracking-wider text-gray-400">Backend</span>
+                    <span className="text-xs font-bold text-gray-900 mt-0.5 block">Django / Node.js</span>
                   </div>
-                )}
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-gray-100 border border-gray-200/90 dark:border-gray-200 shadow-2xs">
+                    <span className="block text-[9px] font-extrabold uppercase tracking-wider text-gray-400">Database</span>
+                    <span className="text-xs font-bold text-gray-900 mt-0.5 block">MongoDB / PostgreSQL</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-gray-100 border border-gray-200/90 dark:border-gray-200 shadow-2xs">
+                    <span className="block text-[9px] font-extrabold uppercase tracking-wider text-gray-400">Styling & UI</span>
+                    <span className="text-xs font-bold text-gray-900 mt-0.5 block">Tailwind CSS</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-4 sm:mt-5 space-y-2 shrink-0 flex flex-col items-center">
+              {generatedScope?.executiveSummary ? (
+                <div className="max-h-24 overflow-y-auto p-3 bg-white/90 dark:bg-gray-50 rounded-lg text-left text-[11px] text-gray-700 leading-relaxed font-sans custom-scrollbar border border-gray-200/80 shadow-inner">
+                  <p className="font-extrabold text-gray-900 mb-1 uppercase tracking-wider text-[10px]">Executive Summary</p>
+                  {generatedScope.executiveSummary}
+                </div>
+              ) : null}
+
+              <div className="pt-2 space-y-2 shrink-0 flex flex-col items-center">
                 <div className="flex items-center gap-2 w-full justify-center">
                   <button
                     type="button"
                     disabled={loading}
                     onClick={() => setDashboardView('sample-ui')}
-                    className="flex-1 max-w-[120px] bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] py-1.5 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                    className="flex-1 max-w-[130px] bg-white text-gray-900 border border-gray-300 font-extrabold text-[11px] py-2 rounded-[6px] shadow-xs hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
                   >
                     Sample UI
                   </button>
@@ -598,9 +627,9 @@ export default function ProjectCreationForm() {
                     disabled={loading}
                     onClick={() => {
                       setErrorMessage('');
-                      setCurrentStep(7);
+                      setCurrentStep(8);
                     }}
-                    className="flex-1 max-w-[120px] bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] py-1.5 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                    className="flex-1 max-w-[130px] bg-white text-gray-900 border border-gray-300 font-extrabold text-[11px] py-2 rounded-[6px] shadow-xs hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
                   >
                     Regenerate
                   </button>
@@ -610,26 +639,25 @@ export default function ProjectCreationForm() {
                   type="button"
                   disabled={loading}
                   onClick={handleSendToDeveloper}
-                  className="w-full max-w-[140px] bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-[10px] py-1.5 rounded-[4px] shadow-xs hover:brightness-105 active:scale-[0.98] transition-all uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold text-xs py-2.5 rounded-[6px] shadow-sm hover:brightness-105 active:scale-[0.99] transition-all uppercase tracking-wider cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   {loading ? (
                     <>
-                      <Loader2 size={12} className="animate-spin" />
+                      <Loader2 size={13} className="animate-spin" />
                       <span>Sending...</span>
                     </>
                   ) : (
-                    'Send to developer'
+                    'Send to Developer'
                   )}
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 7: REGENERATION TEXTAREA */}
-          {currentStep === 7 && (
+          {currentStep === 8 && (
             <div className="flex-1 flex flex-col justify-between">
               <div className="text-left border-b border-gray-200 pb-2 mb-2.5 sm:mb-3">
-                <h3 className="text-xs sm:text-sm font-bold text-gray-900 tracking-tight max-w-[240px] leading-tight">
+                <h3 className="text-xs sm:text-sm font-bold text-gray-900 tracking-tight max-w-[280px] leading-tight">
                   Add your requirements to regenerate
                 </h3>
               </div>
@@ -640,7 +668,7 @@ export default function ProjectCreationForm() {
                   value={regenerationPrompt}
                   onChange={(e) => setRegenerationPrompt(e.target.value)}
                   placeholder="Describe the changes you'd like to make before regenerating the report (e.g. Change backend runtime to NestJS with TypeScript)."
-                  className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] p-3 text-xs font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all resize-none leading-relaxed shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                  className="w-full bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-white/20 rounded-[6px] p-3 text-xs font-medium outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all resize-none leading-relaxed shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                   required
                 />
               </div>
@@ -666,7 +694,7 @@ export default function ProjectCreationForm() {
                     type="button"
                     onClick={() => {
                       setErrorMessage('');
-                      setCurrentStep(6);
+                      setCurrentStep(7);
                     }}
                     className="text-[10px] font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider cursor-pointer"
                   >
@@ -677,19 +705,18 @@ export default function ProjectCreationForm() {
             </div>
           )}
 
-          {/* STEPS 1 to 5: MAIN FORM INPUTS */}
-          {currentStep < 6 && (
+          {currentStep < 7 && (
             <>
               <h3 className="text-xs font-bold text-gray-900 tracking-tight border-b border-gray-200/80 pb-2 text-left mb-2.5 sm:mb-3 leading-snug">
                 {currentStep === 1 && "What is the name of your project?"}
                 {currentStep === 2 && "What is the primary purpose of your project?"}
                 {currentStep === 3 && "Describe your project"}
                 {currentStep === 4 && "What is your estimated budget?"}
-                {currentStep === 5 && "What is your project timeline & milestones?"}
+                {currentStep === 5 && "What is your project timeline?"}
+                {currentStep === 6 && "Define your project milestones"}
               </h3>
 
               <div className="w-full flex-1 flex flex-col justify-start space-y-2">
-                {/* STEP 1: Project Name */}
                 {currentStep === 1 && (
                   <div className="space-y-1.5 text-left">
                     <input
@@ -697,7 +724,7 @@ export default function ProjectCreationForm() {
                       value={projectNameInput}
                       onChange={(e) => setProjectNameInput(e.target.value)}
                       placeholder="e.g. Bon Appetit Restaurant App"
-                      className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-2 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                      className="w-full bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-white/20 rounded-[6px] py-2 px-3 text-xs font-semibold outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                     />
                     <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
                       Give your project a clear, descriptive title.
@@ -705,7 +732,6 @@ export default function ProjectCreationForm() {
                   </div>
                 )}
 
-                {/* STEP 2: Purpose */}
                 {currentStep === 2 && (
                   <div className="space-y-2">
                     <div className="grid grid-cols-1 gap-1.5">
@@ -740,25 +766,25 @@ export default function ProjectCreationForm() {
                           value={customPurposeInput}
                           onChange={(e) => setCustomPurposeInput(e.target.value)}
                           placeholder="Type your custom purpose here..."
-                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                         />
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* STEP 3: Description */}
                 {currentStep === 3 && (
-                  <textarea 
-                    rows={4}
-                    value={projectDescription}
-                    onChange={(e) => setProjectDescription(e.target.value)}
-                    placeholder="Describe what your project should do, target users, and key features..."
-                    className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] p-2.5 text-xs font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all resize-none leading-relaxed shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
-                  />
+                  <div className="space-y-1.5 text-left h-full flex flex-col">
+                    <textarea 
+                      rows={3}
+                      value={projectDescription}
+                      onChange={(e) => setProjectDescription(e.target.value)}
+                      placeholder="Describe what your project should do, target users, and key features..."
+                      className="w-full bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-white/20 rounded-[6px] p-2.5 text-xs font-medium outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all resize-none leading-relaxed shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                    />
+                  </div>
                 )}
 
-                {/* STEP 4: Budget */}
                 {currentStep === 4 && (
                   <div className="space-y-2">
                     <div className="grid grid-cols-1 gap-1.5">
@@ -793,21 +819,20 @@ export default function ProjectCreationForm() {
                           value={customBudgetInput}
                           onChange={(e) => setCustomBudgetInput(e.target.value)}
                           placeholder="e.g. 250000 PKR or $2,500 USD"
-                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold placeholder:text-gray-400 dark:placeholder:text-gray-500 placeholder:font-normal outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold outline-none focus:border-[#DC6B0F] dark:focus:border-[#F2A508] focus:ring-2 focus:ring-[#DC6B0F]/20 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
                         />
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* STEP 5: Timeline & Total Milestones */}
                 {currentStep === 5 && (
                   <div className="space-y-3 text-left">
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
-                        Select Timeline
+                      <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                        Select Project Timeline
                       </label>
-                      <div className="grid grid-cols-2 gap-1.5 mb-2">
+                      <div className="grid grid-cols-2 gap-1.5 mb-2.5">
                         {['2-4 weeks', '4-6 weeks', '6-8 weeks', 'Custom'].map((tOpt) => {
                           const isSelected = projectTimeline === tOpt;
                           return (
@@ -815,7 +840,7 @@ export default function ProjectCreationForm() {
                               key={tOpt}
                               type="button"
                               onClick={() => setProjectTimeline(tOpt)}
-                              className={`w-full text-center text-[11px] font-bold py-1.5 px-2 rounded-[6px] transition-all duration-150 cursor-pointer border ${
+                              className={`w-full text-center text-[11px] font-bold py-2 px-2 rounded-[6px] transition-all duration-150 cursor-pointer border ${
                                 isSelected
                                   ? 'bg-gradient-to-r from-[#DC6B0F]/10 to-[#F2A508]/10 border-[#DC6B0F] text-[#DC6B0F] dark:text-[#F2A508] shadow-xs'
                                   : 'bg-white dark:bg-black text-gray-800 dark:text-white border-gray-300 dark:border-white/20'
@@ -833,30 +858,64 @@ export default function ProjectCreationForm() {
                           value={customTimelineInput}
                           onChange={(e) => setCustomTimelineInput(e.target.value)}
                           placeholder="e.g. 12 weeks"
-                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold outline-none focus:border-[#DC6B0F]"
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold outline-none focus:border-[#DC6B0F]"
                         />
                       )}
                     </div>
+                  </div>
+                )}
 
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-700 dark:text-gray-300 mb-1">
-                        Total Project Milestones
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={totalMilestonesInput}
-                        onChange={(e) => setTotalMilestonesInput(e.target.value)}
-                        placeholder="e.g. 10"
-                        className="w-full bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-300 dark:border-white/20 rounded-[6px] py-1.5 px-3 text-xs font-semibold outline-none focus:border-[#DC6B0F]"
-                      />
-                    </div>
+                {currentStep === 6 && (
+                  <div className="space-y-2.5 text-left max-h-[290px] overflow-y-auto pr-1 custom-scrollbar">
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                      Add the core deliverables and phases for your project:
+                    </p>
+                    {milestonesList.map((m, idx) => (
+                      <div key={idx} className="p-2.5 bg-white/70 dark:bg-black/50 border border-gray-300 dark:border-white/15 rounded-md space-y-1.5 relative">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-gray-500">
+                            Milestone {idx + 1}
+                          </span>
+                          {milestonesList.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMilestone(idx)}
+                              className="text-red-500 hover:text-red-700 cursor-pointer p-0.5"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          value={m.title}
+                          onChange={(e) => handleMilestoneChange(idx, 'title', e.target.value)}
+                          placeholder="Milestone title (e.g. Authentication Setup)"
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-white/20 rounded-[4px] py-1.5 px-2 text-xs font-semibold outline-none focus:border-[#DC6B0F]"
+                        />
+                        <input
+                          type="text"
+                          value={m.description}
+                          onChange={(e) => handleMilestoneChange(idx, 'description', e.target.value)}
+                          placeholder="Short description..."
+                          className="w-full bg-white dark:bg-black text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border border-gray-300 dark:border-white/20 rounded-[4px] py-1.5 px-2 text-[10px] font-medium outline-none focus:border-[#DC6B0F]"
+                        />
+                      </div>
+                    ))}
+
+                    <button
+                      type="button"
+                      onClick={handleAddMilestone}
+                      className="w-full py-2 border border-dashed border-[#DC6B0F] text-[#DC6B0F] dark:text-[#F2A508] rounded-[6px] text-[10px] font-extrabold hover:bg-[#DC6B0F]/5 transition-all cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <Plus size={12} strokeWidth={2.5} />
+                      <span>Add Another Milestone</span>
+                    </button>
                   </div>
                 )}
               </div>
 
-              <div className="mt-3.5 flex flex-col items-center gap-1.5 w-full shrink-0">
+              <div className="mt-4 flex flex-col items-center gap-1.5 w-full shrink-0">
                 <button
                   type="button"
                   disabled={loading}
@@ -869,7 +928,7 @@ export default function ProjectCreationForm() {
                       <span>{loadingMessage || 'Processing...'}</span>
                     </>
                   ) : (
-                    currentStep === 5 ? 'Generate scope document' : 'Next'
+                    currentStep === 6 ? 'Generate scope document' : 'Next'
                   )}
                 </button>
 
@@ -894,7 +953,7 @@ export default function ProjectCreationForm() {
 
       {showReviewModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs animate-fade-in">
-          <div className="absolute inset-0 cursor-pointer" onClick={() => { setShowReviewModal(false); navigate('/client/dashboard'); }} />
+          <div className="absolute inset-0 cursor-pointer" onClick={() => { setShowReviewModal(false); navigate('/client/projects'); }} />
           <div className="bg-[#FFF6E9] rounded-[10px] p-5 sm:p-6 max-w-sm w-full relative z-10 shadow-xl border border-black/5 flex flex-col items-center text-center">
             <div className="relative mb-4 flex items-center justify-center">
               <div className="w-16 sm:w-18 h-16 sm:h-18 rounded-full bg-emerald-700/20 flex items-center justify-center">
@@ -907,7 +966,12 @@ export default function ProjectCreationForm() {
               <h3 className="text-sm sm:text-base font-bold text-black tracking-tight leading-snug">Your project has been sent for review</h3>
               <p className="text-[11px] text-gray-600 font-semibold font-sans leading-relaxed tracking-wide">Nexovate's admin team will review your scope document, requirements, and estimated budget. Once approved, your project will be posted to the Developer Portal and you'll be notified.</p>
             </div>
-            <button onClick={() => { setShowReviewModal(false); navigate('/client/dashboard'); }} className="mt-4 text-[9px] uppercase font-bold tracking-widest text-gray-400 hover:text-gray-600 cursor-pointer transition-colors">Close Window</button>
+            <button 
+              onClick={() => { setShowReviewModal(false); navigate('/client/projects'); }} 
+              className="mt-4 text-[9px] uppercase font-bold tracking-widest text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
+            >
+              View in My Projects
+            </button>
           </div>
         </div>
       )}

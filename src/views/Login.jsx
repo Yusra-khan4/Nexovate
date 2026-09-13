@@ -40,18 +40,29 @@ const Login = () => {
     try {
       const data = await loginUser(email, password);
 
+      if (data?.token) {
+        localStorage.setItem('token', data.token);
+      }
+
       if (data?.user) {
         localStorage.setItem('user', JSON.stringify(data.user));
         
         const userId = data.user.id || data.user._id;
-        if (userId) {
-          localStorage.setItem('developerId', userId);
-        }
+        const userRole = data.user.role?.toLowerCase() || 'client';
+        localStorage.setItem('role', userRole);
 
-        if (data.user.role?.toLowerCase() === 'developer') {
-          navigate('/developer/dashboard');
-        } else {
-          navigate('/client/dashboard');
+        // Clear out old conflicting IDs first
+        localStorage.removeItem('clientId');
+        localStorage.removeItem('developerId');
+
+        if (userId) {
+          if (userRole === 'developer') {
+            localStorage.setItem('developerId', userId);
+            navigate('/developer/dashboard');
+          } else {
+            localStorage.setItem('clientId', userId);
+            navigate('/client/dashboard');
+          }
         }
       } else {
         navigate('/developer/dashboard');
@@ -95,7 +106,6 @@ const Login = () => {
         </button>
       </div>
 
-      {/* Mobile Top Navbar (Visible only on small screens) */}
       <div className="flex md:hidden w-full items-center justify-between px-2 mb-6 z-20">
         <img 
           src={logoImg} 
@@ -121,11 +131,9 @@ const Login = () => {
         </button>
       </div>
 
-      {/* Unified Main Card */}
       <div className="w-full max-w-[390px] sm:max-w-[420px] z-10 my-auto">
         <div className="bg-[#FFF6E9] dark:bg-[#1c1a17]/70 border border-black/5 dark:border-white/10 rounded-[14px] p-6 sm:p-8 backdrop-blur-xl shadow-lg dark:shadow-2xl transition-all duration-300 space-y-5 text-center">
           
-          {/* Header Section */}
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-[#FFFFFF] tracking-tight">
               Welcome back
@@ -141,10 +149,7 @@ const Login = () => {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleLogin} className="space-y-3.5">
-            
-            {/* Email Field */}
             <div className="text-left space-y-1">
               <label className="block text-xs font-bold text-gray-900 dark:text-[#FFFFFF] tracking-wide">
                 Email Address
@@ -165,7 +170,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Password Field */}
             <div className="text-left space-y-1">
               <div className="flex justify-between items-center">
                 <label className="block text-xs font-bold text-gray-900 dark:text-[#FFFFFF] tracking-wide">
@@ -208,14 +212,12 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Divider */}
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-black/10 dark:border-white/10"></div>
               <span className="flex-shrink mx-3 text-[10px] text-gray-500 font-extrabold tracking-widest">OR</span>
               <div className="flex-grow border-t border-black/10 dark:border-white/10"></div>
             </div>
 
-            {/* Google OAuth Button */}
             <button 
               type="button" 
               className="w-full bg-white dark:bg-[#000000]/30 hover:bg-gray-50 dark:hover:bg-[#000000]/50 border border-gray-300 dark:border-white/10 text-gray-800 dark:text-gray-200 rounded-[6px] h-9.5 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
@@ -229,7 +231,6 @@ const Login = () => {
               Continue with Google
             </button>
 
-            {/* Login Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -239,7 +240,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Footer Section inside card */}
           <div className="pt-2 border-t border-black/5 dark:border-white/5">
             <p className="text-xs text-center text-gray-600 dark:text-gray-400 font-semibold tracking-wide">
               Don't have an account? <Link to="/register" className="text-gray-900 dark:text-[#F2A508] hover:underline font-bold ml-1">Sign Up</Link>

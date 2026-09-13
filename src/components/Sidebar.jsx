@@ -16,15 +16,42 @@ import {
   MessageSquare,
   FileText
 } from 'lucide-react';
-
+import { useProfile } from '../context/ProfileContext';
 import logoImg from '../assets/NEXOVATE_WHITE_BG.png';
 
 export default function Sidebar({ userName, userRole, currentView, onViewChange, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation(); 
   
-  const role = userRole?.toLowerCase() || 'developer';
+  // Pull live profile data from ProfileContext if available
+  const { profile } = useProfile?.() || {};
+
+  // Retrieve user object from localStorage as fallback
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+
+  const role = userRole || storedUser.role || 'developer';
   const roleKey = role === 'customer' || role === 'client' ? 'client' : (role === 'admin' ? 'admin' : 'developer');
+
+  // Dynamic user details: profile state (if edited) -> storedUser -> props -> defaults
+  const displayName = 
+    profile?.full_name || 
+    profile?.full_Name || 
+    storedUser.full_name || 
+    storedUser.full_Name || 
+    storedUser.name || 
+    userName || 
+    "Bilal Ahmed";
+
+  const displayAvatar = 
+    profile?.avatar || 
+    storedUser.avatar || 
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80";
 
   const menuConfig = {
     client: [
@@ -73,6 +100,8 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('developerId');
+    localStorage.removeItem('clientId');
+    localStorage.removeItem('role');
     if (onLogout) {
       onLogout();
     }
@@ -120,16 +149,22 @@ export default function Sidebar({ userName, userRole, currentView, onViewChange,
           </div>
 
           <div className="flex items-center gap-2.5 px-0.5 shrink-0 mt-4 mb-3">
-            <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#DC6B0F] shadow-xs shrink-0">
-              <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" 
-                alt={userName || "Bilal Ahmed"} 
-                className="w-full h-full object-cover" 
-              />
+            <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#DC6B0F] shadow-xs shrink-0 bg-gray-200 flex items-center justify-center">
+              {displayAvatar ? (
+                <img 
+                  src={displayAvatar} 
+                  alt={displayName} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                <span className="text-[10px] font-black text-gray-700">
+                  {displayName.substring(0, 2).toUpperCase()}
+                </span>
+              )}
             </div>
             <div className="text-left">
-              <h4 className="font-bold text-xs text-gray-900 dark:text-[#FFFFFF] tracking-wide leading-tight transition-colors duration-300">
-                {userName || "Bilal Ahmed"}
+              <h4 className="font-bold text-xs text-gray-900 dark:text-[#FFFFFF] tracking-wide leading-tight transition-colors duration-300 truncate max-w-[150px]">
+                {displayName}
               </h4>
               <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold mt-0.5 capitalize opacity-70">
                 {roleKey === 'client' ? 'Client' : role}

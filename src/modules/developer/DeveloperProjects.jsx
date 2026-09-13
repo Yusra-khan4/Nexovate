@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Loader2, X } from 'lucide-react';
+import { FileText, Loader2, X, CheckCircle2 } from 'lucide-react';
 import { fetchOpenProjects, applyToProject, downloadProjectReport } from '../../services/api';
 
 const fallbackProjectsData = [
@@ -36,6 +36,9 @@ export default function DeveloperProjects() {
   const [bidAmount, setBidAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
+  
+  // Track applied project IDs
+  const [appliedProjectIds, setAppliedProjectIds] = useState([]);
 
   const loadProjects = async () => {
     try {
@@ -66,10 +69,15 @@ export default function DeveloperProjects() {
             budget: rawBudget > 0 ? `PKR ${rawBudget.toLocaleString()}` : "PKR 50,000",
             numericBudget: rawBudget > 0 ? rawBudget : 50000,
             timeline: p.timeline || "3 - 6 months",
-            totalMilestones: 10
+            totalMilestones: 10,
+            hasApplied: Boolean(p.has_applied || p.applied)
           };
         });
         setProjects(mapped);
+        
+        // Populate initially applied IDs if returned by backend
+        const initialApplied = mapped.filter(p => p.hasApplied).map(p => p.id);
+        setAppliedProjectIds(initialApplied);
       } else {
         setProjects(fallbackProjectsData);
       }
@@ -149,6 +157,7 @@ export default function DeveloperProjects() {
 
       if (res?.success) {
         alert(res.message || 'Application submitted successfully!');
+        setAppliedProjectIds((prev) => [...prev, selectedProject.id]);
         handleCloseModal();
       }
     } catch (err) {
@@ -161,7 +170,6 @@ export default function DeveloperProjects() {
   return (
     <div className="w-full font-['Raleway',sans-serif] px-3 sm:px-4 pb-8 text-gray-900 dark:text-white transition-colors duration-300">
       
-      {/* Page Title Section */}
       <div className="mb-4 sm:mb-5 text-left space-y-0.5 max-w-4xl mx-auto">
         <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-[#FFFFFF] tracking-tight">Open Projects</h2>
         <p className="text-[11px] text-gray-500 dark:text-gray-200 font-medium">
@@ -176,76 +184,87 @@ export default function DeveloperProjects() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 max-w-4xl mx-auto items-stretch">
-          {projects.map((project) => (
-            <div 
-              key={project.id} 
-              className="p-0 dark:p-2 sm:dark:p-6 bg-transparent dark:bg-white/10 border border-transparent dark:border-white/15 rounded-[10px] dark:backdrop-blur-xl dark:shadow-xl flex flex-col justify-between transition-all duration-300 w-full max-w-[360px] mx-auto"
-            >
-              <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] rounded-[8px] sm:rounded-[6px] p-3 sm:p-4 text-black flex-1 flex flex-col justify-between border border-black/5 dark:border-transparent shadow-xs dark:shadow-none transition-all duration-300">
-                
-                <div className="text-left space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono font-bold text-gray-500 shrink-0">{project.id}</span>
-                    <h3 className="text-xs sm:text-sm font-bold tracking-tight leading-snug text-black">{project.title}</h3>
-                  </div>
-                  <p className="text-[9px] text-gray-600 font-bold">
-                    Client: {project.client} · <span className="font-medium text-gray-500">{project.postedTime}</span>
-                  </p>
+          {projects.map((project) => {
+            const isApplied = appliedProjectIds.includes(project.id) || project.hasApplied;
+
+            return (
+              <div 
+                key={project.id} 
+                className="p-0 dark:p-2 sm:dark:p-6 bg-transparent dark:bg-white/10 border border-transparent dark:border-white/15 rounded-[10px] dark:backdrop-blur-xl dark:shadow-xl flex flex-col justify-between transition-all duration-300 w-full max-w-[360px] mx-auto"
+              >
+                <div className="bg-[#FFF6E9] dark:bg-[#EFEEEA] rounded-[8px] sm:rounded-[6px] p-3 sm:p-4 text-black flex-1 flex flex-col justify-between border border-black/5 dark:border-transparent shadow-xs dark:shadow-none transition-all duration-300">
                   
-                  <p className="text-[11px] text-gray-700 font-medium pt-2 sm:pt-2.5 leading-snug sm:min-h-[44px]">
-                    {project.description}
-                  </p>
-                </div>
-
-                <div className="mt-3.5 sm:mt-4 pt-2.5 sm:pt-3 border-t border-black/10 dark:border-black/5">
-                  <div className="grid grid-cols-3 gap-2 mb-3 sm:mb-3.5 text-left">
-                    <div>
-                      <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Budget</span>
-                      <span className="text-xs font-bold text-black mt-0.5 block">{project.budget}</span>
+                  <div className="text-left space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-gray-500 shrink-0">{project.id}</span>
+                      <h3 className="text-xs sm:text-sm font-bold tracking-tight leading-snug text-black">{project.title}</h3>
                     </div>
-                    <div>
-                      <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Timeline</span>
-                      <span className="text-xs font-bold text-black mt-0.5 block">{project.timeline}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Milestones</span>
-                      <span className="text-xs font-bold text-black mt-0.5 block">{project.totalMilestones || 10} Milestones</span>
-                    </div>
+                    <p className="text-[9px] text-gray-600 font-bold">
+                      Client: {project.client} · <span className="font-medium text-gray-500">{project.postedTime}</span>
+                    </p>
+                    
+                    <p className="text-[11px] text-gray-700 font-medium pt-2 sm:pt-2.5 leading-snug sm:min-h-[44px]">
+                      {project.description}
+                    </p>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 w-full">
-                    <button 
-                      type="button" 
-                      disabled={downloadingId === project.id}
-                      onClick={() => handleDownloadReport(project)}
-                      className="w-full sm:flex-1 bg-white border border-gray-300 rounded-[4px] py-1.5 px-2.5 text-[10px] font-bold text-black shadow-xs hover:bg-gray-50 active:scale-[0.99] flex items-center justify-center gap-1 transition-all cursor-pointer disabled:opacity-60"
-                    >
-                      {downloadingId === project.id ? (
-                        <>
-                          <Loader2 size={12} className="animate-spin text-[#DC6B0F]" />
-                          <span>Downloading...</span>
-                        </>
+                  <div className="mt-3.5 sm:mt-4 pt-2.5 sm:pt-3 border-t border-black/10 dark:border-black/5">
+                    <div className="grid grid-cols-3 gap-2 mb-3 sm:mb-3.5 text-left">
+                      <div>
+                        <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Budget</span>
+                        <span className="text-xs font-bold text-black mt-0.5 block">{project.budget}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Timeline</span>
+                        <span className="text-xs font-bold text-black mt-0.5 block">{project.timeline}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[8px] font-bold tracking-wider text-gray-500 uppercase">Milestones</span>
+                        <span className="text-xs font-bold text-black mt-0.5 block">{project.totalMilestones || 10} Milestones</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5 w-full">
+                      <button 
+                        type="button" 
+                        disabled={downloadingId === project.id}
+                        onClick={() => handleDownloadReport(project)}
+                        className="w-full sm:flex-1 bg-white border border-gray-300 rounded-[4px] py-1.5 px-2.5 text-[10px] font-bold text-black shadow-xs hover:bg-gray-50 active:scale-[0.99] flex items-center justify-center gap-1 transition-all cursor-pointer disabled:opacity-60"
+                      >
+                        {downloadingId === project.id ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin text-[#DC6B0F]" />
+                            <span>Downloading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <FileText size={12} strokeWidth={2.2} className="text-black shrink-0" />
+                            <span>Download Report</span>
+                          </>
+                        )}
+                      </button>
+
+                      {isApplied ? (
+                        <div className="w-full sm:flex-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold py-1.5 px-2.5 rounded-[4px] text-[10px] flex items-center justify-center gap-1">
+                          <CheckCircle2 size={12} />
+                          <span>Request Sent</span>
+                        </div>
                       ) : (
-                        <>
-                          <FileText size={12} strokeWidth={2.2} className="text-black shrink-0" />
-                          <span>Download Report</span>
-                        </>
+                        <button 
+                          type="button" 
+                          onClick={() => handleOpenApplyModal(project)}
+                          className="w-full sm:flex-1 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold py-1.5 px-2.5 rounded-[4px] text-[10px] shadow-xs hover:brightness-105 active:scale-[0.98] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        >
+                          Apply
+                        </button>
                       )}
-                    </button>
-
-                    <button 
-                      type="button" 
-                      onClick={() => handleOpenApplyModal(project)}
-                      className="w-full sm:flex-1 bg-gradient-to-r from-[#F2A508] via-[#DC6B0F] to-[#BD1C22] text-white font-extrabold py-1.5 px-2.5 rounded-[4px] text-[10px] shadow-xs hover:brightness-105 active:scale-[0.98] flex items-center justify-center gap-1 transition-all cursor-pointer"
-                    >
-                      Apply
-                    </button>
+                    </div>
                   </div>
-                </div>
 
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {projects.length === 0 && (
             <div className="col-span-2 text-center py-12 text-gray-500 text-xs font-semibold">
@@ -255,7 +274,6 @@ export default function DeveloperProjects() {
         </div>
       )}
 
-      {/* Apply to Project Modal */}
       {selectedProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs transition-all">
           <div className="bg-white rounded-2xl shadow-2xl border border-gray-200/80 p-6 sm:p-7 w-full max-w-md text-left space-y-4 font-['Raleway',sans-serif]">
